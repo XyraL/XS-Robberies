@@ -1,5 +1,8 @@
 # XS-Robberies
 
+> **Beta.** Still being worked on, so expect rough edges. If you hit one, tell
+> me on [Discord](https://discord.gg/XRURAw4TM2) and I will get it sorted.
+
 Build any robbery you want, in game, without touching a config file.
 
 Stores, banks, jewelry, houses, custom MLOs — you place the points, set what each
