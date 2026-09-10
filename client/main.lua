@@ -22,7 +22,7 @@ if Config.Builder.KeyBind and Config.Builder.KeyBind ~= '' then
         Wait(2000)
         if not ensureAdmin() then return end
         lib.addKeybind({
-            name = 'cipher_robberies_builder',
+            name = 'xs_robberies_builder',
             description = 'Open the robbery builder',
             defaultKey = Config.Builder.KeyBind,
             onPressed = function() Builder.Open() end,

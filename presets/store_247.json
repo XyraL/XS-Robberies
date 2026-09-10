@@ -112,7 +112,7 @@
                     "loudness": 0,
                     "difficulty": "2",
                     "onFail": "escalate",
-                    "minigame": "cipher:wire_trace",
+                    "minigame": "xs:wire_trace",
                     "attempts": 2
                 }
             },
@@ -204,7 +204,7 @@
                     "loudness": 0,
                     "difficulty": "2",
                     "onFail": "retry",
-                    "minigame": "cipher:tumbler",
+                    "minigame": "xs:tumbler",
                     "attempts": 3,
                     "restock": 1800
                 }
@@ -308,7 +308,7 @@
                     "loudness": 45,
                     "difficulty": "2",
                     "onFail": "escalate",
-                    "minigame": "cipher:circuit",
+                    "minigame": "xs:circuit",
                     "attempts": 2,
                     "restock": 7200
                 }

@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- Finished the rename off the Cipher name. The seven database tables are now
+  `xs_robbery_*` instead of `cipher_robbery_*`, and the built-in minigames are
+  `xs:tumbler` and friends instead of `cipher:tumbler`.
+- **Nothing to do on your end.** The old tables are renamed in place the first
+  time the resource starts, and only when the old name exists and the new one
+  does not. Every robbery your players built comes with them.
+- Robberies saved with the old `cipher:` minigame ids still run. Those ids stay
+  resolvable for good; the builder just offers the new ones from now on.
+- `tools/check-standalone.mjs` only knew the old `cipher-*` names, so after the
+  rename it would have waved through a hard reference to a sibling script. It
+  matches both now.
+
 ## 0.11.0
 
 ### Added

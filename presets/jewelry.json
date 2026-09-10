@@ -130,7 +130,7 @@
                     "loudness": 0,
                     "difficulty": "3",
                     "onFail": "escalate",
-                    "minigame": "cipher:wire_trace",
+                    "minigame": "xs:wire_trace",
                     "attempts": 2
                 }
             },
@@ -312,7 +312,7 @@
                     "onFail": "escalate",
                     "grabs": 3,
                     "grabTime": 9,
-                    "minigame": "cipher:frequency",
+                    "minigame": "xs:frequency",
                     "attempts": 2
                 }
             },

@@ -11,7 +11,7 @@ local function decodeState(raw)
 end
 
 function Runs.LoadState()
-    local rows = MySQL.query.await('SELECT location_id, state FROM cipher_robbery_state') or {}
+    local rows = MySQL.query.await('SELECT location_id, state FROM xs_robbery_state') or {}
     for _, row in ipairs(rows) do
         Runs.state[row.location_id] = decodeState(row.state)
     end
@@ -20,7 +20,7 @@ end
 local function saveState(locationId)
     if type(locationId) ~= 'number' then return end
     MySQL.prepare.await([[
-        INSERT INTO cipher_robbery_state (location_id, state, last_run_at)
+        INSERT INTO xs_robbery_state (location_id, state, last_run_at)
         VALUES (?, ?, CURRENT_TIMESTAMP)
         ON DUPLICATE KEY UPDATE state = VALUES(state), last_run_at = VALUES(last_run_at)
     ]], { locationId, json.encode(Runs.state[locationId] or {}) })
@@ -29,7 +29,7 @@ end
 function Runs.Cooldown(scope, key, seconds)
     if not seconds or seconds <= 0 then return end
     MySQL.prepare.await([[
-        INSERT INTO cipher_robbery_cooldowns (scope, scope_key, expires_at)
+        INSERT INTO xs_robbery_cooldowns (scope, scope_key, expires_at)
         VALUES (?, ?, FROM_UNIXTIME(?))
         ON DUPLICATE KEY UPDATE expires_at = VALUES(expires_at)
     ]], { scope, tostring(key), now() + seconds })
@@ -37,7 +37,7 @@ end
 
 function Runs.CooldownLeft(scope, key)
     local row = MySQL.single.await([[
-        SELECT UNIX_TIMESTAMP(expires_at) AS expires FROM cipher_robbery_cooldowns
+        SELECT UNIX_TIMESTAMP(expires_at) AS expires FROM xs_robbery_cooldowns
         WHERE scope = ? AND scope_key = ?
     ]], { scope, tostring(key) })
 
@@ -288,7 +288,7 @@ function Runs.Start(src, location)
 
     if Settings.Tunable('logRuns') then
         run.dbId = MySQL.insert.await([[
-            INSERT INTO cipher_robbery_runs (robbery_id, location_id, outcome, participants)
+            INSERT INTO xs_robbery_runs (robbery_id, location_id, outcome, participants)
             VALUES (?, ?, 'active', ?)
         ]], { location.robberyId, location.id, json.encode(participantList(run)) })
     end
@@ -377,7 +377,7 @@ function Runs.Finish(run, outcome)
         end
 
         MySQL.prepare.await([[
-            UPDATE cipher_robbery_runs
+            UPDATE xs_robbery_runs
             SET ended_at = CURRENT_TIMESTAMP, outcome = ?, participants = ?, stages_done = ?, payout = ?
             WHERE id = ?
         ]], { outcome, json.encode(participantList(run)), json.encode(done), math.floor(total), run.dbId })

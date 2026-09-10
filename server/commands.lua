@@ -15,7 +15,7 @@ end
 RegisterCommand('robberylist', function(src)
     if not allowed(src) then return end
 
-    local rows = MySQL.query.await('SELECT id, name, enabled, revision FROM cipher_robberies') or {}
+    local rows = MySQL.query.await('SELECT id, name, enabled, revision FROM xs_robberies') or {}
 
     say(src, '---- id | name | live | crew | police | revision | locations ----')
 
@@ -69,7 +69,7 @@ RegisterCommand('robberylive', function(src, args)
     end
 
     local row = MySQL.single.await(
-        'SELECT enabled, revision FROM cipher_robberies WHERE id = ?', { id })
+        'SELECT enabled, revision FROM xs_robberies WHERE id = ?', { id })
 
     if not row then
         say(src, '^1the row vanished after saving^0')

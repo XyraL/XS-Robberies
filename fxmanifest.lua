@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'XS-Robberies'
 author 'XyraL'
-description 'Cipher — Robberies. Build any robbery from an in-game NUI: stores, banks, jewelry, houses, custom MLOs. Standalone for QBox/QBCore.'
+description 'XS-Robberies. Build any robbery from an in-game NUI: stores, banks, jewelry, houses, custom MLOs. Standalone for QBox/QBCore.'
 version '0.11.0'
 
 -- Works on QBox (qbx_core) OR QBCore (qb-core). The bridge auto-detects.
@@ -55,6 +55,7 @@ server_scripts {
     'bridge/dispatch.lua',
     'bridge/mdt.lua',
     'bridge/doorlock.lua',
+    'server/db.lua',
     'server/settings.lua',
     'server/store.lua',
     'server/presets.lua',

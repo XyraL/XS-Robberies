@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `cipher_robberies` (
+CREATE TABLE IF NOT EXISTS `xs_robberies` (
     `id`          VARCHAR(64)  NOT NULL,
     `name`        VARCHAR(96)  NOT NULL,
     `category`    VARCHAR(32)  NOT NULL DEFAULT 'custom',
@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `cipher_robberies` (
     KEY `idx_category` (`category`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_locations` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_locations` (
     `id`          INT          NOT NULL AUTO_INCREMENT,
     `robbery_id`  VARCHAR(64)  NOT NULL,
     `label`       VARCHAR(96)  NOT NULL,
@@ -24,20 +24,20 @@ CREATE TABLE IF NOT EXISTS `cipher_robbery_locations` (
     PRIMARY KEY (`id`),
     KEY `idx_robbery` (`robbery_id`),
     CONSTRAINT `fk_location_robbery` FOREIGN KEY (`robbery_id`)
-        REFERENCES `cipher_robberies` (`id`) ON DELETE CASCADE
+        REFERENCES `xs_robberies` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_state` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_state` (
     `location_id` INT          NOT NULL,
     `state`       LONGTEXT              DEFAULT NULL,
     `last_run_at` TIMESTAMP    NULL     DEFAULT NULL,
     `restock_at`  TIMESTAMP    NULL     DEFAULT NULL,
     PRIMARY KEY (`location_id`),
     CONSTRAINT `fk_state_location` FOREIGN KEY (`location_id`)
-        REFERENCES `cipher_robbery_locations` (`id`) ON DELETE CASCADE
+        REFERENCES `xs_robbery_locations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_runs` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_runs` (
     `id`           INT          NOT NULL AUTO_INCREMENT,
     `robbery_id`   VARCHAR(64)  NOT NULL,
     `location_id`  INT                   DEFAULT NULL,
@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `cipher_robbery_runs` (
     KEY `idx_started` (`started_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_cooldowns` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_cooldowns` (
     `id`         INT          NOT NULL AUTO_INCREMENT,
     `scope`      VARCHAR(16)  NOT NULL,
     `scope_key`  VARCHAR(96)  NOT NULL,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS `cipher_robbery_cooldowns` (
     KEY `idx_expires` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_loot` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_loot` (
     `id`         VARCHAR(64)  NOT NULL,
     `label`      VARCHAR(96)  NOT NULL,
     `entries`    LONGTEXT     NOT NULL,
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS `cipher_robbery_loot` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-CREATE TABLE IF NOT EXISTS `cipher_robbery_settings` (
+CREATE TABLE IF NOT EXISTS `xs_robbery_settings` (
     `key`   VARCHAR(64) NOT NULL,
     `value` TEXT                 DEFAULT NULL,
     PRIMARY KEY (`key`)

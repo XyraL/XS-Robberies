@@ -103,7 +103,7 @@
                     "difficulty": "2",
                     "onFail": "escalate",
                     "toolKind": "grinder",
-                    "minigame": "cipher:circuit",
+                    "minigame": "xs:circuit",
                     "attempts": 2
                 }
             }

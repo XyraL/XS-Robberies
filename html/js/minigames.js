@@ -734,7 +734,7 @@ function mgSweep(difficulty) {
     });
 }
 
-const CIPHER_MINIGAMES = {
+const XS_MINIGAMES = {
     signal_lock: mgSignalLock,
     circuit: mgCircuit,
     tumbler: mgTumbler,
@@ -751,7 +751,7 @@ const CIPHER_MINIGAMES = {
 
 function startMinigame(kind, difficulty) {
     return new Promise((resolve) => {
-        const game = CIPHER_MINIGAMES[kind];
+        const game = XS_MINIGAMES[kind];
         if (!game) { resolve(true); return; }
 
         MG.root = document.getElementById('minigame');

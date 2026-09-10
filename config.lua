@@ -199,7 +199,7 @@ Config.Sounds = {
 -- they would get by installing it.
 Config.Minigames = {
     -- Our own. No dependency, always available.
-    cipher = true,
+    xs = true,
 
     -- Bridged. Detected at runtime.
     ox_lib          = true,

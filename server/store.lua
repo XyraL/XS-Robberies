@@ -42,19 +42,19 @@ local function rowToLocation(row)
 end
 
 function Store.Load()
-    local robberies = MySQL.query.await('SELECT * FROM cipher_robberies') or {}
+    local robberies = MySQL.query.await('SELECT * FROM xs_robberies') or {}
     Store.robberies = {}
     for _, row in ipairs(robberies) do
         Store.robberies[row.id] = rowToRobbery(row)
     end
 
-    local locations = MySQL.query.await('SELECT * FROM cipher_robbery_locations') or {}
+    local locations = MySQL.query.await('SELECT * FROM xs_robbery_locations') or {}
     Store.locations = {}
     for _, row in ipairs(locations) do
         Store.locations[row.id] = rowToLocation(row)
     end
 
-    local loot = MySQL.query.await('SELECT * FROM cipher_robbery_loot') or {}
+    local loot = MySQL.query.await('SELECT * FROM xs_robbery_loot') or {}
     Store.loot = {}
     for _, row in ipairs(loot) do
         Store.loot[row.id] = {
@@ -150,7 +150,7 @@ function Store.Save(def, author)
     }
 
     MySQL.query.await([[
-        INSERT INTO cipher_robberies (id, name, category, enabled, author, revision, data)
+        INSERT INTO xs_robberies (id, name, category, enabled, author, revision, data)
         VALUES (?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
             name = VALUES(name), category = VALUES(category), enabled = VALUES(enabled),
@@ -167,7 +167,7 @@ end
 function Store.Delete(id)
     if not Store.robberies[id] then return false, 'No such robbery.' end
 
-    MySQL.prepare.await('DELETE FROM cipher_robberies WHERE id = ?', { id })
+    MySQL.prepare.await('DELETE FROM xs_robberies WHERE id = ?', { id })
     Store.robberies[id] = nil
 
     for locId, loc in pairs(Store.locations) do
@@ -199,13 +199,13 @@ function Store.SaveLocation(loc)
 
     if loc.id then
         MySQL.query.await([[
-            UPDATE cipher_robbery_locations
+            UPDATE xs_robbery_locations
             SET label = ?, enabled = ?, origin = ?, overrides = ?, offsets = ?
             WHERE id = ?
         ]], { loc.label or 'Location', loc.enabled and 1 or 0, origin, overrides, offsets, loc.id })
     else
         loc.id = MySQL.insert.await([[
-            INSERT INTO cipher_robbery_locations (robbery_id, label, enabled, origin, overrides, offsets)
+            INSERT INTO xs_robbery_locations (robbery_id, label, enabled, origin, overrides, offsets)
             VALUES (?, ?, ?, ?, ?, ?)
         ]], { loc.robberyId, loc.label or 'Location', loc.enabled and 1 or 0, origin, overrides, offsets })
 
@@ -219,7 +219,7 @@ function Store.SaveLocation(loc)
 end
 
 function Store.DeleteLocation(id)
-    MySQL.prepare.await('DELETE FROM cipher_robbery_locations WHERE id = ?', { id })
+    MySQL.prepare.await('DELETE FROM xs_robbery_locations WHERE id = ?', { id })
     Store.locations[id] = nil
     return true
 end
@@ -228,7 +228,7 @@ function Store.SaveLoot(table_)
     if not table_.id or table_.id == '' then return false, 'That loot table has no id.' end
 
     MySQL.query.await([[
-        INSERT INTO cipher_robbery_loot (id, label, entries) VALUES (?, ?, ?)
+        INSERT INTO xs_robbery_loot (id, label, entries) VALUES (?, ?, ?)
         ON DUPLICATE KEY UPDATE label = VALUES(label), entries = VALUES(entries)
     ]], { table_.id, table_.label or table_.id, json.encode(table_.entries or {}) })
 
@@ -237,7 +237,7 @@ function Store.SaveLoot(table_)
 end
 
 function Store.DeleteLoot(id)
-    MySQL.prepare.await('DELETE FROM cipher_robbery_loot WHERE id = ?', { id })
+    MySQL.prepare.await('DELETE FROM xs_robbery_loot WHERE id = ?', { id })
     Store.loot[id] = nil
     return true
 end

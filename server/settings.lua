@@ -8,7 +8,7 @@ local function decode(raw, fallback)
 end
 
 function Settings.Load()
-    local rows = MySQL.query.await('SELECT `key`, `value` FROM cipher_robbery_settings') or {}
+    local rows = MySQL.query.await('SELECT `key`, `value` FROM xs_robbery_settings') or {}
     Settings.values = {}
     for _, row in ipairs(rows) do
         Settings.values[row.key] = decode(row.value, nil)
@@ -24,7 +24,7 @@ end
 function Settings.Set(key, value)
     Settings.values[key] = value
     MySQL.prepare.await([[
-        INSERT INTO cipher_robbery_settings (`key`, `value`) VALUES (?, ?)
+        INSERT INTO xs_robbery_settings (`key`, `value`) VALUES (?, ?)
         ON DUPLICATE KEY UPDATE `value` = VALUES(`value`)
     ]], { key, json.encode(value) })
 end

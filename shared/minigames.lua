@@ -8,92 +8,92 @@ end
 
 define('none', {
     label = 'None',
-    provider = 'cipher',
+    provider = 'xs',
     resource = nil,
     blurb = 'Just the timer. No skill check.',
     difficulty = false,
 })
 
-define('cipher:signal_lock', {
+define('xs:signal_lock', {
     label = 'Signal Lock',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Hold a drifting carrier inside the band until it locks.',
     difficulty = true,
 })
 
-define('cipher:circuit', {
+define('xs:circuit', {
     label = 'Circuit Routing',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Route power across a grid before the breaker trips.',
     difficulty = true,
 })
 
-define('cipher:tumbler', {
+define('xs:tumbler', {
     label = 'Tumbler',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Feel out each pin and set it. Miss and the whole set drops.',
     difficulty = true,
 })
 
-define('cipher:sequence', {
+define('xs:sequence', {
     label = 'Sequence Recall',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Watch a pattern, repeat it back, one longer each round.',
     difficulty = true,
 })
 
-define('cipher:frequency', {
+define('xs:frequency', {
     label = 'Frequency Match',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Tune two waves until they sit on top of each other.',
     difficulty = true,
 })
 
-define('cipher:wire_trace', {
+define('xs:wire_trace', {
     label = 'Wire Trace',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Follow one wire through a tangle and cut the right end.',
     difficulty = true,
 })
 
-define('cipher:thermite', {
+define('xs:thermite', {
     label = 'Thermite',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'A pattern lights up on the grid. Watch it, then put it back.',
     difficulty = true,
 })
 
-define('cipher:fingerprint', {
+define('xs:fingerprint', {
     label = 'Fingerprint',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'One print matches the one on file. The rest are close.',
     difficulty = true,
 })
 
-define('cipher:drill', {
+define('xs:drill', {
     label = 'Drill',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Lean on it and ease off. Push too hard and the bit burns out.',
     difficulty = true,
 })
 
-define('cipher:pinpad', {
+define('xs:pinpad', {
     label = 'Pin Pad',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Crack a combination. Every guess says which digits are right and which are close.',
     difficulty = true,
 })
 
-define('cipher:bypass', {
+define('xs:bypass', {
     label = 'Bypass',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'Stop a running cursor inside each gate, in order.',
     difficulty = true,
 })
 
-define('cipher:sweep', {
+define('xs:sweep', {
     label = 'Sweep',
-    provider = 'cipher',
+    provider = 'xs',
     blurb = 'A radar sweep goes round. Hit it as it crosses the contact.',
     difficulty = true,
 })
@@ -153,6 +153,19 @@ define('howdy:hack', {
     blurb = 'Word-search style terminal hack.',
     difficulty = true,
 })
+
+-- Robberies built before the XyraLScripts rename store these ids with a
+-- `cipher:` prefix, and that stage data lives in the database. Keep the old
+-- ids resolvable so those robberies still run, but leave them out of `order`
+-- so the builder only ever offers the new ones.
+local legacy = {}
+for id, def in pairs(Minigames.list) do
+    local bare = id:match('^xs:(.+)$')
+    if bare then legacy['cipher:' .. bare] = def end
+end
+for id, def in pairs(legacy) do
+    Minigames.list[id] = def
+end
 
 function Minigames.Available(id)
     local def = Minigames.list[id]

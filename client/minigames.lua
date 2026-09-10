@@ -1,10 +1,10 @@
-CipherMinigames = { pending = nil }
+XSMinigames = { pending = nil }
 
-function CipherMinigames.Run(kind, difficulty)
-    if CipherMinigames.pending then return false end
+function XSMinigames.Run(kind, difficulty)
+    if XSMinigames.pending then return false end
 
     local done = promise.new()
-    CipherMinigames.pending = done
+    XSMinigames.pending = done
 
     SetNuiFocus(true, true)
     SetNuiFocusKeepInput(false)
@@ -15,15 +15,15 @@ function CipherMinigames.Run(kind, difficulty)
     })
 
     local passed = Citizen.Await(done)
-    CipherMinigames.pending = nil
+    XSMinigames.pending = nil
     return passed
 end
 
 RegisterNUICallback('minigameResult', function(data, cb)
     if not Builder.open then SetNuiFocus(false, false) end
 
-    local done = CipherMinigames.pending
-    CipherMinigames.pending = nil
+    local done = XSMinigames.pending
+    XSMinigames.pending = nil
 
     if done then done:resolve(data and data.passed == true) end
     cb({ ok = true })

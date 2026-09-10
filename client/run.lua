@@ -43,8 +43,10 @@ end
 function Minigames.Run(id, difficulty)
     if not id or id == '' or id == 'none' then return true end
 
-    if id:sub(1, 7) == 'cipher:' then
-        return CipherMinigames.Run(id:sub(8), difficulty)
+    -- Robberies saved under the Cipher name still carry `cipher:` ids.
+    local builtin = id:match('^xs:(.+)$') or id:match('^cipher:(.+)$')
+    if builtin then
+        return XSMinigames.Run(builtin, difficulty)
     end
 
     if id == 'ox_lib:skillcheck' then
@@ -494,7 +496,7 @@ local function buildZones(location)
     for _, stage in ipairs(location.stages or {}) do
         local def = Stages.Get(stage.type)
         local option = {
-            name = ('cipher_rob_%s_%s'):format(tostring(location.id), stage.id),
+            name = ('xs_rob_%s_%s'):format(tostring(location.id), stage.id),
             icon = 'fa-solid fa-' .. ((def and def.icon) or 'circle'),
             label = stage.label or (def and def.label) or 'Interact',
             canInteract = function()

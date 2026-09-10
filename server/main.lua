@@ -41,6 +41,7 @@ end
 
 CreateThread(function()
     Wait(500)
+    Db.Migrate()
     Store.Load()
     Settings.Load()
     Runs.LoadState()
@@ -165,7 +166,7 @@ guard('XS-Robberies:diagnose', function()
         end
     end
 
-    local rows = MySQL.query.await('SELECT id, name, enabled, revision FROM cipher_robberies') or {}
+    local rows = MySQL.query.await('SELECT id, name, enabled, revision FROM xs_robberies') or {}
     local stored = {}
 
     for _, row in ipairs(rows) do
@@ -181,7 +182,7 @@ guard('XS-Robberies:diagnose', function()
     end
 
     local locationRows = MySQL.query.await(
-        'SELECT id, robbery_id, label, enabled FROM cipher_robbery_locations') or {}
+        'SELECT id, robbery_id, label, enabled FROM xs_robbery_locations') or {}
 
     return {
         ok = true,
@@ -345,7 +346,7 @@ end)
 guard('XS-Robberies:history', function(src, limit)
     local rows = MySQL.query.await([[
         SELECT id, robbery_id, location_id, started_at, ended_at, outcome, participants, payout
-        FROM cipher_robbery_runs ORDER BY started_at DESC LIMIT ?
+        FROM xs_robbery_runs ORDER BY started_at DESC LIMIT ?
     ]], { math.min(tonumber(limit) or 50, 200) }) or {}
 
     for _, row in ipairs(rows) do

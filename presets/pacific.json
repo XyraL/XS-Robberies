@@ -154,7 +154,7 @@
                     "loudness": 0,
                     "difficulty": "3",
                     "onFail": "escalate",
-                    "minigame": "cipher:wire_trace",
+                    "minigame": "xs:wire_trace",
                     "attempts": 2
                 }
             },
@@ -238,7 +238,7 @@
                     "loudness": 0,
                     "difficulty": "3",
                     "onFail": "retry",
-                    "minigame": "cipher:signal_lock",
+                    "minigame": "xs:signal_lock",
                     "attempts": 3
                 }
             },
@@ -289,7 +289,7 @@
                     "loudness": 0,
                     "difficulty": "2",
                     "onFail": "retry",
-                    "minigame": "cipher:tumbler",
+                    "minigame": "xs:tumbler",
                     "attempts": 3,
                     "restock": 14400
                 }
@@ -333,7 +333,7 @@
                     "loudness": 0,
                     "difficulty": "3",
                     "onFail": "retry",
-                    "minigame": "cipher:sequence",
+                    "minigame": "xs:sequence",
                     "attempts": 3,
                     "revealCode": 6
                 }
@@ -516,7 +516,7 @@
                     "difficulty": "3",
                     "onFail": "escalate",
                     "toolKind": "thermite",
-                    "minigame": "cipher:circuit",
+                    "minigame": "xs:circuit",
                     "attempts": 2
                 }
             },

@@ -43,7 +43,7 @@ const COMMON = [
 
 const TYPES = [
     ['hack', 'Hack', [76,154,255], 'A minigame point. Terminals, alarm panels, security consoles.', [
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:signal_lock' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:signal_lock' },
         { key: 'attempts', label: 'Attempts', type: 'number', default: 3, min: 1, max: 10 },
         { key: 'revealCode', label: 'Reveals a code', type: 'number', default: 0, min: 0, max: 8, advanced: true, hint: 'How many digits. 0 for none. A keypad elsewhere can ask for it.' },
     ]],
@@ -62,18 +62,18 @@ const TYPES = [
         { key: 'attempts', label: 'Attempts', type: 'number', default: 3, min: 1, max: 10 },
     ]],
     ['camera', 'Camera / security', [168,130,255], 'Disable to change what the alarm does.', [
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:wire_trace' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:wire_trace' },
     ]],
     ['power', 'Power box', [168,130,255], 'Cuts power. Kills interior lights and can soften the alarm.', [
         { key: 'killLights', label: 'Darken interior', type: 'toggle', default: true },
         { key: 'shockRisk', label: 'Shock on failure', type: 'toggle', default: true, advanced: true },
     ]],
     ['register', 'Register', [48,209,88], 'A fast grab for a small payout.', [
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:tumbler' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:tumbler' },
         { key: 'restock', label: 'Restocks after', type: 'number', default: 1800, min: 0, max: 86400, unit: 's' },
     ]],
     ['safe', 'Safe / vault', [48,209,88], 'Long, loud, and worth it.', [
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:circuit' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:circuit' },
         { key: 'restock', label: 'Restocks after', type: 'number', default: 7200, min: 0, max: 86400, unit: 's' },
         { key: 'revealCode', label: 'Reveals a code', type: 'number', default: 0, min: 0, max: 8, advanced: true, hint: 'How many digits. 0 for none. A keypad elsewhere can ask for it.' },
     ]],
@@ -102,7 +102,7 @@ const TYPES = [
             { value: 'unlock', label: 'Unlock it' }, { value: 'lock', label: 'Lock it' },
         ] },
         { key: 'relockOnEnd', label: 'Put it back when the run ends', type: 'toggle', default: true },
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:signal_lock' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:signal_lock' },
         { key: 'attempts', label: 'Attempts', type: 'number', default: 3, min: 1, max: 10 },
     ]],
     ['guard', 'Armed guard', [255,90,95], 'A guard who fights back. Done when they are down.', [
@@ -119,7 +119,7 @@ const TYPES = [
         { key: 'span', label: 'Width', type: 'number', default: 2.0, min: 0.5, max: 12, unit: 'm' },
         { key: 'beams', label: 'Beams', type: 'number', default: 4, min: 1, max: 12 },
         { key: 'tripAlarm', label: 'Crossing it trips the alarm', type: 'toggle', default: true },
-        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'cipher:frequency' },
+        { key: 'minigame', label: 'Minigame', type: 'minigame', default: 'xs:frequency' },
         { key: 'attempts', label: 'Attempts', type: 'number', default: 2, min: 1, max: 10 },
     ]],
     ['escape', 'Escape zone', [25,229,140], 'Where the run resolves and everything pays out.', [
@@ -134,19 +134,19 @@ const stageTypes = TYPES.map(([id, label, colour, blurb, fields]) => ({
 }));
 
 const minigames = [
-    { id: 'none', label: 'None', provider: 'cipher', blurb: 'Just the timer. No skill check.', available: true },
-    { id: 'cipher:signal_lock', label: 'Signal Lock', provider: 'cipher', blurb: 'Hold a drifting carrier inside the band until it locks.', available: true },
-    { id: 'cipher:circuit', label: 'Circuit Routing', provider: 'cipher', blurb: 'Route power across a grid before the breaker trips.', available: true },
-    { id: 'cipher:tumbler', label: 'Tumbler', provider: 'cipher', blurb: 'Feel out each pin and set it.', available: true },
-    { id: 'cipher:sequence', label: 'Sequence Recall', provider: 'cipher', blurb: 'Watch a pattern, repeat it back.', available: true },
-    { id: 'cipher:frequency', label: 'Frequency Match', provider: 'cipher', blurb: 'Tune two waves until they overlap.', available: true },
-    { id: 'cipher:wire_trace', label: 'Wire Trace', provider: 'cipher', blurb: 'Follow one wire through a tangle.', available: true },
-    { id: 'cipher:thermite', label: 'Thermite', provider: 'cipher', blurb: 'A pattern lights up on the grid. Watch it, then put it back.', available: true },
-    { id: 'cipher:fingerprint', label: 'Fingerprint', provider: 'cipher', blurb: 'One print matches the one on file. The rest are close.', available: true },
-    { id: 'cipher:drill', label: 'Drill', provider: 'cipher', blurb: 'Lean on it and ease off. Push too hard and the bit burns out.', available: true },
-    { id: 'cipher:pinpad', label: 'Pin Pad', provider: 'cipher', blurb: 'Crack a combination with hot and cold feedback.', available: true },
-    { id: 'cipher:bypass', label: 'Bypass', provider: 'cipher', blurb: 'Stop a running cursor inside each gate, in order.', available: true },
-    { id: 'cipher:sweep', label: 'Sweep', provider: 'cipher', blurb: 'Hit the sweep as it crosses the contact.', available: true },
+    { id: 'none', label: 'None', provider: 'xs', blurb: 'Just the timer. No skill check.', available: true },
+    { id: 'xs:signal_lock', label: 'Signal Lock', provider: 'xs', blurb: 'Hold a drifting carrier inside the band until it locks.', available: true },
+    { id: 'xs:circuit', label: 'Circuit Routing', provider: 'xs', blurb: 'Route power across a grid before the breaker trips.', available: true },
+    { id: 'xs:tumbler', label: 'Tumbler', provider: 'xs', blurb: 'Feel out each pin and set it.', available: true },
+    { id: 'xs:sequence', label: 'Sequence Recall', provider: 'xs', blurb: 'Watch a pattern, repeat it back.', available: true },
+    { id: 'xs:frequency', label: 'Frequency Match', provider: 'xs', blurb: 'Tune two waves until they overlap.', available: true },
+    { id: 'xs:wire_trace', label: 'Wire Trace', provider: 'xs', blurb: 'Follow one wire through a tangle.', available: true },
+    { id: 'xs:thermite', label: 'Thermite', provider: 'xs', blurb: 'A pattern lights up on the grid. Watch it, then put it back.', available: true },
+    { id: 'xs:fingerprint', label: 'Fingerprint', provider: 'xs', blurb: 'One print matches the one on file. The rest are close.', available: true },
+    { id: 'xs:drill', label: 'Drill', provider: 'xs', blurb: 'Lean on it and ease off. Push too hard and the bit burns out.', available: true },
+    { id: 'xs:pinpad', label: 'Pin Pad', provider: 'xs', blurb: 'Crack a combination with hot and cold feedback.', available: true },
+    { id: 'xs:bypass', label: 'Bypass', provider: 'xs', blurb: 'Stop a running cursor inside each gate, in order.', available: true },
+    { id: 'xs:sweep', label: 'Sweep', provider: 'xs', blurb: 'Hit the sweep as it crosses the contact.', available: true },
     { id: 'ox_lib:skillcheck', label: 'ox_lib Skill Check', provider: 'ox_lib', resource: 'ox_lib', blurb: 'The standard ox_lib timed key press.', available: true },
     { id: 'ps-ui:circle', label: 'ps-ui Circle', provider: 'ps-ui', resource: 'ps-ui', blurb: 'Timed circle click.', available: false },
     { id: 'ps-ui:thermite', label: 'ps-ui Thermite', provider: 'ps-ui', resource: 'ps-ui', blurb: 'Memorise a grid and reproduce it.', available: false },
@@ -201,10 +201,10 @@ const DB = {
             gates: { policeRequired: 2, policeOnDuty: true, minCrew: 1, maxCrew: 4, locationCooldown: 1800, playerCooldown: 900 },
             response: { alarm: 'delayed', alarmDelay: 45, camerasChangeTo: 'silent', powerChangesTo: 'none', code: '10-90', title: 'Store Robbery', repeatAlert: 120, dispatchOnFail: true },
             stages: [
-                { id: 'camera_1', type: 'camera', label: 'Back office cameras', coords: { x: 28.1, y: -1339.2, z: 29.5, h: 0 }, requires: [], payout: {}, opts: { label: 'Back office cameras', duration: 12, minigame: 'cipher:wire_trace', requiredItem: 'trojan_usb', consumeItem: true, optional: true, onFail: 'escalate' } },
+                { id: 'camera_1', type: 'camera', label: 'Back office cameras', coords: { x: 28.1, y: -1339.2, z: 29.5, h: 0 }, requires: [], payout: {}, opts: { label: 'Back office cameras', duration: 12, minigame: 'xs:wire_trace', requiredItem: 'trojan_usb', consumeItem: true, optional: true, onFail: 'escalate' } },
                 { id: 'hostage_1', type: 'hostage', label: 'Clerk', coords: { x: 24.9, y: -1346.1, z: 29.5, h: 90 }, requires: [], payout: {}, opts: { label: 'Clerk', duration: 6, ped: 'mp_m_shopkeep_01', needsAim: true, stallFor: 60, panicChance: 15, onFail: 'retry' } },
-                { id: 'register_1', type: 'register', label: 'Front register', coords: { x: 25.4, y: -1347.3, z: 29.5, h: 90 }, requires: ['hostage_1'], payout: { account: 'cash', min: 400, max: 900, lootTable: 'store_register' }, opts: { label: 'Front register', duration: 14, minigame: 'cipher:tumbler', requiredItem: 'lockpick', consumeItem: false, restock: 1800, onFail: 'retry' } },
-                { id: 'safe_1', type: 'safe', label: 'Back room safe', coords: { x: 28.6, y: -1341.0, z: 29.5, h: 180 }, requires: ['camera_1', 'register_1'], payout: { account: 'dirty', min: 1800, max: 4200, lootTable: '' }, opts: { label: 'Back room safe', duration: 55, minigame: 'cipher:circuit', requiredItem: 'drill', consumeItem: true, itemDamage: 40, restock: 7200, onFail: 'escalate' } },
+                { id: 'register_1', type: 'register', label: 'Front register', coords: { x: 25.4, y: -1347.3, z: 29.5, h: 90 }, requires: ['hostage_1'], payout: { account: 'cash', min: 400, max: 900, lootTable: 'store_register' }, opts: { label: 'Front register', duration: 14, minigame: 'xs:tumbler', requiredItem: 'lockpick', consumeItem: false, restock: 1800, onFail: 'retry' } },
+                { id: 'safe_1', type: 'safe', label: 'Back room safe', coords: { x: 28.6, y: -1341.0, z: 29.5, h: 180 }, requires: ['camera_1', 'register_1'], payout: { account: 'dirty', min: 1800, max: 4200, lootTable: '' }, opts: { label: 'Back room safe', duration: 55, minigame: 'xs:circuit', requiredItem: 'drill', consumeItem: true, itemDamage: 40, restock: 7200, onFail: 'escalate' } },
                 { id: 'escape_1', type: 'escape', label: 'Get clear', coords: { x: 60.2, y: -1390.4, z: 29.3, h: 0 }, requires: ['safe_1'], payout: {}, opts: { label: 'Get clear', duration: 1, radius: 60, inVehicle: false, timeLimit: 0, onFail: 'retry' } },
             ],
         },

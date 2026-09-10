@@ -1,4 +1,4 @@
-// Nothing outside the bridges may name another Cipher resource. A bridge may
+// Nothing outside the bridges may name another XS resource. A bridge may
 // list one as one option among several; runtime code may not reach for one
 // directly, or this stops being standalone.
 //
@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('..', import.meta.url));
 
-// Where a Cipher name is legitimate: the bridges that pick a backend, and the
+// Where naming one is legitimate: the bridges that pick a backend, and the
 // manifest comment that lists what is supported.
 const ALLOWED = ['bridge' + sep, 'fxmanifest.lua', 'config.lua'];
 
@@ -26,7 +26,8 @@ const walk = (dir) => {
 
 walk(root);
 
-const NAME = /cipher-(mdt|dispatch|evidence|phone|drugs|airdrops|admin|trucking|npcs|drone)/g;
+const SIBLINGS = 'mdt|dispatch|evidence|phone|drugs|airdrops|admin|trucking|npcs|drone|criminaltablet|multicharacter|paintball|restaurantcreator|taxijob';
+const NAME = new RegExp(`(?:XS-|cipher-)(?:${SIBLINGS})`, 'gi');
 
 let problems = 0;
 
@@ -64,7 +65,7 @@ if (!mdt.includes("register('generic'") || !mdt.includes('RegisterMdtProvider'))
 }
 
 console.log(problems === 0
-    ? `  ${files.length} files: nothing outside the bridges depends on a Cipher script.`
+    ? `  ${files.length} files: nothing outside the bridges depends on another XS script.`
     : `  ${problems} coupling problem(s).`);
 
 process.exit(problems === 0 ? 0 : 1);

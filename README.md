@@ -73,7 +73,7 @@ Stage positions are stored as offsets from wherever you built them, and they
 rotate with each prop, so a stage placed on the front of one ATM lands on the
 front of all of them.
 
-## It does not need another Cipher script
+## It does not need another XS script
 
 Nothing here depends on anything else we make. Every outside system goes through
 a bridge that detects what you already run, and every bridge has a way out if it
@@ -88,7 +88,7 @@ finds nothing:
 | MDT | XS-MDT, or any other through `Config.Integrations.Generic`, or one registered by another resource. With none, no paperwork is filed and nothing complains. |
 | Minigames | Six of our own that need nothing, plus ox_lib, ps-ui, memorygame and howdy-hackminigame when present |
 
-Cipher resources appear in those lists because they exist, not because they are
+XS resources appear in those lists because they exist, not because they are
 required. `node tools/check-standalone.mjs` fails the build if anything outside
 a bridge ever reaches for one by name.
 
