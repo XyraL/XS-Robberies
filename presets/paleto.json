@@ -1,0 +1,505 @@
+{
+    "preset": {
+        "id": "paleto",
+        "name": "Blaine County Savings",
+        "description": "The one out of town. Nobody is coming quickly, so it is built long rather than tense: cut the power, torch the shutter, burn the vault open with thermite, then two of you carry the bags out while a third holds the door.",
+        "alignedTo": "Blaine County Savings in Paleto Bay.",
+        "requires": [
+            "thermite",
+            "torch",
+            "drill",
+            "markedbills",
+            "goldbar"
+        ]
+    },
+    "loot": [
+        {
+            "id": "paleto_vault",
+            "label": "Paleto vault",
+            "entries": [
+                {
+                    "item": "markedbills",
+                    "min": 2,
+                    "max": 4,
+                    "chance": 90
+                },
+                {
+                    "item": "goldbar",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 35
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "Blaine County Savings",
+        "category": "bank",
+        "enabled": false,
+        "radius": 70,
+        "origin": {
+            "x": -104.29,
+            "y": 6469.12,
+            "z": 31.63,
+            "h": 45
+        },
+        "anchor": {
+            "kind": "location",
+            "models": [],
+            "scanRange": 80
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 1,
+            "label": "Bank Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 5,
+            "policeOnDuty": true,
+            "minCrew": 3,
+            "maxCrew": 6,
+            "locationCooldown": 10800,
+            "playerCooldown": 5400,
+            "globalCooldown": 5400
+        },
+        "response": {
+            "alarm": "delayed",
+            "alarmDelay": 90,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "silent",
+            "dispatchOnFail": true,
+            "repeatAlert": 180,
+            "code": "10-90",
+            "title": "Bank Robbery - Paleto"
+        },
+        "stages": [
+            {
+                "id": "power_1",
+                "type": "power",
+                "label": "Yard junction box",
+                "coords": {
+                    "x": -96.4,
+                    "y": 6462.8,
+                    "z": 31.6,
+                    "h": 130
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Yard junction box",
+                    "duration": 25,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "killLights": true,
+                    "shockRisk": true
+                }
+            },
+            {
+                "id": "tool_1",
+                "type": "tool",
+                "label": "Shutter",
+                "coords": {
+                    "x": -104.29,
+                    "y": 6469.12,
+                    "z": 31.63,
+                    "h": 45
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Shutter",
+                    "duration": 45,
+                    "requiredItem": "torch",
+                    "consumeItem": false,
+                    "itemDamage": 50,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 70,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "toolKind": "torch",
+                    "minigame": "cipher:signal_lock",
+                    "attempts": 3
+                }
+            },
+            {
+                "id": "register_1",
+                "type": "register",
+                "label": "Counter drawers",
+                "coords": {
+                    "x": -108.1,
+                    "y": 6472.4,
+                    "z": 31.63,
+                    "h": 225
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 1200,
+                        "max": 2400
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Counter drawers",
+                    "duration": 20,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "minigame": "cipher:tumbler",
+                    "attempts": 3,
+                    "restock": 10800
+                }
+            },
+            {
+                "id": "hack_1",
+                "type": "hack",
+                "label": "Vault controller",
+                "coords": {
+                    "x": -112.6,
+                    "y": 6467.9,
+                    "z": 31.63,
+                    "h": 315
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Vault controller",
+                    "duration": 35,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "retry",
+                    "minigame": "cipher:sequence",
+                    "attempts": 3,
+                    "revealCode": 5
+                }
+            },
+            {
+                "id": "keypad_1",
+                "type": "keypad",
+                "label": "Vault keypad",
+                "coords": {
+                    "x": -110.4,
+                    "y": 6465.1,
+                    "z": 31.63,
+                    "h": 45
+                },
+                "requires": [
+                    "hack_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Vault keypad",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "digits": 5,
+                    "codeFrom": "hack_1",
+                    "attempts": 3
+                }
+            },
+            {
+                "id": "tool_2",
+                "type": "tool",
+                "label": "Vault door",
+                "coords": {
+                    "x": -110.9,
+                    "y": 6464.2,
+                    "z": 31.63,
+                    "h": 45
+                },
+                "requires": [
+                    "keypad_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 9000,
+                        "max": 16000
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Vault door",
+                    "duration": 120,
+                    "requiredItem": "thermite",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 120,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "toolKind": "thermite",
+                    "minigame": "cipher:circuit",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "hold_1",
+                "type": "hold",
+                "label": "Hold the door",
+                "coords": {
+                    "x": -105.8,
+                    "y": 6470.9,
+                    "z": 31.63,
+                    "h": 45
+                },
+                "requires": [
+                    "tool_2"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Hold the door",
+                    "duration": 60,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": false,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 4,
+                    "breakOnLeave": true
+                }
+            },
+            {
+                "id": "container_1",
+                "type": "container",
+                "label": "Cash trolleys",
+                "coords": {
+                    "x": -113.4,
+                    "y": 6462.8,
+                    "z": 31.63,
+                    "h": 45
+                },
+                "requires": [
+                    "tool_2"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 400,
+                        "max": 900
+                    },
+                    "items": [],
+                    "lootTable": "paleto_vault"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Cash trolleys",
+                    "duration": 10,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 8,
+                    "grabTime": 10,
+                    "needsBag": false
+                }
+            },
+            {
+                "id": "escape_1",
+                "type": "escape",
+                "label": "Out of the county",
+                "coords": {
+                    "x": -320.4,
+                    "y": 6180.2,
+                    "z": 31.5,
+                    "h": 0
+                },
+                "requires": [
+                    "tool_2"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Out of the county",
+                    "duration": 1,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 200,
+                    "inVehicle": true,
+                    "timeLimit": 600
+                }
+            }
+        ]
+    },
+    "locations": [
+        {
+            "label": "Blaine County Savings",
+            "origin": {
+                "x": -104.29,
+                "y": 6469.12,
+                "z": 31.63,
+                "h": 45
+            }
+        }
+    ]
+}

@@ -1,0 +1,113 @@
+{
+    "preset": {
+        "id": "atm",
+        "name": "ATM",
+        "description": "Every cash machine in the state, from one design. Grind the face off with an angle grinder and empty the cassette. Loud, quick, and worth very little on its own.",
+        "alignedTo": "Nothing. It is anchored to the ATM prop models, so it finds all of them by itself. Nothing to stamp, nothing to place.",
+        "requires": [
+            "grinder"
+        ]
+    },
+    "loot": [],
+    "robbery": {
+        "name": "ATM",
+        "category": "atm",
+        "enabled": false,
+        "radius": 20,
+        "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "h": 0
+        },
+        "anchor": {
+            "kind": "model",
+            "scanRange": 60,
+            "models": [
+                "prop_atm_01",
+                "prop_atm_02",
+                "prop_atm_03",
+                "prop_fleeca_atm"
+            ]
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 0.6,
+            "label": "ATM Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 1,
+            "policeOnDuty": true,
+            "minCrew": 1,
+            "maxCrew": 3,
+            "locationCooldown": 3600,
+            "playerCooldown": 600,
+            "globalCooldown": 0
+        },
+        "response": {
+            "alarm": "delayed",
+            "alarmDelay": 25,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "none",
+            "dispatchOnFail": true,
+            "repeatAlert": 0,
+            "code": "10-31",
+            "title": "ATM Break-In"
+        },
+        "stages": [
+            {
+                "id": "grind_1",
+                "type": "tool",
+                "label": "Cash machine",
+                "coords": {
+                    "x": 0,
+                    "y": 0,
+                    "z": 0,
+                    "h": 0
+                },
+                "requires": [],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 400,
+                        "max": 1100
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Cash machine",
+                    "duration": 40,
+                    "requiredItem": "grinder",
+                    "consumeItem": false,
+                    "itemDamage": 20,
+                    "optional": false,
+                    "reach": 1.4,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 60,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "toolKind": "grinder",
+                    "minigame": "cipher:circuit",
+                    "attempts": 2
+                }
+            }
+        ]
+    },
+    "locations": []
+}

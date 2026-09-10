@@ -1,0 +1,639 @@
+{
+    "preset": {
+        "id": "fleeca",
+        "name": "Fleeca Bank",
+        "description": "Eleven stages and a crew of at least two. Cut the power or kill the cameras to buy quiet, hack the counter door, find the vault code on the manager's terminal, hold both release switches at once, then drill. Teller drawers are quick, the deposit boxes take six trips, and you leave by car on a clock.",
+        "alignedTo": "The Fleeca on Legion Square.",
+        "locationsNote": "All six Fleecas are bundled. Walk each one and use Move origin to line it up.",
+        "requires": [
+            "drill",
+            "trojan_usb",
+            "markedbills",
+            "goldchain"
+        ]
+    },
+    "loot": [
+        {
+            "id": "fleeca_boxes",
+            "label": "Deposit boxes",
+            "entries": [
+                {
+                    "item": "markedbills",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 70
+                },
+                {
+                    "item": "goldchain",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 30
+                },
+                {
+                    "item": "rolex",
+                    "min": 1,
+                    "max": 1,
+                    "chance": 12
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "Fleeca Bank",
+        "category": "bank",
+        "enabled": false,
+        "radius": 60,
+        "origin": {
+            "x": 147.04,
+            "y": -1044.53,
+            "z": 29.37,
+            "h": 340
+        },
+        "anchor": {
+            "kind": "location",
+            "models": [],
+            "scanRange": 80
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 0.9,
+            "label": "Bank Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 4,
+            "policeOnDuty": true,
+            "minCrew": 2,
+            "maxCrew": 5,
+            "locationCooldown": 5400,
+            "playerCooldown": 2700,
+            "globalCooldown": 1800
+        },
+        "response": {
+            "alarm": "instant",
+            "alarmDelay": 30,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "silent",
+            "dispatchOnFail": true,
+            "repeatAlert": 120,
+            "code": "10-90",
+            "title": "Bank Robbery"
+        },
+        "stages": [
+            {
+                "id": "power_1",
+                "type": "power",
+                "label": "Street junction box",
+                "coords": {
+                    "x": 152.91,
+                    "y": -1035.18,
+                    "z": 29.34,
+                    "h": 250
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Street junction box",
+                    "duration": 18,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "killLights": true,
+                    "shockRisk": true
+                }
+            },
+            {
+                "id": "camera_1",
+                "type": "camera",
+                "label": "Camera feed",
+                "coords": {
+                    "x": 143.62,
+                    "y": -1046.11,
+                    "z": 29.37,
+                    "h": 160
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Camera feed",
+                    "duration": 14,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "minigame": "cipher:wire_trace",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "hack_1",
+                "type": "hack",
+                "label": "Counter door panel",
+                "coords": {
+                    "x": 148.55,
+                    "y": -1048.12,
+                    "z": 29.37,
+                    "h": 70
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Counter door panel",
+                    "duration": 20,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": false,
+                    "itemDamage": 25,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": true,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "minigame": "cipher:signal_lock",
+                    "attempts": 3,
+                    "revealCode": 0
+                }
+            },
+            {
+                "id": "register_1",
+                "type": "register",
+                "label": "Teller drawers",
+                "coords": {
+                    "x": 146.94,
+                    "y": -1048.86,
+                    "z": 29.37,
+                    "h": 340
+                },
+                "requires": [
+                    "hack_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 900,
+                        "max": 1900
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Teller drawers",
+                    "duration": 18,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "minigame": "cipher:tumbler",
+                    "attempts": 3,
+                    "restock": 5400
+                }
+            },
+            {
+                "id": "hack_2",
+                "type": "hack",
+                "label": "Manager's terminal",
+                "coords": {
+                    "x": 149.86,
+                    "y": -1043.06,
+                    "z": 29.37,
+                    "h": 250
+                },
+                "requires": [
+                    "hack_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Manager's terminal",
+                    "duration": 26,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "retry",
+                    "minigame": "cipher:sequence",
+                    "attempts": 3,
+                    "revealCode": 4
+                }
+            },
+            {
+                "id": "keypad_1",
+                "type": "keypad",
+                "label": "Vault keypad",
+                "coords": {
+                    "x": 144.71,
+                    "y": -1043.79,
+                    "z": 29.37,
+                    "h": 250
+                },
+                "requires": [
+                    "hack_2"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Vault keypad",
+                    "duration": 6,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "digits": 4,
+                    "codeFrom": "hack_2",
+                    "attempts": 3
+                }
+            },
+            {
+                "id": "twoman_1",
+                "type": "twoman",
+                "label": "Release switch A",
+                "coords": {
+                    "x": 145.42,
+                    "y": -1042.11,
+                    "z": 29.37,
+                    "h": 340
+                },
+                "requires": [
+                    "keypad_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Release switch A",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "pairWith": "twoman_2",
+                    "holdTime": 8
+                }
+            },
+            {
+                "id": "twoman_2",
+                "type": "twoman",
+                "label": "Release switch B",
+                "coords": {
+                    "x": 149.31,
+                    "y": -1041.35,
+                    "z": 29.37,
+                    "h": 160
+                },
+                "requires": [
+                    "keypad_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Release switch B",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "pairWith": "twoman_1",
+                    "holdTime": 8
+                }
+            },
+            {
+                "id": "tool_1",
+                "type": "tool",
+                "label": "Vault door",
+                "coords": {
+                    "x": 145.09,
+                    "y": -1044.72,
+                    "z": 29.37,
+                    "h": 250
+                },
+                "requires": [
+                    "twoman_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 6500,
+                        "max": 12000
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Vault door",
+                    "duration": 95,
+                    "requiredItem": "drill",
+                    "consumeItem": false,
+                    "itemDamage": 70,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 90,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "toolKind": "drill",
+                    "minigame": "cipher:circuit",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "container_1",
+                "type": "container",
+                "label": "Deposit boxes",
+                "coords": {
+                    "x": 143.88,
+                    "y": -1043.21,
+                    "z": 29.37,
+                    "h": 70
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 300,
+                        "max": 700
+                    },
+                    "items": [],
+                    "lootTable": "fleeca_boxes"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Deposit boxes",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 6,
+                    "grabTime": 8
+                }
+            },
+            {
+                "id": "escape_1",
+                "type": "escape",
+                "label": "Lose them",
+                "coords": {
+                    "x": 195.14,
+                    "y": -1006.77,
+                    "z": 29.32,
+                    "h": 0
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Lose them",
+                    "duration": 1,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 120,
+                    "inVehicle": true,
+                    "timeLimit": 420
+                }
+            }
+        ]
+    },
+    "locations": [
+        {
+            "label": "Fleeca Legion Square",
+            "origin": {
+                "x": 147.04,
+                "y": -1044.53,
+                "z": 29.37,
+                "h": 340
+            }
+        },
+        {
+            "label": "Fleeca Alta",
+            "origin": {
+                "x": 313,
+                "y": -278.65,
+                "z": 54.17,
+                "h": 340
+            }
+        },
+        {
+            "label": "Fleeca Burton",
+            "origin": {
+                "x": -351.53,
+                "y": -49.55,
+                "z": 49.04,
+                "h": 340
+            }
+        },
+        {
+            "label": "Fleeca Rockford Hills",
+            "origin": {
+                "x": -1212.95,
+                "y": -330.85,
+                "z": 37.78,
+                "h": 115
+            }
+        },
+        {
+            "label": "Fleeca Great Ocean Hwy",
+            "origin": {
+                "x": -2962.6,
+                "y": 482.8,
+                "z": 15.7,
+                "h": 85
+            }
+        },
+        {
+            "label": "Fleeca Route 68",
+            "origin": {
+                "x": 1175.06,
+                "y": 2706.63,
+                "z": 38.09,
+                "h": 0
+            }
+        }
+    ]
+}

@@ -1,0 +1,544 @@
+{
+    "preset": {
+        "id": "store_247",
+        "name": "24-7 Store",
+        "description": "Five stages. Silence the recorder to keep the alarm quiet, lean on the clerk to stall the response, empty the register for quick money, then take your time on the back room safe.",
+        "alignedTo": "The 24-7 on Grove Street.",
+        "locationsNote": "Twenty shop fronts are bundled. They are a starting grid, not verified in game — walk each one and use Move origin to line it up.",
+        "requires": [
+            "lockpick",
+            "drill",
+            "trojan_usb",
+            "markedbills"
+        ]
+    },
+    "loot": [
+        {
+            "id": "store_shelves",
+            "label": "Store shelves",
+            "entries": [
+                {
+                    "item": "water_bottle",
+                    "min": 1,
+                    "max": 3,
+                    "chance": 60
+                },
+                {
+                    "item": "sandwich",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 45
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "24-7 Store",
+        "category": "store",
+        "enabled": false,
+        "radius": 35,
+        "origin": {
+            "x": 24.62,
+            "y": -1347.29,
+            "z": 29.49,
+            "h": 270
+        },
+        "anchor": {
+            "kind": "location",
+            "models": [],
+            "scanRange": 80
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 0.8,
+            "label": "Store Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 2,
+            "policeOnDuty": true,
+            "minCrew": 1,
+            "maxCrew": 4,
+            "locationCooldown": 1800,
+            "playerCooldown": 900,
+            "globalCooldown": 0
+        },
+        "response": {
+            "alarm": "delayed",
+            "alarmDelay": 45,
+            "camerasChangeTo": "silent",
+            "powerChangesTo": "none",
+            "dispatchOnFail": true,
+            "repeatAlert": 150,
+            "code": "10-90",
+            "title": "Store Robbery"
+        },
+        "stages": [
+            {
+                "id": "camera_1",
+                "type": "camera",
+                "label": "Security recorder",
+                "coords": {
+                    "x": 28.19,
+                    "y": -1339.24,
+                    "z": 29.49,
+                    "h": 180
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Security recorder",
+                    "duration": 12,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "minigame": "cipher:wire_trace",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "hostage_1",
+                "type": "hostage",
+                "label": "Clerk",
+                "coords": {
+                    "x": 25.81,
+                    "y": -1347.92,
+                    "z": 29.49,
+                    "h": 90
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Clerk",
+                    "duration": 6,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "ped": "mp_m_shopkeep_01",
+                    "needsAim": true,
+                    "stallFor": 90,
+                    "panicChance": 15
+                }
+            },
+            {
+                "id": "register_1",
+                "type": "register",
+                "label": "Front register",
+                "coords": {
+                    "x": 24.62,
+                    "y": -1347.29,
+                    "z": 29.49,
+                    "h": 270
+                },
+                "requires": [],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 350,
+                        "max": 850
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Front register",
+                    "duration": 14,
+                    "requiredItem": "lockpick",
+                    "consumeItem": false,
+                    "itemDamage": 15,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "minigame": "cipher:tumbler",
+                    "attempts": 3,
+                    "restock": 1800
+                }
+            },
+            {
+                "id": "shelves_1",
+                "type": "container",
+                "label": "Shelves",
+                "coords": {
+                    "x": 22.4,
+                    "y": -1345.1,
+                    "z": 29.49,
+                    "h": 90
+                },
+                "requires": [],
+                "payout": {
+                    "cash": null,
+                    "items": [],
+                    "lootTable": "store_shelves"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Shelves",
+                    "duration": 5,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 4,
+                    "grabTime": 5
+                }
+            },
+            {
+                "id": "safe_1",
+                "type": "safe",
+                "label": "Back room safe",
+                "coords": {
+                    "x": 28.61,
+                    "y": -1341.52,
+                    "z": 29.49,
+                    "h": 180
+                },
+                "requires": [
+                    "register_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 1600,
+                        "max": 3800
+                    },
+                    "items": [
+                        {
+                            "item": "markedbills",
+                            "min": 1,
+                            "max": 2,
+                            "chance": 40
+                        }
+                    ],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Back room safe",
+                    "duration": 55,
+                    "requiredItem": "drill",
+                    "consumeItem": false,
+                    "itemDamage": 45,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 45,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "minigame": "cipher:circuit",
+                    "attempts": 2,
+                    "restock": 7200
+                }
+            },
+            {
+                "id": "escape_1",
+                "type": "escape",
+                "label": "Get clear",
+                "coords": {
+                    "x": 60.2,
+                    "y": -1390.4,
+                    "z": 29.33,
+                    "h": 0
+                },
+                "requires": [
+                    "safe_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Get clear",
+                    "duration": 1,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 90,
+                    "inVehicle": false,
+                    "timeLimit": 300
+                }
+            }
+        ]
+    },
+    "locations": [
+        {
+            "label": "24-7 Grove Street",
+            "origin": {
+                "x": 24.62,
+                "y": -1347.29,
+                "z": 29.49,
+                "h": 270
+            }
+        },
+        {
+            "label": "24-7 Little Seoul",
+            "origin": {
+                "x": -47.42,
+                "y": -1757.51,
+                "z": 29.42,
+                "h": 50
+            }
+        },
+        {
+            "label": "24-7 Alta",
+            "origin": {
+                "x": 373.87,
+                "y": 325.89,
+                "z": 103.56,
+                "h": 260
+            }
+        },
+        {
+            "label": "24-7 Mirror Park",
+            "origin": {
+                "x": 1163.37,
+                "y": -323.8,
+                "z": 69.2,
+                "h": 100
+            }
+        },
+        {
+            "label": "24-7 Del Perro",
+            "origin": {
+                "x": -1222.9,
+                "y": -907,
+                "z": 12.32,
+                "h": 30
+            }
+        },
+        {
+            "label": "24-7 Great Ocean Hwy",
+            "origin": {
+                "x": -2968.24,
+                "y": 390.9,
+                "z": 15.04,
+                "h": 85
+            }
+        },
+        {
+            "label": "24-7 Barbareno Road",
+            "origin": {
+                "x": -3039.94,
+                "y": 585.9,
+                "z": 7.9,
+                "h": 20
+            }
+        },
+        {
+            "label": "24-7 Chumash",
+            "origin": {
+                "x": -3241.93,
+                "y": 1001.46,
+                "z": 12.83,
+                "h": 355
+            }
+        },
+        {
+            "label": "24-7 Sandy Shores",
+            "origin": {
+                "x": 1961.4,
+                "y": 3740.67,
+                "z": 32.34,
+                "h": 300
+            }
+        },
+        {
+            "label": "24-7 Grapeseed",
+            "origin": {
+                "x": 1697.98,
+                "y": 4924.4,
+                "z": 42.06,
+                "h": 325
+            }
+        },
+        {
+            "label": "24-7 Cape Catfish",
+            "origin": {
+                "x": 1728.9,
+                "y": 6414.13,
+                "z": 35.03,
+                "h": 240
+            }
+        },
+        {
+            "label": "24-7 Paleto Bay",
+            "origin": {
+                "x": -3.9,
+                "y": 6517.53,
+                "z": 31.87,
+                "h": 225
+            }
+        },
+        {
+            "label": "24-7 Harmony",
+            "origin": {
+                "x": 547.43,
+                "y": 2671.71,
+                "z": 42.15,
+                "h": 95
+            }
+        },
+        {
+            "label": "24-7 Route 68",
+            "origin": {
+                "x": 2679.94,
+                "y": 3280.66,
+                "z": 55.24,
+                "h": 30
+            }
+        },
+        {
+            "label": "24-7 Palomino",
+            "origin": {
+                "x": 2557.42,
+                "y": 382.24,
+                "z": 108.62,
+                "h": 0
+            }
+        },
+        {
+            "label": "LTD Mirror Park",
+            "origin": {
+                "x": 1134.5,
+                "y": -982.28,
+                "z": 46.41,
+                "h": 275
+            }
+        },
+        {
+            "label": "LTD Richman Glen",
+            "origin": {
+                "x": -1820.52,
+                "y": 792.51,
+                "z": 138.11,
+                "h": 135
+            }
+        },
+        {
+            "label": "LTD Little Seoul",
+            "origin": {
+                "x": -707.51,
+                "y": -914.24,
+                "z": 19.21,
+                "h": 90
+            }
+        },
+        {
+            "label": "Rob's Liquor Morningwood",
+            "origin": {
+                "x": -1393.4,
+                "y": -606.63,
+                "z": 30.31,
+                "h": 30
+            }
+        },
+        {
+            "label": "Rob's Liquor Vespucci",
+            "origin": {
+                "x": -1222.1,
+                "y": -906.98,
+                "z": 12.33,
+                "h": 30
+            }
+        }
+    ]
+}

@@ -1,0 +1,632 @@
+{
+    "preset": {
+        "id": "pacific",
+        "name": "Pacific Standard",
+        "description": "The big one. Twelve stages, a crew of four, and every mechanic in the script: split objectives, a code hunt, paired release switches, thermite, a long carry and a hard clock on the way out. Build a night around it.",
+        "alignedTo": "The Pacific Standard on Vinewood Boulevard.",
+        "requires": [
+            "thermite",
+            "drill",
+            "trojan_usb",
+            "security_card_01",
+            "markedbills",
+            "goldbar"
+        ]
+    },
+    "loot": [
+        {
+            "id": "pacific_vault",
+            "label": "Pacific vault",
+            "entries": [
+                {
+                    "item": "markedbills",
+                    "min": 3,
+                    "max": 6,
+                    "chance": 95
+                },
+                {
+                    "item": "goldbar",
+                    "min": 1,
+                    "max": 3,
+                    "chance": 55
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "Pacific Standard",
+        "category": "bank",
+        "enabled": false,
+        "radius": 90,
+        "origin": {
+            "x": 235.31,
+            "y": 216.66,
+            "z": 106.28,
+            "h": 160
+        },
+        "anchor": {
+            "kind": "location",
+            "models": [],
+            "scanRange": 80
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 1,
+            "label": "Bank Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 6,
+            "policeOnDuty": true,
+            "minCrew": 4,
+            "maxCrew": 8,
+            "locationCooldown": 14400,
+            "playerCooldown": 7200,
+            "globalCooldown": 7200
+        },
+        "response": {
+            "alarm": "instant",
+            "alarmDelay": 20,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "delayed",
+            "dispatchOnFail": true,
+            "repeatAlert": 90,
+            "code": "10-90",
+            "title": "Bank Robbery - Pacific Standard"
+        },
+        "stages": [
+            {
+                "id": "power_1",
+                "type": "power",
+                "label": "Roof junction box",
+                "coords": {
+                    "x": 246.8,
+                    "y": 226.4,
+                    "z": 110.4,
+                    "h": 250
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Roof junction box",
+                    "duration": 25,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "killLights": true,
+                    "shockRisk": true
+                }
+            },
+            {
+                "id": "camera_1",
+                "type": "camera",
+                "label": "Security office",
+                "coords": {
+                    "x": 251.4,
+                    "y": 220.9,
+                    "z": 106.28,
+                    "h": 70
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Security office",
+                    "duration": 20,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "minigame": "cipher:wire_trace",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "hostage_1",
+                "type": "hostage",
+                "label": "Floor manager",
+                "coords": {
+                    "x": 237.9,
+                    "y": 220.1,
+                    "z": 106.28,
+                    "h": 340
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Floor manager",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "ped": "a_m_y_business_01",
+                    "needsAim": true,
+                    "stallFor": 60,
+                    "panicChance": 30
+                }
+            },
+            {
+                "id": "hack_1",
+                "type": "hack",
+                "label": "Front desk terminal",
+                "coords": {
+                    "x": 240.6,
+                    "y": 224.9,
+                    "z": 106.28,
+                    "h": 250
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Front desk terminal",
+                    "duration": 25,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": false,
+                    "itemDamage": 30,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": true,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "retry",
+                    "minigame": "cipher:signal_lock",
+                    "attempts": 3
+                }
+            },
+            {
+                "id": "register_1",
+                "type": "register",
+                "label": "Teller drawers",
+                "coords": {
+                    "x": 243.1,
+                    "y": 225.8,
+                    "z": 106.28,
+                    "h": 250
+                },
+                "requires": [
+                    "hack_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 1500,
+                        "max": 3000
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Teller drawers",
+                    "duration": 20,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "minigame": "cipher:tumbler",
+                    "attempts": 3,
+                    "restock": 14400
+                }
+            },
+            {
+                "id": "hack_2",
+                "type": "hack",
+                "label": "Records terminal",
+                "coords": {
+                    "x": 253.2,
+                    "y": 224.6,
+                    "z": 101.68,
+                    "h": 70
+                },
+                "requires": [
+                    "hack_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Records terminal",
+                    "duration": 30,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "retry",
+                    "minigame": "cipher:sequence",
+                    "attempts": 3,
+                    "revealCode": 6
+                }
+            },
+            {
+                "id": "keypad_1",
+                "type": "keypad",
+                "label": "Stair keypad",
+                "coords": {
+                    "x": 255.9,
+                    "y": 220.1,
+                    "z": 101.68,
+                    "h": 160
+                },
+                "requires": [
+                    "hack_2"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Stair keypad",
+                    "duration": 8,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "digits": 6,
+                    "codeFrom": "hack_2",
+                    "attempts": 3
+                }
+            },
+            {
+                "id": "twoman_1",
+                "type": "twoman",
+                "label": "Release switch A",
+                "coords": {
+                    "x": 258.4,
+                    "y": 222.7,
+                    "z": 101.68,
+                    "h": 340
+                },
+                "requires": [
+                    "keypad_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Release switch A",
+                    "duration": 10,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "pairWith": "twoman_2",
+                    "holdTime": 10
+                }
+            },
+            {
+                "id": "twoman_2",
+                "type": "twoman",
+                "label": "Release switch B",
+                "coords": {
+                    "x": 263.1,
+                    "y": 217.9,
+                    "z": 101.68,
+                    "h": 160
+                },
+                "requires": [
+                    "keypad_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Release switch B",
+                    "duration": 10,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "pairWith": "twoman_1",
+                    "holdTime": 10
+                }
+            },
+            {
+                "id": "tool_1",
+                "type": "tool",
+                "label": "Vault door",
+                "coords": {
+                    "x": 261.2,
+                    "y": 220.4,
+                    "z": 101.68,
+                    "h": 250
+                },
+                "requires": [
+                    "twoman_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 14000,
+                        "max": 24000
+                    },
+                    "items": [],
+                    "lootTable": ""
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Vault door",
+                    "duration": 150,
+                    "requiredItem": "thermite",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 140,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "toolKind": "thermite",
+                    "minigame": "cipher:circuit",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "container_1",
+                "type": "container",
+                "label": "Vault trolleys",
+                "coords": {
+                    "x": 265.4,
+                    "y": 223.1,
+                    "z": 101.68,
+                    "h": 70
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "cash",
+                        "min": 600,
+                        "max": 1200
+                    },
+                    "items": [],
+                    "lootTable": "pacific_vault"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Vault trolleys",
+                    "duration": 12,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 10,
+                    "grabTime": 12,
+                    "needsBag": false
+                }
+            },
+            {
+                "id": "escape_1",
+                "type": "escape",
+                "label": "Off the boulevard",
+                "coords": {
+                    "x": 130.4,
+                    "y": 340.9,
+                    "z": 111.2,
+                    "h": 0
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Off the boulevard",
+                    "duration": 1,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 220,
+                    "inVehicle": true,
+                    "timeLimit": 480
+                }
+            }
+        ]
+    },
+    "locations": [
+        {
+            "label": "Pacific Standard",
+            "origin": {
+                "x": 235.31,
+                "y": 216.66,
+                "z": 106.28,
+                "h": 160
+            }
+        }
+    ]
+}

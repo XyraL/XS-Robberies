@@ -1,0 +1,376 @@
+{
+    "preset": {
+        "id": "jewelry",
+        "name": "Vangelico Jewelry",
+        "description": "A smash and grab. Gas the shop or cut the cameras, put the staff on the floor, then work the display cases one at a time while the clock runs. No cash at all — everything you take is goods you still have to sell.",
+        "alignedTo": "Vangelico on Portola Drive.",
+        "requires": [
+            "thermite",
+            "trojan_usb",
+            "goldchain",
+            "rolex",
+            "diamond_ring"
+        ]
+    },
+    "loot": [
+        {
+            "id": "jewel_case_common",
+            "label": "Display case",
+            "entries": [
+                {
+                    "item": "goldchain",
+                    "min": 1,
+                    "max": 3,
+                    "chance": 85
+                },
+                {
+                    "item": "rolex",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 45
+                }
+            ]
+        },
+        {
+            "id": "jewel_case_rare",
+            "label": "Centre display",
+            "entries": [
+                {
+                    "item": "diamond_ring",
+                    "min": 1,
+                    "max": 2,
+                    "chance": 55
+                },
+                {
+                    "item": "rolex",
+                    "min": 1,
+                    "max": 1,
+                    "chance": 35
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "Vangelico Jewelry",
+        "category": "jewelry",
+        "enabled": false,
+        "radius": 55,
+        "origin": {
+            "x": -630.57,
+            "y": -237.11,
+            "z": 38.06,
+            "h": 300
+        },
+        "anchor": {
+            "kind": "location",
+            "models": [],
+            "scanRange": 80
+        },
+        "blip": {
+            "sprite": 500,
+            "colour": 1,
+            "scale": 0.9,
+            "label": "Jewelry Robbery",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 4,
+            "policeOnDuty": true,
+            "minCrew": 2,
+            "maxCrew": 6,
+            "locationCooldown": 7200,
+            "playerCooldown": 3600,
+            "globalCooldown": 3600
+        },
+        "response": {
+            "alarm": "instant",
+            "alarmDelay": 20,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "delayed",
+            "dispatchOnFail": true,
+            "repeatAlert": 90,
+            "code": "10-68",
+            "title": "Jewelry Store Robbery"
+        },
+        "stages": [
+            {
+                "id": "camera_1",
+                "type": "camera",
+                "label": "Camera room",
+                "coords": {
+                    "x": -626.51,
+                    "y": -232.09,
+                    "z": 38.06,
+                    "h": 120
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Camera room",
+                    "duration": 16,
+                    "requiredItem": "trojan_usb",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "minigame": "cipher:wire_trace",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "hostage_1",
+                "type": "hostage",
+                "label": "Shop assistant",
+                "coords": {
+                    "x": -628.9,
+                    "y": -238.4,
+                    "z": 38.06,
+                    "h": 210
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Shop assistant",
+                    "duration": 6,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": true,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "ped": "s_f_y_shop_high",
+                    "needsAim": true,
+                    "stallFor": 45,
+                    "panicChance": 25
+                }
+            },
+            {
+                "id": "case_1",
+                "type": "container",
+                "label": "Left cases",
+                "coords": {
+                    "x": -624.3,
+                    "y": -230.6,
+                    "z": 38.06,
+                    "h": 120
+                },
+                "requires": [],
+                "payout": {
+                    "cash": null,
+                    "items": [],
+                    "lootTable": "jewel_case_common"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Left cases",
+                    "duration": 6,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 30,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 5,
+                    "grabTime": 6
+                }
+            },
+            {
+                "id": "case_2",
+                "type": "container",
+                "label": "Right cases",
+                "coords": {
+                    "x": -632.8,
+                    "y": -235.9,
+                    "z": 38.06,
+                    "h": 300
+                },
+                "requires": [],
+                "payout": {
+                    "cash": null,
+                    "items": [],
+                    "lootTable": "jewel_case_common"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Right cases",
+                    "duration": 6,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 30,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 5,
+                    "grabTime": 6
+                }
+            },
+            {
+                "id": "case_3",
+                "type": "container",
+                "label": "Centre display",
+                "coords": {
+                    "x": -628.4,
+                    "y": -233.2,
+                    "z": 38.06,
+                    "h": 30
+                },
+                "requires": [
+                    "case_1"
+                ],
+                "payout": {
+                    "cash": null,
+                    "items": [],
+                    "lootTable": "jewel_case_rare"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Centre display",
+                    "duration": 9,
+                    "requiredItem": "thermite",
+                    "consumeItem": true,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 55,
+                    "difficulty": "3",
+                    "onFail": "escalate",
+                    "grabs": 3,
+                    "grabTime": 9,
+                    "minigame": "cipher:frequency",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "escape_1",
+                "type": "escape",
+                "label": "Split up",
+                "coords": {
+                    "x": -585.2,
+                    "y": -282.6,
+                    "z": 35.4,
+                    "h": 0
+                },
+                "requires": [
+                    "case_3"
+                ],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Split up",
+                    "duration": 1,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 1.5,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "radius": 140,
+                    "inVehicle": true,
+                    "timeLimit": 300
+                }
+            }
+        ]
+    },
+    "locations": [
+        {
+            "label": "Vangelico",
+            "origin": {
+                "x": -630.57,
+                "y": -237.11,
+                "z": 38.06,
+                "h": 300
+            }
+        }
+    ]
+}

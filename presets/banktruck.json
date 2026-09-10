@@ -1,0 +1,179 @@
+{
+    "preset": {
+        "id": "banktruck",
+        "name": "Bank Truck",
+        "description": "Every Stockade on the road. Torch the rear doors, take a guard with you if one is riding, then work the cash boxes out one at a time. Anchored to the vehicle, so it works wherever you find one.",
+        "alignedTo": "Nothing. It is anchored to the Stockade model, so it follows the van.",
+        "requires": [
+            "torch",
+            "markedbills",
+            "goldbar"
+        ]
+    },
+    "loot": [
+        {
+            "id": "truck_boxes",
+            "label": "Cash boxes",
+            "entries": [
+                {
+                    "item": "markedbills",
+                    "min": 1,
+                    "max": 3,
+                    "chance": 80
+                },
+                {
+                    "item": "goldbar",
+                    "min": 1,
+                    "max": 1,
+                    "chance": 20
+                }
+            ]
+        }
+    ],
+    "robbery": {
+        "name": "Bank Truck",
+        "category": "custom",
+        "enabled": false,
+        "radius": 40,
+        "origin": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "h": 0
+        },
+        "anchor": {
+            "kind": "model",
+            "pool": "vehicle",
+            "scanRange": 70,
+            "models": [
+                "stockade"
+            ]
+        },
+        "blip": {
+            "sprite": 67,
+            "colour": 1,
+            "scale": 0.8,
+            "label": "Bank Truck",
+            "showWhen": "during"
+        },
+        "gates": {
+            "policeRequired": 3,
+            "policeOnDuty": true,
+            "minCrew": 1,
+            "maxCrew": 4,
+            "locationCooldown": 2700,
+            "playerCooldown": 1800,
+            "globalCooldown": 900
+        },
+        "response": {
+            "alarm": "instant",
+            "alarmDelay": 15,
+            "camerasChangeTo": "delayed",
+            "powerChangesTo": "none",
+            "dispatchOnFail": true,
+            "repeatAlert": 90,
+            "code": "10-31",
+            "title": "Armoured Van Robbery"
+        },
+        "stages": [
+            {
+                "id": "tool_1",
+                "type": "tool",
+                "label": "Rear doors",
+                "coords": {
+                    "x": 0,
+                    "y": -3.2,
+                    "z": 0,
+                    "h": 180
+                },
+                "requires": [],
+                "payout": {},
+                "enabled": true,
+                "opts": {
+                    "label": "Rear doors",
+                    "duration": 50,
+                    "requiredItem": "torch",
+                    "consumeItem": false,
+                    "itemDamage": 45,
+                    "optional": false,
+                    "reach": 2,
+                    "notifyPolice": true,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 80,
+                    "penalty": "fire",
+                    "loseItemChance": 15,
+                    "difficulty": "2",
+                    "onFail": "escalate",
+                    "toolKind": "torch",
+                    "minigame": "cipher:drill",
+                    "attempts": 2
+                }
+            },
+            {
+                "id": "container_1",
+                "type": "container",
+                "label": "Cash boxes",
+                "coords": {
+                    "x": 0,
+                    "y": -3.6,
+                    "z": 0,
+                    "h": 180
+                },
+                "requires": [
+                    "tool_1"
+                ],
+                "payout": {
+                    "cash": {
+                        "account": "dirty",
+                        "min": 800,
+                        "max": 1600
+                    },
+                    "items": [],
+                    "lootTable": "truck_boxes"
+                },
+                "enabled": true,
+                "opts": {
+                    "label": "Cash boxes",
+                    "duration": 7,
+                    "requiredItem": "",
+                    "consumeItem": false,
+                    "itemDamage": 0,
+                    "optional": false,
+                    "reach": 2,
+                    "notifyPolice": false,
+                    "prop": "",
+                    "propZ": 0,
+                    "handProp": "",
+                    "animDict": "",
+                    "animClip": "",
+                    "animFlag": 16,
+                    "scenario": "",
+                    "handBone": 57005,
+                    "handOffset": "",
+                    "progressStyle": "circle",
+                    "freezePlayer": true,
+                    "canCancel": true,
+                    "loudness": 0,
+                    "penalty": "none",
+                    "loseItemChance": 0,
+                    "difficulty": "2",
+                    "onFail": "retry",
+                    "grabs": 5,
+                    "grabTime": 7
+                }
+            }
+        ]
+    },
+    "locations": []
+}

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XS-Robberies — preview</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="hud" class="hidden"></div>
+<div id="minigame" class="hidden"></div>
+
+<div id="app" class="hidden">
+    <div id="grid-bg"></div>
+    <div id="glow"></div>
+
+    <div id="wrapper">
+        <nav id="sidebar">
+            <div id="logo">
+                <div class="logo-mark">&#9711;</div>
+                <div class="logo-text">XS<span>ROBBERIES</span></div>
+            </div>
+
+            <ul id="nav">
+                <li class="nav-item active" data-panel="robberies">
+                    <span class="nav-icon">&#9635;</span>
+                    <span class="nav-label">Robberies</span>
+                    <span class="nav-badge" id="badge-robberies"></span>
+                </li>
+                <li class="nav-item" data-panel="editor">
+                    <span class="nav-icon">&#9881;</span>
+                    <span class="nav-label">Editor</span>
+                    <span class="nav-badge" id="badge-editor"></span>
+                </li>
+                <li class="nav-item" data-panel="graph">
+                    <span class="nav-icon">&#9783;</span>
+                    <span class="nav-label">Flow</span>
+                </li>
+                <li class="nav-item" data-panel="locations">
+                    <span class="nav-icon">&#9678;</span>
+                    <span class="nav-label">Locations</span>
+                    <span class="nav-badge" id="badge-locations"></span>
+                </li>
+                <li class="nav-item" data-panel="loot">
+                    <span class="nav-icon">&#9636;</span>
+                    <span class="nav-label">Loot Tables</span>
+                    <span class="nav-badge" id="badge-loot"></span>
+                </li>
+                <li class="nav-divider"></li>
+                <li class="nav-item" data-panel="live">
+                    <span class="nav-icon live-dot">&#9679;</span>
+                    <span class="nav-label">Live</span>
+                    <span class="nav-badge" id="badge-live"></span>
+                </li>
+                <li class="nav-item" data-panel="history">
+                    <span class="nav-icon">&#9202;</span>
+                    <span class="nav-label">History</span>
+                </li>
+                <li class="nav-item" data-panel="settings">
+                    <span class="nav-icon">&#9881;</span>
+                    <span class="nav-label">Settings</span>
+                </li>
+            </ul>
+
+            <div id="sidebar-foot">
+                <div class="foot-row"><span>Framework</span><b id="foot-framework">—</b></div>
+                <div class="foot-row"><span>Inventory</span><b id="foot-inventory">—</b></div>
+                <div class="foot-row"><span>Version</span><b>0.11.0</b></div>
+            </div>
+        </nav>
+
+        <main id="main">
+            <header id="topbar">
+                <div id="topbar-left">
+                    <div id="topbar-title">Robberies</div>
+                    <div id="topbar-subtitle">Every robbery on this server</div>
+                </div>
+                <div id="topbar-actions"></div>
+                <button id="btn-close" title="Close">&times;</button>
+            </header>
+
+            <section class="panel active" id="panel-robberies"></section>
+            <section class="panel" id="panel-editor"></section>
+            <section class="panel" id="panel-graph"></section>
+            <section class="panel" id="panel-locations"></section>
+            <section class="panel" id="panel-loot"></section>
+            <section class="panel" id="panel-live"></section>
+            <section class="panel" id="panel-history"></section>
+            <section class="panel" id="panel-settings"></section>
+        </main>
+    </div>
+
+    <div id="modal-root"></div>
+    <div id="toast-container"></div>
+</div>
+
+<script src="js/mock.js"></script>
+<script src="js/core.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/minigames.js"></script>
+<script src="js/panels/robberies.js"></script>
+<script src="js/panels/editor.js"></script>
+<script src="js/panels/graph.js"></script>
+<script src="js/panels/locations.js"></script>
+<script src="js/panels/loot.js"></script>
+<script src="js/panels/live.js"></script>
+<script src="js/panels/history.js"></script>
+<script src="js/panels/settings.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
