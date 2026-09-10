@@ -408,11 +408,11 @@ const HANDLERS = {
         };
     },
     live: () => ({ ok: true, killSwitch: false,
-      blacklist: (DB.blacklist = DB.blacklist || { 'XYZ99887': 'Cass Moreau' }),
+      blacklist: (DB.blacklist = DB.blacklist || { 'XYZ99887': 'Marisol Vega' }),
       runs: [
         { locationId: 1, name: '24-7 Store', location: '24-7 Grove Street', stage: '3 of 5 stages',
           alarm: 'raised', elapsed: 214, pot: 3400,
-          participants: [{ citizenid: 'ABC12345', name: 'Marcus Reed' }, { citizenid: 'DEF67890', name: 'Tia Vance' }] },
+          participants: [{ citizenid: 'ABC12345', name: 'Isabel Ferreira' }, { citizenid: 'DEF67890', name: 'Callum Rhodes' }] },
       ] }),
     setEditorStages: () => ({ ok: true }),
     teleport: () => ({ ok: true }),
