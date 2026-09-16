@@ -244,6 +244,28 @@ minigame backends to offer.
 voice or another language — keep the `%d` and `%s` where they are and the
 script fills them in.
 
+### Items
+
+There is no item list to install. Every tool and every piece of loot is picked
+from what your server already has, in the builder.
+
+Two names are set in `config.lua` rather than picked, because they are used by
+the script itself:
+
+| Setting | Default | What it does |
+|---|---|---|
+| `Config.Payout.DirtyItem` | `markedbills` | Handed over when a stage pays to `dirty` |
+| `Config.Run.BagItem` | `bag` | What a container asks for when "Requires a bag" is ticked |
+
+Both are standard QBCore items. If yours are called something else, change them
+there — do not add duplicates.
+
+A `markedbills.png` ships in `inventory_images/` in case you do not have one. It
+goes in `ox_inventory/web/images/`, `qb-inventory/html/images/`,
+`ps-inventory/html/images/`, `qs-inventory/html/images/`,
+`codem-inventory/html/itemimages/` or `core_inventory/html/img/`, depending on
+what you run.
+
 ## Tuning one location
 
 Open a location from the Locations panel and you get everything that is specific
