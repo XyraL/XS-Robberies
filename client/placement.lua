@@ -398,7 +398,9 @@ function Placement.Start(opts)
             speed = speed * dt
 
             local fwd = camForward()
-            local right = vector3(-fwd.y, fwd.x, 0.0)
+            local yaw = math.rad(GetCamRot(cam, 2).z)
+            local ahead = vector3(-math.sin(yaw), math.cos(yaw), 0.0)
+            local right = vector3(math.cos(yaw), math.sin(yaw), 0.0)
             local move = vector3(0.0, 0.0, 0.0)
 
             if IsDisabledControlPressed(0, CONTROLS.forward) then move = move + fwd end
@@ -468,10 +470,16 @@ function Placement.Start(opts)
 
                 local step = IsDisabledControlPressed(0, CONTROLS.fine) and (nudge / 10) or nudge
 
-                if IsDisabledControlPressed(0, CONTROLS.nudgeF) then ghost.y = ghost.y + step manual = true end
-                if IsDisabledControlPressed(0, CONTROLS.nudgeB) then ghost.y = ghost.y - step manual = true end
-                if IsDisabledControlPressed(0, CONTROLS.rotateL) then ghost.x = ghost.x - step manual = true end
-                if IsDisabledControlPressed(0, CONTROLS.rotateR) then ghost.x = ghost.x + step manual = true end
+                local shift = vector3(0.0, 0.0, 0.0)
+                if IsDisabledControlPressed(0, CONTROLS.nudgeF) then shift = shift + ahead end
+                if IsDisabledControlPressed(0, CONTROLS.nudgeB) then shift = shift - ahead end
+                if IsDisabledControlPressed(0, CONTROLS.rotateR) then shift = shift + right end
+                if IsDisabledControlPressed(0, CONTROLS.rotateL) then shift = shift - right end
+                if #shift > 0.0 then
+                    ghost.x = ghost.x + shift.x * step
+                    ghost.y = ghost.y + shift.y * step
+                    manual = true
+                end
                 if IsDisabledControlPressed(0, CONTROLS.growZ) then ghost.z = ghost.z + step manual = true end
                 if IsDisabledControlPressed(0, CONTROLS.shrinkZ) then ghost.z = ghost.z - step manual = true end
 
