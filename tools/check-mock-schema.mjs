@@ -1,7 +1,7 @@
-// html/js/mock.js hand-mirrors the stage schema in shared/stages.lua so the
-// browser preview lays out real fields. Nothing keeps the two in step, and a
-// field added to the Lua but not the mock means you are previewing a panel the
-// game will never render.
+// The browser preview reads its stage schema from html/js/mock-catalogue.js,
+// which is generated from shared/stages.lua. This catches the two drifting
+// apart: a field added to the Lua after the catalogue was last generated means
+// the preview shows a panel the game will not render.
 //
 //   node tools/check-mock-schema.mjs
 
@@ -11,36 +11,31 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const lua = readFileSync(root + 'shared/stages.lua', 'utf8');
-const mock = readFileSync(root + 'html/js/mock.js', 'utf8');
+const raw = readFileSync(root + 'html/js/mock-catalogue.js', 'utf8');
+const catalogue = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}') + 1));
 
-const keysIn = (src, re) => {
-    const out = new Set();
-    for (const m of src.matchAll(re)) out.add(m[1]);
-    return out;
-};
+const luaFields = new Set([...lua.matchAll(/\{\s*key\s*=\s*'([a-zA-Z]+)'/g)].map(m => m[1]));
+const luaTypes = new Set([...lua.matchAll(/define\('([a-z]+)'/g)].map(m => m[1]));
 
-// Field keys, and the stage type ids each schema declares.
-const luaFields = keysIn(lua, /\{\s*key\s*=\s*'([A-Za-z]+)'/g);
-const mockFields = keysIn(mock, /\{\s*key:\s*'([A-Za-z]+)'/g);
+const mockFields = new Set();
+const mockTypes = new Set();
+for (const type of catalogue.stageTypes) {
+    mockTypes.add(type.id);
+    for (const f of type.fields) mockFields.add(f.key);
+}
 
-const luaTypes = keysIn(lua, /^define\('([a-z]+)'/gm);
-const mockTypes = keysIn(mock, /^\s*\['([a-z]+)',\s*'/gm);
+const diff = (a, b) => [...a].filter(x => !b.has(x));
+const problems = [
+    ['fields in shared/stages.lua but not the catalogue', diff(luaFields, mockFields)],
+    ['fields in the catalogue but not shared/stages.lua', diff(mockFields, luaFields)],
+    ['stage types in shared/stages.lua but not the catalogue', diff(luaTypes, mockTypes)],
+    ['stage types in the catalogue but not shared/stages.lua', diff(mockTypes, luaTypes)],
+].filter(([, list]) => list.length);
 
-const report = (what, a, b, aName, bName) => {
-    const missing = [...a].filter(k => !b.has(k));
-    if (missing.length === 0) return 0;
-    console.log(`  ${what} in ${aName} but not ${bName}: ${missing.join(', ')}`);
-    return missing.length;
-};
+for (const [label, list] of problems) console.log(`  ${label}: ${list.join(', ')}`);
 
-let problems = 0;
-problems += report('fields', luaFields, mockFields, 'shared/stages.lua', 'mock.js');
-problems += report('fields', mockFields, luaFields, 'mock.js', 'shared/stages.lua');
-problems += report('stage types', luaTypes, mockTypes, 'shared/stages.lua', 'mock.js');
-problems += report('stage types', mockTypes, luaTypes, 'mock.js', 'shared/stages.lua');
-
-console.log(problems === 0
-    ? `  mock schema matches: ${luaFields.size} field keys, ${luaTypes.size} stage types.`
-    : `  ${problems} difference(s) — the preview does not match the game.`);
-
-process.exit(problems === 0 ? 0 : 1);
+const count = problems.reduce((n, [, list]) => n + list.length, 0);
+console.log(count
+    ? `  ${count} difference(s). Regenerate html/js/mock-catalogue.js from the Lua.`
+    : `  ${luaTypes.size} stage types and ${luaFields.size} fields match the preview catalogue.`);
+process.exit(count ? 1 : 0);

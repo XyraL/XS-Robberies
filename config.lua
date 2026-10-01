@@ -5,7 +5,7 @@ Config.Bridges = {
     framework = 'auto',   -- auto | qbox | qbcore
     inventory = 'auto',   -- auto | ox_inventory | qb-inventory | qs-inventory | codem-inventory | core_inventory | ps-inventory
     target    = 'auto',   -- auto | ox_target | qb-target | builtin
-    dispatch  = 'auto',   -- auto | XS-Dispatch | ps-dispatch | qs-dispatch | cd_dispatch | core_dispatch | none
+    dispatch  = 'auto',   -- auto | XS-Dispatch | ps-dispatch | qs-dispatch | cd_dispatch | core_dispatch | rcore_dispatch | linden_outlawalert | none
     doorlock  = 'auto',   -- auto | ox_doorlock | qb-doorlock | nui_doorlock | jd_doorlock | none
 }
 
@@ -38,11 +38,6 @@ Config.Builder = {
     -- point through the floor. G toggles it while placing.
     SnapToGround = false,
 
-    -- Starting colour for the builder. Change it in the panel instead; this is
-    -- only what a fresh install begins with.
-    -- emerald | amber | violet | rose | ice | gold
-    Theme = 'emerald',
-
     -- Nudge step in metres when adjusting a placed point with the arrow keys.
     NudgeStep = 0.05,
 }
@@ -73,16 +68,24 @@ Config.PoliceJobs = { 'police', 'sheriff', 'bcso', 'sast' }
 
 -- ── Payouts ──────────────────────────────────────────────────────────────────
 Config.Payout = {
-    -- Accounts offered in the builder's payout dropdown. The owner picks one
-    -- per stage. 'dirty' only shows up if the server actually has that item.
+    -- How a job can pay. The owner picks one per job in the builder, and any
+    -- single step can be set to pay differently.
     Accounts = {
-        { id = 'cash',  label = 'Cash on hand' },
+        { id = 'cash',  label = 'Cash' },
+        { id = 'dirty', label = 'Dirty money' },
         { id = 'bank',  label = 'Bank' },
-        { id = 'dirty', label = 'Dirty cash (item)' },
     },
 
-    -- The inventory item used when a stage pays out to 'dirty'.
+    -- The item a job pays in when it is set to dirty money.
     DirtyItem = 'markedbills',
+
+    -- How that item carries the money.
+    -- 'worth' - one item per payout with the amount stored on it, the way
+    --           QBCore and Qbox markedbills work. Laundering scripts read it.
+    -- 'count' - a stack of items, DirtyPer dollars each. Use this for a
+    --           black_money style item with DirtyPer = 1.
+    DirtyMode = 'worth',
+    DirtyPer  = 1,
 
     -- Multiplies every payout on the server. For tuning an economy without
     -- reopening every stage. 1.0 = exactly what the builder says.
@@ -162,12 +165,25 @@ Config.Integrations = {
 Config.Interaction = {
     Key      = 38,      -- E
     MarkerType   = 21,
-    MarkerColour = { 25, 224, 140 },
+    MarkerColour = { 90, 162, 255 },
     MarkerScale  = 0.22,
     MarkerZ      = 0.9, -- how far above the point the marker floats
 
     DrawDistance     = 8.0,
     InteractDistance = 1.6,
+}
+
+-- ── Props and NPCs ───────────────────────────────────────────────────────────
+-- Switch off every scene prop or every NPC a job places, on the whole server.
+-- Props and peds that belong to a step (a till prop, a clerk, a guard) are part
+-- of the job and are not affected.
+Config.Scene = {
+    Props = true,
+    Npcs  = true,
+
+    -- How far away a player can be before a place's props and NPCs appear.
+    -- Metres past the job's own radius.
+    SpawnDistance = 60.0,
 }
 
 -- ── Sound ────────────────────────────────────────────────────────────────────
@@ -201,10 +217,19 @@ Config.Minigames = {
     -- Our own. No dependency, always available.
     xs = true,
 
-    -- Bridged. Detected at runtime.
-    ox_lib          = true,
-    ['ps-ui']       = true,
-    ['memorygame']  = true,
+    -- Other minigame resources. Each one only shows up as ready when it is
+    -- running. Set one to false to hide it from the builder.
+    ox_lib                 = true,
+    ['ps-ui']              = true,   -- ps-ui, or ps_lib which provides the same calls
+    bl_ui                  = true,
+    ['qb-minigames']       = true,
+    glow_minigames         = true,
+    utk_fingerprint        = true,
+    ['ultra-voltlab']      = true,
+    mhacking               = true,
+    ['SN-Hacking']         = true,
+    boii_minigames         = true,
+    memorygame             = true,
     ['howdy-hackminigame'] = true,
 }
 
@@ -214,7 +239,7 @@ Config.NotifyStyle = {
     position = 'top',
     duration = 5000,
     icons = {
-        inform  = { icon = 'circle-info',           color = '#19e08c' },
+        inform  = { icon = 'circle-info',           color = '#5aa2ff' },
         success = { icon = 'circle-check',          color = '#30d158' },
         error   = { icon = 'circle-exclamation',    color = '#ff5a5f' },
         warning = { icon = 'triangle-exclamation',  color = '#f5a524' },
@@ -270,6 +295,7 @@ Config.Text = {
     runComplete     = 'Clear. Get out of the area.',
     grabsLeft       = '%d more in there.',
     paid            = 'You took $%d.',
+    crewShare       = 'Your cut: $%d.',
     stageDone       = 'Done.',
     codeFound       = 'Written down here: %s',
     retryLeft       = 'That slipped. %d left.',
@@ -283,6 +309,9 @@ Config.Text = {
 Config.Defaults = {
     category = 'store',
     radius   = 30.0,
+
+    -- cash | dirty | bank
+    payoutAccount = 'cash',
 
     blip = { sprite = 500, colour = 1, scale = 0.8, showWhen = 'during' },
 

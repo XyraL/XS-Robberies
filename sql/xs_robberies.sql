@@ -23,8 +23,7 @@ CREATE TABLE IF NOT EXISTS `xs_robbery_locations` (
     `created_at`  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     KEY `idx_robbery` (`robbery_id`),
-    CONSTRAINT `fk_location_robbery` FOREIGN KEY (`robbery_id`)
-        REFERENCES `xs_robberies` (`id`) ON DELETE CASCADE
+    FOREIGN KEY (`robbery_id`) REFERENCES `xs_robberies` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `xs_robbery_state` (
@@ -33,8 +32,7 @@ CREATE TABLE IF NOT EXISTS `xs_robbery_state` (
     `last_run_at` TIMESTAMP    NULL     DEFAULT NULL,
     `restock_at`  TIMESTAMP    NULL     DEFAULT NULL,
     PRIMARY KEY (`location_id`),
-    CONSTRAINT `fk_state_location` FOREIGN KEY (`location_id`)
-        REFERENCES `xs_robbery_locations` (`id`) ON DELETE CASCADE
+    FOREIGN KEY (`location_id`) REFERENCES `xs_robbery_locations` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS `xs_robbery_runs` (

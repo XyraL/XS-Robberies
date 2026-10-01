@@ -40,54 +40,6 @@ local function animationFor(stage)
     return ANIMATIONS.default
 end
 
-function Minigames.Run(id, difficulty)
-    if not id or id == '' or id == 'none' then return true end
-
-    -- Robberies saved under the Cipher name still carry `cipher:` ids.
-    local builtin = id:match('^xs:(.+)$') or id:match('^cipher:(.+)$')
-    if builtin then
-        return XSMinigames.Run(builtin, difficulty)
-    end
-
-    if id == 'ox_lib:skillcheck' then
-        return lib.skillCheck({ 'easy', 'easy', 'medium' }, { 'w', 'a', 's', 'd' })
-    end
-
-    if id:sub(1, 6) == 'ps-ui:' then
-        local kind = id:sub(7)
-        local done = promise.new()
-
-        if kind == 'circle' then
-            exports['ps-ui']:Circle(function(success) done:resolve(success) end, 3, 20)
-        elseif kind == 'maze' then
-            exports['ps-ui']:Maze(function(success) done:resolve(success) end, 20)
-        elseif kind == 'thermite' then
-            exports['ps-ui']:Thermite(function(success) done:resolve(success) end, 10, 5, 3)
-        elseif kind == 'scrambler' then
-            exports['ps-ui']:Scrambler(function(success) done:resolve(success) end, 'numeric', 20, 3)
-        else
-            done:resolve(true)
-        end
-        return Citizen.Await(done)
-    end
-
-    if id == 'memorygame:start' then
-        local done = promise.new()
-        exports['memorygame']:thermiteminigame(10, 5, 3, 3,
-            function() done:resolve(true) end,
-            function() done:resolve(false) end)
-        return Citizen.Await(done)
-    end
-
-    if id == 'howdy:hack' then
-        local done = promise.new()
-        exports['howdy-hackminigame']:Start(4, 30, function(success) done:resolve(success) end)
-        return Citizen.Await(done)
-    end
-
-    return lib.skillCheck({ 'easy', 'medium' }, { 'w', 'a', 's', 'd' })
-end
-
 local function runMinigame(opts)
     local attempts = math.max(1, tonumber(opts.attempts) or 1)
 
@@ -109,12 +61,11 @@ local function contains(list, value)
 end
 
 local function stageAvailable(location, stage)
-    -- Busy somewhere else entirely.
+
     if ActiveRun and ActiveRun.locationId ~= location.id then return false end
 
     local live = PublicRuns[location.id]
 
-    -- Nothing running here yet, so only a stage that waits on nothing can start it.
     if not live then return #(stage.requires or {}) == 0 end
 
     if contains(live.done, stage.id) then return false end
@@ -205,7 +156,8 @@ local function holdProgress(stage, duration)
 end
 
 function loadModel(name)
-    local model = type(name) == 'number' and name or joaat(name)
+    local model = type(name) == 'number' and name or (tonumber(name) or joaat(name))
+    if not IsModelValid(model) then return nil end
     RequestModel(model)
 
     local waited = 0
@@ -230,11 +182,10 @@ local function spawnProp(location, stage)
         return nil
     end
 
-    local object = CreateObject(model, stage.coords.x, stage.coords.y,
+    local object = CreateObjectNoOffset(model, stage.coords.x, stage.coords.y,
         stage.coords.z + (tonumber(opts.propZ) or 0.0), false, false, false)
 
     SetEntityHeading(object, stage.coords.h or 0.0)
-    PlaceObjectOnGroundProperly(object)
     FreezeEntityPosition(object, true)
     SetEntityInvincible(object, true)
     SetModelAsNoLongerNeeded(model)
@@ -278,7 +229,6 @@ local function takeHandProp(object)
         DeleteObject(object)
     end
 end
-
 
 local busySince = nil
 
@@ -445,8 +395,8 @@ local function spawnHostage(location, stage)
     end
     if not HasModelLoaded(model) then return nil end
 
-    local ped = CreatePed(4, model, stage.coords.x, stage.coords.y, stage.coords.z - 1.0,
-        stage.coords.h or 0.0, false, false)
+    local ped = CreatePed(4, model, stage.coords.x, stage.coords.y,
+        FloorUnder(stage.coords.x, stage.coords.y, stage.coords.z), stage.coords.h or 0.0, false, false)
 
     FreezeEntityPosition(ped, true)
     SetEntityInvincible(ped, true)
@@ -484,6 +434,9 @@ local function removeZones(locationId)
         end
     end
     propsByLocation[locationId] = nil
+
+    Props.Remove(locationId)
+    Npcs.Remove(locationId)
 end
 
 local function buildZones(location)
@@ -535,8 +488,9 @@ local function buildZones(location)
             local key = ('%s_%s'):format(tostring(location.id), stage.id)
             pedsByLocation[location.id][#pedsByLocation[location.id] + 1] = { ped = ped, key = key }
         elseif prop then
-            Target.AddEntity(prop, { option }, 2.0)
+            Target.AddEntity(prop, { option }, math.max(2.0, tonumber((stage.opts or {}).reach) or 2.0))
             propsByLocation[location.id][#propsByLocation[location.id] + 1] = prop
+            Props.Track(location, stage, prop)
         else
             local reach = tonumber((stage.opts or {}).reach) or 1.5
             if stage.type == 'escape' then reach = math.max(reach, 1.6) end
@@ -553,6 +507,8 @@ local function buildZones(location)
     end
 
     Zones[location.id] = handles
+    Props.Build(location)
+    Npcs.Build(location)
 end
 
 local function refreshBlip(location)
@@ -680,7 +636,7 @@ CreateThread(function()
         for id, location in pairs(Locations) do
             local dist = #(coords - vector3(location.origin.x, location.origin.y, location.origin.z))
 
-            if dist <= (location.radius or 30.0) + 60.0 then
+            if dist <= (location.radius or 30.0) + ((Config.Scene or {}).SpawnDistance or 60.0) then
                 buildZones(location)
                 if dist < nearest then nearest = dist end
             elseif Zones[id] then

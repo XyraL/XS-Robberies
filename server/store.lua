@@ -1,8 +1,6 @@
 Store = { robberies = {}, locations = {}, loot = {}, ready = false }
 
 local function truthy(value)
-    -- oxmysql hands TINYINT(1) back as a Lua boolean, not a number, so a plain
-    -- `== 1` is false for every row and everything loads back disabled.
     return value == true or value == 1 or value == '1'
 end
 
@@ -22,10 +20,13 @@ local function rowToRobbery(row)
     def.author   = row.author
     def.revision = row.revision
     def.stages   = def.stages or {}
+    def.props    = def.props or {}
+    def.npcs     = def.npcs or {}
     def.anchor   = def.anchor or {}
     def.gates    = def.gates or {}
     def.response = def.response or {}
     def.blip     = def.blip or {}
+    def.payout   = def.payout or {}
     return def
 end
 
@@ -77,6 +78,7 @@ end
 function Store.List()
     local out = {}
     for _, def in pairs(Store.robberies) do
+        local anchor = def.anchor or {}
         out[#out + 1] = {
             id = def.id,
             name = def.name,
@@ -85,7 +87,10 @@ function Store.List()
             author = def.author,
             revision = def.revision,
             stageCount = #(def.stages or {}),
+            propCount = #(def.props or {}),
+            npcCount = #(def.npcs or {}),
             locationCount = #Store.LocationsFor(def.id),
+            anchorKind = anchor.kind or 'location',
         }
     end
     table.sort(out, function(a, b) return a.name < b.name end)
@@ -137,6 +142,9 @@ function Store.Save(def, author)
     def.revision = (existing and existing.revision or 0) + 1
     def.author = def.author or author
     def.stages = def.stages or {}
+    def.props = def.props or {}
+    def.npcs = def.npcs or {}
+    def.payout = def.payout or {}
 
     local payload = {
         anchor   = def.anchor or {},
@@ -145,7 +153,10 @@ function Store.Save(def, author)
         origin   = def.origin,
         gates    = def.gates or {},
         response = def.response or {},
+        payout   = def.payout,
         stages   = def.stages,
+        props    = def.props,
+        npcs     = def.npcs,
         notes    = def.notes,
     }
 
@@ -183,6 +194,7 @@ function Store.Duplicate(id, newName)
     local copy = json.decode(json.encode(src))
     copy.name = newName or (src.name .. ' copy')
     copy.id = Store.NewId(copy.name)
+    copy.enabled = false
     copy.revision = 0
 
     return Store.Save(copy, src.author)
@@ -255,24 +267,43 @@ local function defOrigin(def)
     return first and first.coords or { x = 0.0, y = 0.0, z = 0.0, h = 0.0 }
 end
 
-function Store.LayoutStages(def, origin, offsets, overrides)
+Store.DefOrigin = defOrigin
+
+local function placer(def, origin)
     local base = defOrigin(def)
     local turn = math.rad(((origin.h or 0.0) - (base.h or 0.0)) % 360)
     local cos, sin = math.cos(turn), math.sin(turn)
 
-    offsets = offsets or {}
-    overrides = overrides or {}
+    return function(point, nudge)
+        nudge = nudge or {}
+        local vx = point.x - (base.x or 0.0)
+        local vy = point.y - (base.y or 0.0)
 
-    -- A stage is gone here if the design switched it off, or if this one site
-    -- did. A custom interior with no back room turns the safe off without
-    -- touching the fifteen shops that do have one.
+        return {
+            x = (origin.x or 0.0) + (vx * cos - vy * sin) + (nudge.x or 0.0),
+            y = (origin.y or 0.0) + (vx * sin + vy * cos) + (nudge.y or 0.0),
+            z = (origin.z or 0.0) + (point.z - (base.z or 0.0)) + (nudge.z or 0.0),
+            h = ((point.h or 0.0) + math.deg(turn)) % 360,
+        }
+    end
+end
+
+local function switchedOff(def, overrides)
     local off = {}
     for _, stage in ipairs(def.stages or {}) do
         if stage.enabled == false then off[stage.id] = true end
     end
-    for id, gone in pairs(overrides.disabledStages or {}) do
+    for id, gone in pairs((overrides or {}).disabledStages or {}) do
         if gone then off[id] = true end
     end
+    return off
+end
+
+function Store.LayoutStages(def, origin, offsets, overrides)
+    local place = placer(def, origin)
+    offsets = offsets or {}
+
+    local off = switchedOff(def, overrides)
 
     local function keep(requires)
         local out = {}
@@ -285,10 +316,10 @@ function Store.LayoutStages(def, origin, offsets, overrides)
     local stages = {}
     for _, stage in ipairs(def.stages or {}) do
         if stage.coords and not off[stage.id] then
-            local nudge = offsets[stage.id] or {}
-
-            local vx = stage.coords.x - (base.x or 0.0)
-            local vy = stage.coords.y - (base.y or 0.0)
+            local opts = {}
+            for k, v in pairs(stage.opts or {}) do opts[k] = v end
+            if opts.codeFrom and off[opts.codeFrom] then opts.codeFrom = '' end
+            if opts.pairWith and off[opts.pairWith] then opts.pairWith = '' end
 
             stages[#stages + 1] = {
                 id = stage.id,
@@ -296,24 +327,64 @@ function Store.LayoutStages(def, origin, offsets, overrides)
                 label = stage.label,
                 requires = keep(stage.requires),
                 payout = stage.payout or {},
-                opts = (function()
-                    local opts = {}
-                    for k, v in pairs(stage.opts or {}) do opts[k] = v end
-                    if opts.codeFrom and off[opts.codeFrom] then opts.codeFrom = '' end
-                    if opts.pairWith and off[opts.pairWith] then opts.pairWith = '' end
-                    return opts
-                end)(),
-                coords = {
-                    x = (origin.x or 0.0) + (vx * cos - vy * sin) + (nudge.x or 0.0),
-                    y = (origin.y or 0.0) + (vx * sin + vy * cos) + (nudge.y or 0.0),
-                    z = (origin.z or 0.0) + (stage.coords.z - (base.z or 0.0)) + (nudge.z or 0.0),
-                    h = ((stage.coords.h or 0.0) + math.deg(turn)) % 360,
-                },
+                opts = opts,
+                coords = place(stage.coords, offsets[stage.id]),
             }
         end
     end
 
     return stages
+end
+
+function Store.LayoutProps(def, origin, offsets, overrides)
+    local place = placer(def, origin)
+    offsets = offsets or {}
+
+    local gone = (overrides or {}).disabledProps or {}
+    local off = switchedOff(def, overrides)
+
+    local props = {}
+    for _, prop in ipairs(def.props or {}) do
+        if prop.coords and prop.model and prop.model ~= '' and not gone[prop.id] then
+            local link = prop.linkStage
+            if link and off[link] then link = nil end
+
+            props[#props + 1] = {
+                id = prop.id,
+                model = prop.model,
+                linkStage = link,
+                onDone = link and (prop.onDone or 'keep') or 'keep',
+                swapModel = prop.swapModel,
+                coords = place(prop.coords, offsets[prop.id]),
+            }
+        end
+    end
+
+    return props
+end
+
+function Store.LayoutNpcs(def, origin, offsets, overrides)
+    local place = placer(def, origin)
+    offsets = offsets or {}
+
+    local gone = (overrides or {}).disabledNpcs or {}
+    local npcs = {}
+
+    for _, npc in ipairs(def.npcs or {}) do
+        if npc.coords and npc.model and npc.model ~= '' and not gone[npc.id] then
+            npcs[#npcs + 1] = {
+                id = npc.id,
+                model = npc.model,
+                scenario = npc.scenario,
+                animDict = npc.animDict,
+                animClip = npc.animClip,
+                reaction = npc.reaction or 'cower',
+                coords = place(npc.coords, offsets[npc.id]),
+            }
+        end
+    end
+
+    return npcs
 end
 
 function Store.Anchor(def)
@@ -323,6 +394,7 @@ function Store.Anchor(def)
         models = anchor.models or {},
         pool = anchor.pool or 'object',
         scanRange = anchor.scanRange or 80.0,
+        label = anchor.label,
     }
 end
 
@@ -347,16 +419,17 @@ function Store.Resolve(locationId)
         enabled = def.enabled and loc.enabled,
         origin = loc.origin,
         payoutMultiplier = overrides.payoutMultiplier or 1.0,
+        payout = def.payout or {},
         radius = overrides.radius or def.radius or 30.0,
         blip = def.blip or {},
         gates = gates,
         response = def.response or {},
         stages = Store.LayoutStages(def, loc.origin, loc.offsets, overrides),
+        props = Store.LayoutProps(def, loc.origin, loc.offsets, overrides),
+        npcs = Store.LayoutNpcs(def, loc.origin, loc.offsets, overrides),
     }
 end
 
--- A robbery anchored to prop models has no stamped locations. Every matching
--- object in the world is an instance, identified by where it stands.
 function Store.InstanceId(robberyId, anchor)
     return ('m:%s:%.1f_%.1f_%.1f'):format(robberyId, anchor.x or 0.0, anchor.y or 0.0, anchor.z or 0.0)
 end
@@ -377,11 +450,14 @@ function Store.ResolveModel(robberyId, anchor)
         enabled = true,
         origin = origin,
         payoutMultiplier = 1.0,
+        payout = def.payout or {},
         radius = def.radius or 30.0,
         blip = def.blip or {},
         gates = def.gates or {},
         response = def.response or {},
         stages = Store.LayoutStages(def, origin, nil, nil),
+        props = Store.LayoutProps(def, origin, nil, nil),
+        npcs = Store.LayoutNpcs(def, origin, nil, nil),
         modelAnchored = true,
     }
 end
@@ -400,6 +476,8 @@ function Store.ModelRobberies()
                 radius = def.radius or 30.0,
                 blip = def.blip or {},
                 stages = def.stages or {},
+                props = def.props or {},
+                npcs = def.npcs or {},
                 origin = defOrigin(def),
             }
         end

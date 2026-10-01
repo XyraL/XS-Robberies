@@ -2,6 +2,13 @@ Builder = Builder or {}
 
 local checkedAdmin, isAdmin = false, false
 
+function FloorUnder(x, y, z)
+    local ray = StartExpensiveSynchronousShapeTestLosProbe(x, y, z + 0.6, x, y, z - 2.5, 1, 0, 4)
+    local _, hit, at = GetShapeTestResult(ray)
+    if hit == 1 then return at.z end
+    return z
+end
+
 local function ensureAdmin()
     if checkedAdmin then return isAdmin end
     isAdmin = lib.callback.await('XS-Robberies:isAdmin', false) == true

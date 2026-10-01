@@ -1,20 +1,51 @@
 # Changelog
 
-## Unreleased
+## 1.0.0
+
+### New
+
+- A new builder in black and dark blue. Every job has Plan, Flow, Loot, Props, NPCs, Places and Rules.
+- Guided setup for stores, ATMs, banks, jewelry stores, houses and vehicles. It asks for each point in game.
+- The Plan draws every point to scale around the anchor, with the way each one faces and the distances.
+- The Flow shows the order of the steps and when the alarm goes.
+- Props: place cash trolleys, gold, laptops, anything. Tie one to a step and it disappears or swaps when the step is done.
+- NPCs: place tellers, guards and customers with an idle animation. They put their hands up or run when the robbery starts.
+- Each job pays as cash, dirty money or bank. Any step can pay differently.
+- Cash can go to whoever did the step or be split across the crew.
+- Cash can pay straight away or at the getaway, per job.
+- Dirty money pays as one markedbills item carrying the amount, or as a stack. Your choice in config.lua.
+- Aim at an ATM or a vehicle to pick the model a job lives on.
+- Adding a place shows the whole job in the world while you line it up.
+- Places can switch off or nudge props and NPCs, not just steps.
+- Any loot container can ask for its own bag item.
+- Robbed props stay robbed until the place resets.
+- A server-wide switch for props and NPCs in config.lua.
+- 34 new minigames from other resources: bl_ui, qb-minigames, glow_minigames, utk_fingerprint, ultra-voltlab, mhacking, SN-Hacking, boii_minigames, and ps-ui VarHack. ps_lib works in place of ps-ui.
+- Every outside minigame follows the step's difficulty.
+- Try any minigame from the builder.
+- The database tables are created on first start.
 
 ### Changed
 
-- Finished the rename off the Cipher name. The seven database tables are now
-  `xs_robbery_*` instead of `cipher_robbery_*`, and the built-in minigames are
-  `xs:tumbler` and friends instead of `cipher:tumbler`.
-- **Nothing to do on your end.** The old tables are renamed in place the first
-  time the resource starts, and only when the old name exists and the new one
-  does not. Every robbery your players built comes with them.
-- Robberies saved with the old `cipher:` minigame ids still run. Those ids stay
-  resolvable for good; the builder just offers the new ones from now on.
-- `tools/check-standalone.mjs` only knew the old `cipher-*` names, so after the
-  rename it would have waved through a hard reference to a sibling script. It
-  matches both now.
+- Presets are gone. Every job is one you build.
+- Police alerts go out once, from the server.
+- The HUD and the minigames match the new look.
+- Finished the rename off the Cipher name. Old tables are renamed on first start and every robbery comes with them.
+
+### Fixed
+
+- ps-dispatch showed each alert once per officer online.
+- Alerts never reached rcore_dispatch, linden_outlawalert or XS-Dispatch.
+- Clerks and guards spawned sunk into the floor.
+- When one crew member dropped a guard, it stayed alive for everyone else.
+- Settings did not save.
+- The pin pad minigame was squashed.
+- howdy-hackminigame never started. It now uses the call that resource actually has.
+- memorygame gave 3 seconds to click 10 tiles.
+- A step with its least payout set above its most broke the payout.
+- Closing the builder lost unsaved changes.
+- The HUD could show a black box behind it in game.
+- Database setup could fail on servers that still had the old Cipher tables.
 
 ## 0.11.0
 

@@ -1,4 +1,4 @@
-Runs = { active = {}, tokens = {}, state = {}, recent = {} }
+Runs = { active = {}, tokens = {}, state = {}, recent = {}, looted = {} }
 
 local function now()
     return os.time()
@@ -143,6 +143,15 @@ function Runs.PublicSnapshot()
     for locationId, run in pairs(Runs.active) do
         local unlocked, done = broadcastStages(run)
         out[#out + 1] = { locationId = locationId, unlocked = unlocked, done = done }
+    end
+
+    local at = now()
+    for locationId, entry in pairs(Runs.looted) do
+        if entry.untilAt > at and not Runs.active[locationId] then
+            out[#out + 1] = { locationId = locationId, ended = true, looted = entry.done, resetIn = entry.untilAt - at }
+        elseif entry.untilAt <= at then
+            Runs.looted[locationId] = nil
+        end
     end
     return out
 end
@@ -333,9 +342,23 @@ function Runs.Finish(run, outcome)
         Runs.Cooldown('global', run.location.robberyId, gates.globalCooldown)
     end
 
+    local looted = {}
+    for id, entry in pairs(run.stages) do
+        if entry.done then looted[#looted + 1] = id end
+    end
+
+    local resetIn = math.max(0, math.floor(tonumber(gates.locationCooldown) or 0))
+    if resetIn > 0 and #looted > 0 then
+        Runs.looted[run.locationId] = { done = looted, untilAt = now() + resetIn }
+    else
+        Runs.looted[run.locationId] = nil
+    end
+
     TriggerClientEvent('XS-Robberies:client:runPublic', -1, {
         locationId = run.locationId,
         ended = true,
+        looted = looted,
+        resetIn = resetIn,
     })
 
     for _, door in ipairs(run.doors or {}) do
@@ -410,15 +433,78 @@ function Runs.Finish(run, outcome)
     })
 end
 
+local function payDirty(src, amount)
+    local payout = Config.Payout or {}
+    local item = payout.DirtyItem or 'markedbills'
+
+    if (payout.DirtyMode or 'worth') == 'count' then
+        local per = math.max(1, tonumber(payout.DirtyPer) or 1)
+        local count = math.floor(amount / per)
+        if count > 0 then Inv.Add(src, item, count) end
+        return
+    end
+
+    Inv.Add(src, item, 1, { worth = math.floor(amount) })
+end
+
 local function payAccount(src, account, amount)
     if amount <= 0 then return end
 
     if account == 'dirty' then
-        Inv.Add(src, Config.Payout.DirtyItem, math.floor(amount / 100))
+        payDirty(src, amount)
         return
     end
 
     Framework.AddMoney(src, account == 'bank' and 'bank' or 'cash', math.floor(amount), 'robbery')
+end
+
+function Runs.Holds(run)
+    local when = (run.location.payout or {}).when or 'default'
+    if not run.hasEscape or when == 'instant' then return false end
+    if when == 'escape' then return true end
+    return Settings.Tunable('payoutOnEscape') == true
+end
+
+function Runs.Credit(run, src, account, amount)
+    if amount <= 0 then return 0 end
+
+    local shares = {}
+    if (run.location.payout or {}).split == 'crew' then
+        for citizenid, entry in pairs(run.participants) do
+            if entry.src and GetPlayerName(entry.src) then
+                shares[#shares + 1] = { citizenid = citizenid, src = entry.src }
+            end
+        end
+    end
+
+    if #shares == 0 then
+        shares[1] = { citizenid = Framework.GetCitizenId(src), src = src }
+    end
+
+    local each = math.floor(amount / #shares)
+    local hold = Runs.Holds(run)
+
+    for _, share in ipairs(shares) do
+        if hold then
+            run.pot[share.citizenid] = run.pot[share.citizenid] or {}
+            run.pot[share.citizenid][account] = (run.pot[share.citizenid][account] or 0) + each
+        else
+            payAccount(share.src, account, each)
+            if share.src ~= src then
+                Framework.Notify(share.src, T('crewShare', each), 'success')
+            end
+        end
+    end
+
+    return each
+end
+
+function Runs.AccountFor(location, cash)
+    local account = cash and cash.account
+    if not account or account == '' or account == 'job' then
+        account = (location.payout or {}).account or 'cash'
+    end
+    return account
 end
 
 function Runs.PayOut(run)
@@ -435,8 +521,6 @@ function Runs.PayOut(run)
     run.pot = {}
 end
 
--- Old stages stored a single { account, min, max, lootTable }. Anything saved
--- since stores { cash = {...}, items = {...}, lootTable = '' }. Both are read.
 function Runs.NormalisePayout(payout)
     payout = payout or {}
 
@@ -573,7 +657,8 @@ function Runs.Begin(src, ref, stageId)
         if used >= (opts.grabs or 1) then
             return { ok = false, error = T('containerEmpty') }
         end
-        if opts.needsBag and not Inv.Has(src, Config.Run.BagItem) then
+        local bag = (opts.bagItem and opts.bagItem ~= '') and opts.bagItem or Config.Run.BagItem
+        if opts.needsBag and not Inv.Has(src, bag) then
             return { ok = false, error = T('needBag') }
         end
     end
@@ -715,24 +800,16 @@ function Runs.FinishStage(src, token, success)
     local function award()
         local reward = Runs.NormalisePayout(payout)
 
-        if reward.cash and (reward.cash.max or 0) > 0 then
-            paid = math.random(reward.cash.min or 0, reward.cash.max)
-            paid = math.floor(paid
+        if reward.cash and (tonumber(reward.cash.max) or 0) > 0 then
+            local high = math.floor(tonumber(reward.cash.max) or 0)
+            local low = math.min(math.floor(tonumber(reward.cash.min) or 0), high)
+            local total = math.floor(math.random(low, high)
                 * (Settings.Tunable('payoutMultiplier') or 1.0)
                 * (location.payoutMultiplier or 1.0))
 
-            local account = reward.cash.account or 'cash'
-            if Settings.Tunable('payoutOnEscape') and run.hasEscape then
-                local citizenid = Framework.GetCitizenId(src)
-                run.pot[citizenid] = run.pot[citizenid] or {}
-                run.pot[citizenid][account] = (run.pot[citizenid][account] or 0) + paid
-            else
-                payAccount(src, account, paid)
-            end
+            paid = Runs.Credit(run, src, Runs.AccountFor(location, reward.cash), total)
         end
 
-        -- Items go straight into their pockets even when the cash is held until
-        -- the escape. Carrying the goods is the risk.
         for _, entry in ipairs(reward.items or {}) do
             if entry.item and entry.item ~= '' then
                 if math.random(100) <= (tonumber(entry.chance) or 100) then
@@ -987,9 +1064,12 @@ function Runs.Live()
 
         out[#out + 1] = {
             locationId = locationId,
+            robberyId = run.location.robberyId,
             name = run.location.name or run.location.label,
             location = run.location.label,
             stage = ('%d of %d stages'):format(doneCount, #(run.location.stages or {})),
+            done = doneCount,
+            total = #(run.location.stages or {}),
             alarm = run.alarm,
             elapsed = now() - run.startedAt,
             pot = math.floor(total),

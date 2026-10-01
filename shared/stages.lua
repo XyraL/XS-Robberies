@@ -19,6 +19,15 @@ Stages.commonFields = {
     { key = 'prop',         label = 'Prop model',      type = 'text',   default = '', advanced = true,
       hint = 'Spawned at the point and used as the thing you target. Leave empty for an invisible marker.' },
     { key = 'propZ',        label = 'Prop height',     type = 'number', default = 0, min = -5, max = 5, unit = 'm', advanced = true },
+    { key = 'propDone',     label = 'When it is done', type = 'select', default = 'keep', advanced = true,
+      hint = 'What happens to the prop once this step is done. It comes back when the place resets.',
+      options = {
+          { value = 'keep',   label = 'Leave it' },
+          { value = 'remove', label = 'Remove it' },
+          { value = 'swap',   label = 'Swap it' },
+      } },
+    { key = 'propSwap',     label = 'Swap to',         type = 'text',   default = '', advanced = true,
+      hint = 'The model it turns into. An empty trolley, an open safe door.' },
     { key = 'handProp',     label = 'Held prop',       type = 'text',   default = '', advanced = true,
       hint = 'Put in their right hand while they work. A drill, a crowbar, a laptop.' },
     { key = 'animDict',     label = 'Animation dict',  type = 'text',   default = '', advanced = true,
@@ -42,7 +51,7 @@ Stages.commonFields = {
     { key = 'canCancel',    label = 'Can be cancelled', type = 'toggle', default = true, advanced = true },
     { key = 'loudness',     label = 'Heard from',      type = 'number', default = 0, min = 0, max = 300, unit = 'm', advanced = true,
       hint = 'Anyone this close who is not in the crew is told they hear something. 0 for silent.' },
-    { key = 'difficulty',   label = 'Difficulty',      type = 'select', default = '2', advanced = true,
+    { key = 'difficulty',   label = 'Difficulty',      type = 'select', default = '2',
       options = {
           { value = '1', label = 'Easy' },
           { value = '2', label = 'Normal' },
@@ -68,12 +77,12 @@ Stages.commonFields = {
 }
 
 local MARKER = {
-    entry   = { 25, 229, 140 },
-    tool    = { 245, 165, 36 },
-    puzzle  = { 76, 154, 255 },
-    loot    = { 48, 209, 88 },
-    people  = { 255, 90, 95 },
-    control = { 168, 130, 255 },
+    entry   = { 169, 139, 255 },
+    tool    = { 255, 195, 90 },
+    puzzle  = { 90, 162, 255 },
+    loot    = { 57, 212, 155 },
+    people  = { 255, 93, 115 },
+    control = { 124, 196, 255 },
 }
 
 define('hack', {
@@ -182,6 +191,8 @@ define('container', {
         { key = 'grabs',     label = 'Grabs available', type = 'number', default = 6, min = 1, max = 40 },
         { key = 'grabTime',  label = 'Per grab',        type = 'number', default = 4, min = 1, max = 60, unit = 's' },
         { key = 'needsBag',  label = 'Requires a bag',  type = 'toggle', default = false, advanced = true },
+        { key = 'bagItem',   label = 'Bag item',        type = 'item',   default = '', advanced = true,
+          hint = 'The item that counts as a bag. Empty uses the one in config.lua.' },
     },
 })
 

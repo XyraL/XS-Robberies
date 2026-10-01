@@ -12,13 +12,28 @@ local POOLS = {
     ped     = 'CPed',
 }
 
+local function unsigned(hash)
+    hash = math.tointeger(hash) or hash
+    if type(hash) ~= 'number' then return nil end
+    if hash < 0 then hash = hash + 4294967296 end
+    return hash
+end
+
+local function modelKey(model)
+    if type(model) == 'number' then return unsigned(model) end
+    local numeric = tonumber(model)
+    if numeric then return unsigned(numeric) end
+    return unsigned(joaat(model))
+end
+
 local function rebuildHashes()
     hashes = {}
     pools = {}
 
     for _, def in ipairs(ModelRobberies) do
         for _, model in ipairs(def.models or {}) do
-            hashes[joaat(model)] = def
+            local key = modelKey(model)
+            if key then hashes[key] = def end
         end
 
         local pool = POOLS[def.pool or 'object'] or 'CObject'
@@ -32,10 +47,69 @@ local function instanceId(robberyId, coords)
     return ('m:%s:%.1f_%.1f_%.1f'):format(robberyId, coords.x, coords.y, coords.z)
 end
 
-local function layoutStages(def, anchor)
+local function placer(def, anchor)
     local base = def.origin or { x = 0.0, y = 0.0, z = 0.0, h = 0.0 }
     local turn = math.rad(((anchor.h or 0.0) - (base.h or 0.0)) % 360)
     local cos, sin = math.cos(turn), math.sin(turn)
+
+    return function(point)
+        local vx = point.x - (base.x or 0.0)
+        local vy = point.y - (base.y or 0.0)
+        return {
+            x = anchor.x + (vx * cos - vy * sin),
+            y = anchor.y + (vx * sin + vy * cos),
+            z = anchor.z + (point.z - (base.z or 0.0)),
+            h = ((point.h or 0.0) + math.deg(turn)) % 360,
+        }
+    end
+end
+
+local function layoutProps(def, anchor, off)
+    local place = placer(def, anchor)
+    local props = {}
+
+    for _, prop in ipairs(def.props or {}) do
+        if prop.coords and prop.model and prop.model ~= '' then
+            local link = prop.linkStage
+            if link and off[link] then link = nil end
+
+            props[#props + 1] = {
+                id = prop.id,
+                model = prop.model,
+                linkStage = link,
+                onDone = link and (prop.onDone or 'keep') or 'keep',
+                swapModel = prop.swapModel,
+                coords = place(prop.coords),
+            }
+        end
+    end
+
+    return props
+end
+
+local function layoutNpcs(def, anchor)
+    local place = placer(def, anchor)
+    local npcs = {}
+
+    for _, npc in ipairs(def.npcs or {}) do
+        if npc.coords and npc.model and npc.model ~= '' then
+            npcs[#npcs + 1] = {
+                id = npc.id,
+                model = npc.model,
+                scenario = npc.scenario,
+                animDict = npc.animDict,
+                animClip = npc.animClip,
+                reaction = npc.reaction or 'cower',
+                coords = place(npc.coords),
+            }
+        end
+    end
+
+    return npcs
+end
+
+local function layoutStages(def, anchor)
+    local place = placer(def, anchor)
 
     local off = {}
     for _, stage in ipairs(def.stages or {}) do
@@ -53,9 +127,6 @@ local function layoutStages(def, anchor)
     local stages = {}
     for _, stage in ipairs(def.stages or {}) do
         if stage.coords and stage.enabled ~= false then
-            local vx = stage.coords.x - (base.x or 0.0)
-            local vy = stage.coords.y - (base.y or 0.0)
-
             stages[#stages + 1] = {
                 id = stage.id,
                 type = stage.type,
@@ -63,21 +134,14 @@ local function layoutStages(def, anchor)
                 requires = keep(stage.requires),
                 payout = stage.payout or {},
                 opts = stage.opts or {},
-                coords = {
-                    x = anchor.x + (vx * cos - vy * sin),
-                    y = anchor.y + (vx * sin + vy * cos),
-                    z = anchor.z + (stage.coords.z - (base.z or 0.0)),
-                    h = ((stage.coords.h or 0.0) + math.deg(turn)) % 360,
-                },
+                coords = place(stage.coords),
             }
         end
     end
 
-    return stages
+    return stages, layoutProps(def, anchor, off), layoutNpcs(def, anchor)
 end
 
--- Every matching prop in the world is its own robbery. Nothing is stamped and
--- nothing is stored: walk up to an ATM and it is there.
 local function scan()
     if #ModelRobberies == 0 then
         ModelInstances = {}
@@ -96,7 +160,7 @@ local function scan()
     end
 
     for _, object in ipairs(entities) do
-        local def = hashes[GetEntityModel(object)]
+        local def = hashes[unsigned(GetEntityModel(object))]
 
         if def then
             local coords = GetEntityCoords(object)
@@ -110,6 +174,7 @@ local function scan()
                 }
 
                 local id = instanceId(def.id, anchor)
+                local stages, props, npcs = layoutStages(def, anchor)
 
                 found[id] = {
                     id = id,
@@ -121,7 +186,9 @@ local function scan()
                     blip = def.blip or {},
                     entity = object,
                     modelAnchored = true,
-                    stages = layoutStages(def, anchor),
+                    stages = stages,
+                    props = props,
+                    npcs = npcs,
                 }
             end
         end

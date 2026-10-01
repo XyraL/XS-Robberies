@@ -26,13 +26,6 @@ local function toQb(opts)
     return out
 end
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Built-in interaction, used when the server runs no target resource at all.
--- A marker where the point is and a key prompt when you are on it. Nothing
--- fancy, but it means ox_target and qb-target are a nicety rather than a
--- requirement.
--- ─────────────────────────────────────────────────────────────────────────────
-
 local builtin = { points = {}, entities = {}, next = 1, running = false }
 
 local function interactionConfig()
@@ -72,7 +65,7 @@ local function builtinLoop()
             local C = interactionConfig()
             local drawAt = C.DrawDistance or 8.0
             local reach = C.InteractDistance or 1.6
-            local colour = C.MarkerColour or { 25, 224, 140 }
+            local colour = C.MarkerColour or { 90, 162, 255 }
 
             local ped = PlayerPedId()
             local here = GetEntityCoords(ped)
@@ -128,8 +121,6 @@ local function builtinRemove(handle)
     if handle then builtin.points[handle] = nil end
     if next(builtin.points) == nil then builtin.running = false end
 end
-
--- ─────────────────────────────────────────────────────────────────────────────
 
 function Target.AddSphere(id, coords, radius, opts)
     if Target.name == 'ox_target' then

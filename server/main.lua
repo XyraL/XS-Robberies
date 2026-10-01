@@ -17,7 +17,6 @@ local READ_ONLY = {
     ['XS-Robberies:validateRobbery'] = true,
     ['XS-Robberies:exportRobbery'] = true,
     ['XS-Robberies:history'] = true,
-    ['XS-Robberies:presets'] = true,
     ['XS-Robberies:live'] = true,
     ['XS-Robberies:resolveLocation'] = true,
     ['XS-Robberies:diagnose'] = true,
@@ -33,7 +32,12 @@ local function guard(name, handler)
             return { ok = false, error = 'You are not allowed to do that.' }
         end
 
-        local result = handler(src, ...)
+        local done, result = pcall(handler, src, ...)
+        if not done then
+            print(('^1[XS-Robberies]^0 %s failed: %s'):format(name, tostring(result)))
+            return { ok = false, error = 'That failed on the server. The server console has the reason.' }
+        end
+
         if not READ_ONLY[name] and result and result.ok then SyncLocations() end
         return result
     end)
@@ -41,7 +45,9 @@ end
 
 CreateThread(function()
     Wait(500)
-    Db.Migrate()
+    if not Db.Setup() then
+        print('^1[XS-Robberies]^0 the database tables could not be created. Import sql/xs_robberies.sql by hand and restart.')
+    end
     Store.Load()
     Settings.Load()
     Runs.LoadState()
@@ -63,8 +69,6 @@ CreateThread(function()
             Framework.name or 'NONE', Inv.name or 'NONE',
             Dispatch.name or 'notifications', Mdt.name or 'none'))
 
-    -- Which folder is actually running. If a server has a second, older copy
-    -- somewhere, this is the only thing that shows it.
     print(("^2[XS-Robberies]^0 running from: %s")
         :format(GetResourcePath(GetCurrentResourceName()) or 'unknown'))
 
@@ -213,7 +217,9 @@ guard('XS-Robberies:bootstrap', function(src)
         minigames = Minigames.Catalogue(),
         items = Inv.Items(),
         accounts = Config.Payout.Accounts,
+        dirtyItem = Config.Payout.DirtyItem,
         defaults = Config.Defaults,
+        version = GetResourceMetadata(GetCurrentResourceName(), 'version', 0),
         robberies = Store.List(),
         locations = Store.AllLocations(),
         loot = Store.LootList(),
@@ -238,6 +244,8 @@ guard('XS-Robberies:createRobbery', function(src, payload)
     if not name or name == '' then return { ok = false, error = 'Give it a name first.' } end
 
     local D = Config.Defaults
+    local anchor = type(payload.anchor) == 'table' and payload.anchor or {}
+
     local def = {
         id = Store.NewId(name),
         name = name,
@@ -248,8 +256,19 @@ guard('XS-Robberies:createRobbery', function(src, payload)
         blip = json.decode(json.encode(D.blip)),
         gates = json.decode(json.encode(D.gates)),
         response = json.decode(json.encode(D.response)),
+        payout = { account = D.payoutAccount or 'cash' },
+        anchor = {
+            kind = anchor.kind == 'model' and 'model' or 'location',
+            pool = anchor.pool or 'object',
+            models = {},
+            scanRange = 80.0,
+        },
         stages = {},
+        props = {},
     }
+
+    def.blip.label = name
+    def.response.title = payload.alertTitle or def.response.title
 
     local ok, result = Store.Save(def, def.author)
     if not ok then return { ok = false, error = result } end
@@ -397,27 +416,6 @@ guard('XS-Robberies:blacklist', function(src, payload)
 
     local list = Settings.SetBlacklisted(payload.citizenid, payload.name, payload.on ~= false)
     return { ok = true, blacklist = list }
-end)
-
-guard('XS-Robberies:presets', function()
-    return { ok = true, presets = Presets.List() }
-end)
-
-guard('XS-Robberies:installPreset', function(src, payload)
-    payload = type(payload) == 'table' and payload or { id = payload }
-
-    local ok, result, stamped = Presets.Install(payload.id, Framework.GetName(src), payload.stampAll)
-    if not ok then return { ok = false, error = result } end
-
-    return {
-        ok = true,
-        robbery = result,
-        stamped = stamped or 0,
-        robberies = Store.List(),
-        locations = Store.AllLocations(),
-        loot = Store.LootList(),
-        issues = Validate.Robbery(result),
-    }
 end)
 
 lib.callback.register('XS-Robberies:beginStage', function(src, payload)

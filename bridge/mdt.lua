@@ -43,10 +43,6 @@ register('XS-MDT', {
     end,
 })
 
--- Anything else. Fill in Config.Integrations.Generic with the export names your
--- MDT documents and this calls them — no code change, no waiting on us. The
--- table it passes is the same one every provider gets, so most MDTs that take
--- a plain incident table will work as-is.
 register('generic', {
     available = function()
         local g = Config.Integrations.Generic or {}
@@ -65,13 +61,6 @@ register('generic', {
     end,
 })
 
--- Any resource can add one of its own, the same way XS-Evidence does it:
---
---   exports['XS-Robberies']:RegisterMdtProvider('my-mdt', {
---       available = function() return GetResourceState('my-mdt') == 'started' end,
---       createIncident = function(data) return { id = ... } end,
---       attachNote = function(handle, text) return true end,
---   })
 exports('RegisterMdtProvider', function(name, provider)
     local ok = register(name, provider)
     if ok then Mdt.Detect() end

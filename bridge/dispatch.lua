@@ -11,7 +11,7 @@ local CANDIDATES = {
     'cd_dispatch',
     'core_dispatch',
     'rcore_dispatch',
-    'origen_police',
+    'linden_outlawalert',
 }
 
 do
@@ -27,46 +27,197 @@ do
     end
 end
 
--- Which jobs count as police for the alert. Add yours here if it is not listed.
 local POLICE_JOBS = Config.PoliceJobs or { 'police', 'sheriff', 'bcso', 'sast' }
 
+local function custom()
+    local c = (Config.Integrations or {}).GenericDispatch or {}
+    if c.resource and c.resource ~= '' and c.export and c.export ~= '' then return c end
+    return nil
+end
+
 if IS_SERVER then
-    function Dispatch.Alert(payload)
-        TriggerClientEvent('XS-Robberies:client:alert', -1, payload)
+    local function vec(c)
+        return vector3((tonumber(c.x) or 0.0) + 0.0, (tonumber(c.y) or 0.0) + 0.0, (tonumber(c.z) or 0.0) + 0.0)
+    end
+
+    local Senders = {}
+
+    Senders['XS-Dispatch'] = function(a)
+        exports['XS-Dispatch']:CreateCall({
+            type = 'custom',
+            code = a.code,
+            title = a.title,
+            description = a.description,
+            priority = a.priority,
+            coords = a.coords,
+            sprite = a.sprite,
+            color = a.colour,
+            caller = 'Alarm company',
+            origin = GetCurrentResourceName(),
+        })
+    end
+
+    Senders['ps-dispatch'] = function(a)
+        local jobs = {}
+        for _, j in ipairs(POLICE_JOBS) do jobs[#jobs + 1] = j end
+        jobs[#jobs + 1] = 'leo'
+
+        local alert = {
+            message = a.title,
+            codeName = 'xs_robbery',
+            code = a.code,
+            icon = 'fas fa-mask',
+            priority = a.priority == 1 and 1 or 2,
+            coords = vec(a.coords),
+            information = a.description,
+            jobs = jobs,
+            addToList = true,
+            alert = {
+                radius = 0, sprite = a.sprite, color = a.colour, scale = 1.0, length = 3,
+                sound = 'Lose_1st', sound2 = 'GTAO_FM_Events_Soundset', offset = false, flash = a.priority == 1,
+            },
+        }
+
+        local sent = pcall(function()
+            exports['ps-dispatch']:SendTargetedAlert(Framework.PoliceSources(true), alert)
+        end)
+        if not sent then TriggerEvent('ps-dispatch:server:notify', alert) end
+    end
+
+    Senders['qs-dispatch'] = function(a)
+        TriggerEvent('qs-dispatch:server:CreateDispatchCall', {
+            job = POLICE_JOBS,
+            callLocation = vec(a.coords),
+            callCode = { code = a.code, snippet = a.title },
+            message = a.description,
+            flashes = a.priority == 1,
+            image = nil,
+            blip = {
+                sprite = a.sprite, scale = 1.0, colour = a.colour, flashes = a.priority == 1,
+                text = a.title, time = (a.blipTime or 300) * 1000,
+            },
+        })
+    end
+
+    Senders['cd_dispatch'] = function(a)
+        TriggerClientEvent('cd_dispatch:AddNotification', -1, {
+            job_table = POLICE_JOBS,
+            coords = vec(a.coords),
+            title = ('%s - %s'):format(a.code, a.title),
+            message = a.description,
+            flash = a.priority == 1 and 1 or 0,
+            unique_id = tostring(math.random(1000000, 9999999)),
+            sound = 1,
+            blip = {
+                sprite = a.sprite, scale = 1.0, colour = a.colour, flashes = a.priority == 1,
+                text = ('%s - %s'):format(a.code, a.title), time = math.max(1, math.floor((a.blipTime or 300) / 60)), radius = 0,
+            },
+        })
+    end
+
+    Senders['core_dispatch'] = function(a)
+        local extra = { { icon = 'fa-circle-info', info = a.description } }
+        local urgent = a.priority == 1
+
+        local sent = pcall(function()
+            exports['core_dispatch']:sendAlert({
+                code = a.code,
+                message = a.title,
+                extraInfo = extra,
+                coords = vec(a.coords),
+                priority = urgent,
+                job = POLICE_JOBS,
+                time = 10000,
+                blip = a.sprite,
+                color = a.colour,
+            })
+        end)
+        if sent then return end
+
+        local c = vec(a.coords)
+        for _, job in ipairs(POLICE_JOBS) do
+            TriggerEvent('core_dispatch:addCall', a.code, a.title, extra, { c.x, c.y, c.z }, job, 10000, a.sprite, a.colour, urgent)
+        end
+    end
+
+    Senders['rcore_dispatch'] = function(a)
+        TriggerEvent('rcore_dispatch:server:sendAlert', {
+            code = ('%s - %s'):format(a.code, a.title),
+            default_priority = a.priority == 1 and 'high' or 'medium',
+            coords = vec(a.coords),
+            job = POLICE_JOBS,
+            text = a.description,
+            type = 'alerts',
+            blip = {
+                sprite = a.sprite, colour = a.colour, scale = 1.0, text = a.title,
+                flashes = a.priority == 1, radius = 0,
+            },
+        })
+    end
+
+    Senders['linden_outlawalert'] = function(a)
+        TriggerEvent('wf-alerts:svNotify', {
+            dispatchData = {
+                displayCode = a.code,
+                description = a.title,
+                isImportant = a.priority == 1 and 1 or 0,
+                recipientList = POLICE_JOBS,
+                length = 10000,
+                infoM = 'fa-info-circle',
+                info = a.description,
+                blipSprite = a.sprite,
+                blipColour = a.colour,
+                blipScale = 1.0,
+            },
+            caller = 'Alarm company',
+            coords = vec(a.coords),
+        })
+    end
+
+    local function toPolice(a)
+        for _, src in ipairs(Framework.PoliceSources(false)) do
+            TriggerClientEvent('XS-Robberies:client:alert', src, a)
+        end
+    end
+
+    function Dispatch.Alert(a)
+        a.code = a.code or '10-90'
+        a.title = a.title or 'Robbery in progress'
+        a.description = a.description or 'Alarm triggered.'
+        a.sprite = a.sprite or 500
+        a.colour = a.colour or 1
+        a.priority = a.priority or 1
+
+        if custom() then
+            toPolice(a)
+            return
+        end
+
+        local sender = Dispatch.name and Senders[Dispatch.name]
+        if sender and GetResourceState(Dispatch.name) == 'started' then
+            local ok, err = pcall(sender, a)
+            if ok then return end
+            print(('^3[XS-Robberies]^0 %s refused the alert (%s). Police get a plain notification instead.')
+                :format(Dispatch.name, tostring(err)))
+        end
+
+        toPolice(a)
     end
 else
-    local function isPolice()
-        local job = Framework.GetJob and Framework.GetJob()
-        if not job then return false end
-        for _, name in ipairs(POLICE_JOBS) do
-            if job.name == name then return true end
-        end
-        return false
-    end
-
     RegisterNetEvent('XS-Robberies:client:alert', function(data)
-        if not isPolice() then return end
-
         local coords = vector3(data.coords.x, data.coords.y, data.coords.z)
-        local code = data.code or '10-90'
-        local title = data.title or 'Robbery In Progress'
-        local description = data.description or 'Alarm triggered.'
-        local sprite = data.sprite or 500
-        local colour = data.colour or 1
-        local radius = data.radius or 0
 
-        local custom = (Config.Integrations or {}).GenericDispatch or {}
-        if custom.resource ~= '' and custom.export ~= ''
-            and GetResourceState(custom.resource) == 'started' then
+        local c = custom()
+        if c and GetResourceState(c.resource) == 'started' then
             local sent = pcall(function()
-                exports[custom.resource][custom.export](exports[custom.resource], {
+                exports[c.resource][c.export](exports[c.resource], {
                     coords = coords,
-                    code = code,
-                    title = title,
-                    description = description,
-                    sprite = sprite,
-                    colour = colour,
-                    radius = radius,
+                    code = data.code,
+                    title = data.title,
+                    description = data.description,
+                    sprite = data.sprite,
+                    colour = data.colour,
+                    radius = data.radius or 0,
                     priority = data.priority or 1,
                     jobs = POLICE_JOBS,
                     blipTime = data.blipTime or 300,
@@ -75,88 +226,17 @@ else
             if sent then return end
         end
 
-        if Dispatch.name == 'XS-Dispatch' then
-            exports['XS-Dispatch']:CustomAlert({
-                code = code,
-                title = title,
-                description = description,
-                coords = coords,
-                priority = data.priority or 1,
-                jobs = POLICE_JOBS,
-                blip = { sprite = sprite, colour = colour, scale = 1.0, time = data.blipTime or 300 },
-            })
-            return
-        end
-
-        if Dispatch.name == 'ps-dispatch' then
-            exports['ps-dispatch']:CustomAlert({
-                coords = coords,
-                message = title,
-                dispatchCode = code,
-                description = description,
-                radius = radius,
-                sprite = sprite,
-                color = colour,
-                scale = 1.0,
-                length = 5,
-            })
-            return
-        end
-
-        if Dispatch.name == 'qs-dispatch' then
-            exports['qs-dispatch']:StoreRobbery({
-                displayCode = code,
-                description = title,
-                radius = radius,
-                coords = coords,
-            })
-            return
-        end
-
-        if Dispatch.name == 'cd_dispatch' then
-            TriggerEvent('cd_dispatch:AddNotification', {
-                job_table = POLICE_JOBS,
-                coords = coords,
-                title = code .. ' - ' .. title,
-                message = description,
-                flash = 0,
-                unique_id = tostring(math.random(0000000, 9999999)),
-                blip = {
-                    sprite = sprite,
-                    scale = 1.0,
-                    colour = colour,
-                    flashes = false,
-                    text = code .. ' - ' .. title,
-                    time = 5,
-                    radius = radius,
-                },
-            })
-            return
-        end
-
-        if Dispatch.name == 'core_dispatch' then
-            TriggerEvent('core_dispatch:addCall', code, title, {
-                { icon = 'fa-circle-info', info = description },
-            }, { coords.x, coords.y, coords.z }, POLICE_JOBS, 15000, sprite, colour)
-            return
-        end
-
-        Framework.Notify(('%s — %s'):format(code, title), 'warning', 'Dispatch')
+        Framework.Notify(('%s — %s'):format(data.code, data.title), 'warning', 'Dispatch')
         local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
-        SetBlipSprite(blip, sprite)
-        SetBlipColour(blip, colour)
+        SetBlipSprite(blip, data.sprite or 500)
+        SetBlipColour(blip, data.colour or 1)
         SetBlipScale(blip, 1.0)
         SetBlipAsShortRange(blip, false)
         BeginTextCommandSetBlipName('STRING')
-        AddTextComponentSubstringPlayerName(title)
+        AddTextComponentSubstringPlayerName(data.title)
         EndTextCommandSetBlipName(blip)
         SetTimeout((data.blipTime or 300) * 1000, function()
             if DoesBlipExist(blip) then RemoveBlip(blip) end
         end)
     end)
-end
-
-if Config.Debug then
-    print(('^2[XS-Robberies]^0 dispatch bridge loaded (%s) on %s'):format(
-        Dispatch.name or 'notifications', IS_SERVER and 'server' or 'client'))
 end

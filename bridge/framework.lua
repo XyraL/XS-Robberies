@@ -1,3 +1,18 @@
+if not IsDuplicityVersion() and type(RegisterNUICallback) == 'function' then
+    local _registerNUI = RegisterNUICallback
+
+    RegisterNUICallback = function(name, handler)
+        return _registerNUI(name, function(data, cb)
+            CreateThread(function()
+                handler(data, function(payload, ...)
+                    if payload == nil then payload = false end
+                    cb(payload, ...)
+                end)
+            end)
+        end)
+    end
+end
+
 Framework = { name = nil, core = nil }
 
 if not Config then
@@ -65,7 +80,6 @@ if IS_SERVER then
         local job = Framework.GetJob(src)
         if not job or not blockedJobs[job.name] then return false end
 
-        -- This bridge loads before settings.lua, so never assume it is there.
         local respect = Settings and Settings.Tunable and Settings.Tunable('respectDuty')
         if respect == nil then respect = Config.BlockedJobsRespectDuty end
 
@@ -82,6 +96,18 @@ if IS_SERVER then
             end
         end
         return count
+    end
+
+    function Framework.PoliceSources(onDutyOnly)
+        local out = {}
+        for _, sid in ipairs(GetPlayers()) do
+            local src = tonumber(sid)
+            local job = Framework.GetJob(src)
+            if job and policeJobs[job.name] then
+                if not onDutyOnly or job.onDuty ~= false then out[#out + 1] = src end
+            end
+        end
+        return out
     end
 
     function Framework.GetNameByCitizenId(citizenid)

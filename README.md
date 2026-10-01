@@ -1,317 +1,123 @@
 # XS-Robberies
 
-> **Beta.** Still being worked on, so expect rough edges. If you hit one, tell
-> me on [Discord](https://discord.gg/XRURAw4TM2) and I will get it sorted.
+Build any robbery you want, in game. Stores, ATMs, banks, jewelry stores, houses,
+armoured trucks, your own MLOs. You place every point yourself, decide what each
+one needs and what it pays, then stamp the job anywhere it should work.
 
-Build any robbery you want, in game, without touching a config file.
+It ships empty. No presets, no coordinates from someone else's map, no items to
+add before it works. Every robbery on your server is one you built.
 
-Stores, banks, jewelry, houses, custom MLOs — you place the points, set what each
-one needs, and decide what it pays.
+QBox and QBCore.
 
-It ships **empty**. No stores of ours to delete, no coordinates from someone
-else's map, no items you have to add before anything works. Every robbery on your
-server is one you built.
+## What you get
 
-Standalone for QBox and QBCore.
-
-
-
-## Door locks
-
-A **Door** stage opens a door in your door lock resource as part of a run. It
-auto-detects `ox_doorlock`, `qb-doorlock`, `nui_doorlock` and `jd_doorlock`;
-Settings tells you which one it found. Put the door id in exactly as your door
-lock resource names it, and choose whether the door goes back to how it was
-when the run ends.
-
-Running something else? Register it yourself:
-
-```lua
-exports['XS-Robberies']:RegisterDoorProvider('my-doors', {
-    available = function() return GetResourceState('my-doors') == 'started' end,
-    setState = function(id, locked) exports['my-doors']:setLock(id, locked) end,
-})
-```
-
-## Guards, lasers and consequences
-
-- **Armed guards** are a stage with nothing to press. Set the model, weapon,
-  accuracy, health and armour; the stage completes when they go down. Leave
-  *Starts hostile* off and they ignore you until the alarm goes, which is what
-  makes a quiet approach worth doing.
-- **Laser grids** draw beams across a doorway and trip the alarm if anybody
-  walks through. Make the power box a requirement and cutting power kills them.
-- **Failure penalties** let any stage answer a botched attempt with a shock,
-  fire, gas or an explosion.
-- **Item loss** sets the odds that failing destroys the tool being used.
-
-## Presets
-
-Open **Robberies -> Presets**. Six ship with it, and all of them arrive switched
-off with their loot tables so you can read every stage before anyone can rob it.
-
-| Preset | Stages | Where |
-|---|---|---|
-| ATM | 1 | Anchored to the ATM prop models. Finds every machine itself. |
-| 24-7 Store | 6 | Twenty shop fronts bundled |
-| Fleeca Bank | 11 | All six Fleecas bundled |
-| Vangelico Jewelry | 6 | One site. Pays in goods only, no cash. |
-| Blaine County Savings | 9 | Paleto Bay |
-| Pacific Standard | 12 | Vinewood Boulevard |
-
-Each card names any item your server does not have, so you can add it or point
-the stage at something you do have before installing.
-
-The bundled coordinates are a starting grid and have not been checked in game.
-Walk each site and use **Move origin** to line it up; everything rotates with it.
-
-## Robberies that find their own spots
-
-A robbery is normally anchored to locations you stamp by hand. Set **Anchor** to
-**Prop models** in Robbery settings instead, list the models, and every matching
-prop in the map becomes its own robbery with nothing to place. That is how the
-ATM preset covers the whole state from one design.
-
-Stage positions are stored as offsets from wherever you built them, and they
-rotate with each prop, so a stage placed on the front of one ATM lands on the
-front of all of them.
-
-## It does not need another XS script
-
-Nothing here depends on anything else we make. Every outside system goes through
-a bridge that detects what you already run, and every bridge has a way out if it
-finds nothing:
-
-| | Detected |
-|---|---|
-| Framework | qbx_core, qb-core |
-| Inventory | ox_inventory, qb-inventory, qs-inventory, codem-inventory, core_inventory, ps-inventory |
-| Target | ox_target, qb-target — with neither, a built-in marker and key prompt is used instead |
-| Dispatch | XS-Dispatch, ps-dispatch, qs-dispatch, cd_dispatch, core_dispatch, rcore_dispatch, origen_police — or any other through `Config.Integrations.GenericDispatch`. With none of them, police get a notification and a blip. |
-| MDT | XS-MDT, or any other through `Config.Integrations.Generic`, or one registered by another resource. With none, no paperwork is filed and nothing complains. |
-| Minigames | Six of our own that need nothing, plus ox_lib, ps-ui, memorygame and howdy-hackminigame when present |
-
-XS resources appear in those lists because they exist, not because they are
-required. `node tools/check-standalone.mjs` fails the build if anything outside
-a bridge ever reaches for one by name.
-
-**Adding an MDT we have never heard of**, without touching our code:
-
-```lua
-Config.Integrations.Generic = {
-    resource     = 'your-mdt',
-    createExport = 'CreateIncident',
-    noteExport   = 'AddNote',       -- optional
-}
-```
-
-Or register one properly from your own resource:
-
-```lua
-exports['XS-Robberies']:RegisterMdtProvider('your-mdt', {
-    available      = function() return GetResourceState('your-mdt') == 'started' end,
-    createIncident = function(data) return yourCreate(data) end,
-    attachNote     = function(handle, text) return yourNote(handle, text) end,
-})
-```
-
-## Requirements
-
-- `ox_lib`
-- `oxmysql`
-- Any of: `ox_inventory`, `qb-inventory`, `qs-inventory`, `codem-inventory`, `core_inventory`, `ps-inventory`
-
-That is the whole list. `ox_target` or `qb-target` are used if you have one;
-without either, interaction falls back to a marker and a key prompt.
-
-Optional: `XS-Dispatch`, `ps-dispatch`, `qs-dispatch`, `cd_dispatch`, `core_dispatch`
-(a plain notification is used when none are present), and any supported minigame
-resource you want offered in the builder.
+- **A guided setup.** Pick Store, ATM, Bank, Jewelry, House or Vehicle and it
+  walks you through the job in game: stand at the till, press ENTER, next point.
+  Skip anything you do not want. Or start blank and add exactly the steps you want.
+- **15 kinds of step.** Hack, tool (lockpick, drill, thermite, grinder, torch,
+  crowbar), keypad, cameras, power box, till, safe, loot container, two-man
+  switch, clerk, hold point, door lock, armed guard, laser grid, getaway zone.
+- **Steps unlock each other.** By default it is a straight line. Change what opens
+  what and you get parallel paths, a code found in one room for a keypad in
+  another, optional steps that only add to the take.
+- **A plan of the job.** Every point drawn to scale around the anchor, with the
+  way each one faces and the distances between them. A flow view shows the order
+  and when the alarm goes.
+- **Props.** Cash trolleys, gold stacks, a laptop on a desk. Tie one to a step and
+  it disappears or swaps (full trolley to empty) when that step is done, then
+  comes back when the place resets.
+- **NPCs.** Tellers, a guard by the door, customers. Pick the ped, what they are
+  doing, and whether they put their hands up or run when the robbery starts.
+- **Payouts your way.** Each job pays as cash, dirty money or bank, and any step
+  can pay differently. Set the least and most, add items with their own odds, or
+  point at a shared loot table. Choose whether the cash goes to whoever did the
+  step or is split across the crew, and whether it pays straight away or at the
+  getaway.
+- **Stamp it anywhere.** Build a 24/7 once and place it at every 24/7. You line up
+  the anchor and the whole job turns with it. Each place can nudge single points,
+  switch steps off, or set its own payout, police and cooldown.
+- **Jobs that find their own spots.** Aim at an ATM and every ATM with that model
+  becomes the job. Same for vehicles.
+- **The alarm is yours.** Instant, delayed, silent or none. Cutting the cameras or
+  the power can change it. Steps can call the police, failed steps can too, and the
+  call repeats on a timer while the job is running.
+- **Minigames.** 53 to pick from: 12 of our own plus the minigame resources people
+  already run (list below). Every step picks its own and how hard it is. Try any
+  of them from the builder.
+- **Live control.** See every robbery happening right now, end one, ban someone
+  from robberies, or switch them all off.
 
 ## Install
 
 1. Drop the folder in your resources.
-2. Import `sql/xs_robberies.sql`.
-3. Add `ensure XS-Robberies` after `ox_lib` and `oxmysql`.
-4. Give yourself access — `add_ace group.admin xs.robberies allow`, or list
-   your framework groups in `Config.Admin`.
-5. In game, `/robberies`.
+2. `ensure XS-Robberies` after `ox_lib` and `oxmysql`.
+3. Give yourself access: `add_ace group.admin xs.robberies allow`, or list your
+   framework groups or licenses in `Config.Admin`.
+4. In game, `/robberies`.
 
-## Building your first one
+The database tables are created on first start. `sql/xs_robberies.sql` is there if
+you would rather import them yourself.
 
-There is nothing in it. That is on purpose — no stores you have to delete, no
-coordinates from someone else's map, no items you have to add before anything
-works. What you build is what your server has.
+Coming from Cipher-Robberies? Your old tables are renamed in place on first start
+and every robbery comes with them.
 
-1. `/robberies` → **New robbery**. Name it, pick a category.
-2. **Add Stage** → pick a type. The panel steps aside, you fly to the spot and
-   drop the point.
-3. Keep going. A till, a safe, a camera, a way out. Five stages is a shop;
-   eleven is a bank.
-4. Set what each one needs — an item, a minigame, how long, what it pays.
-5. **Validate**, then flip it **Live** and save.
-6. **Locations → Stamp a location** and place it in the world. Stamp it again
-   anywhere else the same building shape exists.
+## Building your first job
 
-Items come from your own inventory — the picker lists whatever your server
-already has, so nothing needs adding first.
+1. `/robberies`, then **New job**. Name it and pick what it is.
+2. Leave **Walk me through it** on and press Create. The builder hides and asks for
+   each point in turn. ENTER places it, BACKSPACE skips it, DEL stops.
+3. Back in the builder, open each step on the right to set what it needs: an item,
+   a minigame, how long it takes, what happens on a failure.
+4. **Loot**: set how the job pays and what each step is worth.
+5. **Places**: add every other location it should exist at.
+6. Press **Live** and save.
 
-## How it works
+Nothing is placed from chat. Every point is placed in the world with a freecam:
+WASD to fly, SPACE to pin, X to drop to the floor, the scroll wheel to turn it, the
+arrow keys to nudge.
 
-A **robbery** is a set of **stages**. A stage is a point you place in the world
-with a type — hack, drill, keypad, camera, power box, register, safe, container,
-two-man point, hostage, hold point, escape zone — and its own options, payout and
-requirements.
+## Integrations
 
-Requirements are what make it more than a checklist. By default each stage waits
-on the one before it, so you get a straight sequence. Open **Requirements** on a
-stage and you can wire it differently: make the safe need the cameras *or* the
-power cut, hide a keypad code in another room, add optional stages that only
-raise the payout.
+Everything outside the script goes through a bridge that finds what you already run.
 
-Nothing is placed from chat. Everything happens in the builder: click Add Stage,
-pick a type, and the panel steps aside so you can fly to the spot and drop the
-point. Confirm and you are back in the panel with that stage selected.
+| | Supported |
+|---|---|
+| Framework | qbx_core, qb-core |
+| Inventory | ox_inventory, qb-inventory, qs-inventory, codem-inventory, core_inventory, ps-inventory |
+| Target | ox_target, qb-target. With neither, a marker and a key prompt. |
+| Dispatch | ps-dispatch, qs-dispatch, cd_dispatch, core_dispatch, rcore_dispatch, linden_outlawalert, XS-Dispatch, or any export through `Config.Integrations.GenericDispatch`. With none, police get a notification and a blip. |
+| Door locks | ox_doorlock, qb-doorlock, nui_doorlock, jd_doorlock, or your own through `RegisterDoorProvider` |
+| MDT | XS-MDT, or any other through `Config.Integrations.Generic` or `RegisterMdtProvider`. Optional. |
+| Minigames | 12 built in, plus ox_lib, ps-ui (or ps_lib), bl_ui, qb-minigames, glow_minigames, utk_fingerprint, ultra-voltlab, mhacking, SN-Hacking, boii_minigames, memorygame and howdy-hackminigame. 53 in all, each with an easy, normal and hard setting. |
 
-## What a run looks like
+None of them are required apart from a framework and an inventory.
 
-A run starts the moment someone works the first stage that has no requirements,
-and it belongs to the location, not the player — anyone who joins in is part of
-the same crew.
+## Items
 
-- The alarm follows what you set. Disabling cameras or cutting power re-routes it.
-- Loot items go into the bag at the stage. Cash goes into a pot that only pays
-  when the crew reaches the escape zone, so getting caught on the way out costs
-  them the money but not the goods.
-- Registers and safes restock on their own timer, and remember it across restarts.
-- A run nobody is near ends itself, and the location goes on cooldown either way.
-- Everything the client reports is checked: the stage token, the time it actually
-  took, the distance, the items, the prerequisites, and the cooldowns.
+There is no item list to install. Tools and loot are picked in the builder from
+whatever your inventory already has.
 
-## Locations
+Two items are set in `config.lua` because the script uses them itself:
 
-A robbery on its own is a template. Stamp it onto a location and it exists in the
-world. Stamp the same one onto twenty stores and they all behave the same way,
-with per-site overrides where you want them different.
-
-## What you can change
-
-There is no hidden layer. Everything below is a field in the builder, and there is
-nothing a robbery can do that you cannot reach.
-
-**Per robbery**, in the Editor under Robbery settings:
-name, category, live or not, radius, blip sprite, colour, scale, name and when
-it shows, police required and whether they must be on duty, minimum and maximum
-crew, location cooldown, player cooldown, a server-wide cooldown across every
-site of that robbery, and a proximity rule that stops a crew running a whole
-street at once.
-
-Police response is its own set: alarm instant, delayed, silent or none; the delay;
-what disabling cameras changes it to; what cutting power changes it to; the
-dispatch code and title; how often it re-alerts; and whether a botched stage
-calls it in.
-
-**Per stage**, starting with whether it exists at all — every stage has an on/off
-switch, so the same store can be register-only on one server and a full
-cameras-clerk-register-safe job on another without deleting anything. Turn one
-off and whatever was waiting on it carries on without it. Then: name, how long it
-takes, which item it needs and whether that is
-consumed or just worn down, optional or required, whether it alerts police,
-difficulty, what happens on failure, its minigame and how many attempts, the
-payout account, range and loot table, and which other stages have to be finished
-first.
-
-Plus the things that make it yours rather than ours:
-
-- **Prop model** — spawn any object at the point and target that instead of an
-  invisible marker. A safe, a till, a laptop, a fuse box.
-- **Prop height** — nudge it up or down to sit on a counter.
-- **Held prop** — put a model in their hand while they work. A drill, a crowbar.
-- **Animation dict and clip** — any animation you like. Leave them empty and the
-  stage type picks a sensible one.
-
-**Per location**, in Locations: label, live or not, and overrides for payout
-multiplier, radius, police required and cooldown. Empty means follow the
-robbery.
-
-**Per server**, in `config.lua`: which bridges to force, who can open the
-builder, the blocked jobs, the payout accounts and what dirty cash and bags are
-called, a global payout multiplier, whether crews split or each get paid, when a
-run is abandoned, how long one can last, logging and a Discord webhook, and which
-minigame backends to offer.
-
-**Every line a player reads** lives in `Config.Text`. Rewrite them in your own
-voice or another language — keep the `%d` and `%s` where they are and the
-script fills them in.
-
-### Items
-
-There is no item list to install. Every tool and every piece of loot is picked
-from what your server already has, in the builder.
-
-Two names are set in `config.lua` rather than picked, because they are used by
-the script itself:
-
-| Setting | Default | What it does |
+| Setting | Default | What it is |
 |---|---|---|
-| `Config.Payout.DirtyItem` | `markedbills` | Handed over when a stage pays to `dirty` |
-| `Config.Run.BagItem` | `bag` | What a container asks for when "Requires a bag" is ticked |
+| `Config.Payout.DirtyItem` | `markedbills` | What dirty money pays in. `DirtyMode` sets whether the amount is stored on one item (QBCore/Qbox markedbills) or paid as a stack. |
+| `Config.Run.BagItem` | `bag` | What a loot container asks for when it needs a bag. Any step can pick its own. |
 
-Both are standard QBCore items. If yours are called something else, change them
-there — do not add duplicates.
+A `markedbills.png` ships in `inventory_images/` in case you need one.
 
-A `markedbills.png` ships in `inventory_images/` in case you do not have one. It
-goes in `ox_inventory/web/images/`, `qb-inventory/html/images/`,
-`ps-inventory/html/images/`, `qs-inventory/html/images/`,
-`codem-inventory/html/itemimages/` or `core_inventory/html/img/`, depending on
-what you run.
+## Commands
 
-## Tuning one location
-
-Open a location from the Locations panel and you get everything that is specific
-to that site: its label, whether it is live, and a set of override boxes. Leave a
-box empty and it follows the robbery. Fill one in — payout multiplier, radius,
-police required, cooldown — and only that location changes.
-
-Below that is every stage as it really sits in the world at that site. Nudge any
-that do not line up with that interior and only this location moves; the design
-and every other location stay where they were. Reset puts one back.
-
-## Staff controls
-
-**Live** shows every run happening right now — where, how far in, how loud, who
-is inside, and what the pot is worth. Two things you can do from there:
-
-- **End it.** Everyone inside is told it is over. They keep whatever is already
-  in their pockets; the pot is lost.
-- **Ban someone.** Click their name. They cannot start or join a robbery until
-  you lift it.
-
-**Settings** has the kill switch — no robbery can be started while it is on, and
-runs already going are left to finish. It survives a restart. Bans are listed
-there too, with a button to lift each one.
-
-## Police paperwork
-
-With an MDT connected, an alarm files its own incident, the way a monitoring
-company would phone one in — title, location, time, and a narrative saying nobody
-has been identified from the alarm alone. When the run ends, a closing note goes
-on the same incident with the outcome and who was seen at the scene.
-
-Officers get a case to work rather than a blip that disappears. Both halves are
-switches in `Config.Integrations`, and with no MDT at all nothing happens and
-nothing complains.
-
-XS-MDT works out of the box. Any other MDT connects through
-`Config.Integrations.Generic` or the `RegisterMdtProvider` export — see the top
-of this file.
-
+| Command | Who | What |
+|---|---|---|
+| `/robberies` | admins | Opens the builder |
+| `/robberylist` | admins, console | Every job with its crew, police and places |
+| `/robberylive <id>` | admins, console | Switches a job live from chat or the console |
 
 ## Hooking your own systems in
 
-The script does not ship levelling, achievements or its own logging, because
-every server wants those a different way. It fires events instead, and you build
-what you want on top.
+Server events, with everything you need to build levelling, achievements or logs
+on top:
 
 ```lua
 AddEventHandler('XS-Robberies:runStarted', function(data)
@@ -320,38 +126,40 @@ end)
 
 AddEventHandler('XS-Robberies:stageCompleted', function(data)
     -- robberyId, locationId, stageId, stageType, citizenid, source, paid
-    -- This is the one to hang XP off. It fires per stage, for the person who
-    -- did it, and tells you what kind of stage it was.
 end)
 
 AddEventHandler('XS-Robberies:runEnded', function(data)
     -- robberyId, locationId, label, outcome, payout, participants, seconds
-    -- outcome is completed, failed or abandoned.
 end)
 ```
 
-There are read-only exports too:
+Exports:
 
 ```lua
-exports['XS-Robberies']:GetActiveRuns()        -- what is happening now
+exports['XS-Robberies']:GetActiveRuns()
 exports['XS-Robberies']:IsRunActive(locationId)
 exports['XS-Robberies']:IsBlacklisted(citizenid)
-exports['XS-Robberies']:GetRobberies()         -- every definition
+exports['XS-Robberies']:GetRobberies()
+exports['XS-Robberies']:RegisterDoorProvider(name, provider)
+exports['XS-Robberies']:RegisterMdtProvider(name, provider)
 ```
 
-## Sharing
+## Sharing jobs
 
-Every robbery exports to JSON and imports back. Imported ones arrive disabled so
-nothing goes live before you have looked at it.
-
-That is also how a robbery travels between servers — build one, export it, and
-anyone can paste it in. Nothing about it is tied to our map or our items.
+Every job exports from **Rules** and imports from the button next to New job.
+Imported jobs arrive as drafts so nothing goes live before you have looked at it.
+Nothing in a job is tied to our map, so one built on your server works on anyone's.
 
 ## Config
 
-`config.lua` holds only what applies to the whole resource — bridges, who can
-open the builder, payout accounts, run limits, which minigame backends to offer.
-Everything about an individual robbery lives in the database and is edited in
-game.
+`config.lua` only holds what applies to the whole server: bridges, who can open the
+builder, the jobs that can never rob, payout types, run limits, sounds, minigame
+backends, and every line a player reads (`Config.Text`). Everything about a single
+job lives in the database and is changed in game.
 
-PD and EMS can never start or progress a robbery. That is not a setting.
+Police and EMS can never start or work a robbery. Whether going off duty lifts
+that is `Config.BlockedJobsRespectDuty`.
+
+## Support
+
+[Discord](https://discord.gg/XRURAw4TM2)

@@ -8,8 +8,10 @@ function Markers.SetStages(stages, catalogue)
     if catalogue then
         Markers.colours = {}
         for _, entry in ipairs(catalogue) do
-            Markers.colours[entry.id] = entry.colour or { 25, 229, 140 }
+            Markers.colours[entry.id] = entry.colour or { 90, 162, 255 }
         end
+        Markers.colours.prop = { 57, 212, 155 }
+        Markers.colours.npc = { 255, 93, 115 }
     end
 
     if #Markers.stages > 0 then Markers.Start() else Markers.Clear() end
@@ -21,7 +23,7 @@ function Markers.Clear()
 end
 
 local function colourFor(stage)
-    return Markers.colours[stage.type] or { 25, 229, 140 }
+    return Markers.colours[stage.type] or { 90, 162, 255 }
 end
 
 local function drawLabel(stage, colour)

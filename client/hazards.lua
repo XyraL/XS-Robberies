@@ -10,8 +10,6 @@ local function locationRef(location)
     return { locationId = location.id }
 end
 
--- ── Penalties ───────────────────────────────────────────────────────────────
-
 function Hazards.Punish(kind, coords)
     local ped = PlayerPedId()
 
@@ -57,8 +55,6 @@ function Hazards.Punish(kind, coords)
     end
 end
 
--- ── Armed guards ────────────────────────────────────────────────────────────
-
 local function guardKey(location, stage)
     return ('%s_%s'):format(tostring(location.id), stage.id)
 end
@@ -71,8 +67,8 @@ function Hazards.SpawnGuard(location, stage)
     local model = loadModel(opts.ped or 's_m_m_security_01')
     if not model then return nil end
 
-    local ped = CreatePed(4, model, stage.coords.x, stage.coords.y, stage.coords.z - 1.0,
-        stage.coords.h or 0.0, false, false)
+    local ped = CreatePed(4, model, stage.coords.x, stage.coords.y,
+        FloorUnder(stage.coords.x, stage.coords.y, stage.coords.z), stage.coords.h or 0.0, false, false)
 
     SetEntityMaxHealth(ped, tonumber(opts.guardHealth) or 200)
     SetEntityHealth(ped, tonumber(opts.guardHealth) or 200)
@@ -121,6 +117,22 @@ function Hazards.AlarmRaised(locationId)
     end
 end
 
+RegisterNetEvent('XS-Robberies:client:runPublic', function(data)
+    if not data or not data.locationId or data.ended then return end
+
+    local done = {}
+    for _, id in ipairs(data.done or {}) do done[id] = true end
+
+    for _, guard in pairs(guards) do
+        if guard.location.id == data.locationId and done[guard.stage.id] then
+            guard.reported = true
+            if DoesEntityExist(guard.ped) and not IsPedDeadOrDying(guard.ped, true) then
+                SetEntityHealth(guard.ped, 0)
+            end
+        end
+    end
+end)
+
 function Hazards.RemoveGuards(locationId)
     for key, guard in pairs(guards) do
         if guard.location.id == locationId then
@@ -132,8 +144,6 @@ function Hazards.RemoveGuards(locationId)
         end
     end
 end
-
--- ── Laser grids ─────────────────────────────────────────────────────────────
 
 function Hazards.AddLaser(location, stage)
     lasers[guardKey(location, stage)] = { location = location, stage = stage, tripped = false }
@@ -198,8 +208,6 @@ CreateThread(function()
         Wait(wait)
     end
 end)
-
--- ── Guards report their own death ───────────────────────────────────────────
 
 CreateThread(function()
     while true do

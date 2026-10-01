@@ -70,10 +70,6 @@ function mgKeys(handler) {
     window.addEventListener('keydown', MG.keydown);
 }
 
-// ── Signal Lock ──────────────────────────────────────────────────────────────
-// A carrier drifts along the track. Hold it inside the band until the lock
-// fills. Leaving the band drains it.
-
 function mgSignalLock(difficulty) {
     const rounds = 1 + difficulty;
     const bandWidth = 26 - difficulty * 5;
@@ -131,9 +127,6 @@ function mgSignalLock(difficulty) {
     MG.raf = requestAnimationFrame(frame);
 }
 
-// ── Circuit Routing ──────────────────────────────────────────────────────────
-// Lights-out. Every cell you flip flips its neighbours. Kill every light.
-
 function mgCircuit(difficulty) {
     const size = 3 + Math.min(2, difficulty - 1);
     const cells = new Array(size * size).fill(false);
@@ -178,9 +171,6 @@ function mgCircuit(difficulty) {
 
     paint();
 }
-
-// ── Tumbler ──────────────────────────────────────────────────────────────────
-// Set each pin as the driver passes its notch. Miss and the set drops.
 
 function mgTumbler(difficulty) {
     const pins = 3 + difficulty;
@@ -235,8 +225,6 @@ function mgTumbler(difficulty) {
     MG.raf = requestAnimationFrame(frame);
 }
 
-// ── Sequence Recall ──────────────────────────────────────────────────────────
-
 function mgSequence(difficulty) {
     const size = 3;
     const length = 3 + difficulty;
@@ -286,8 +274,6 @@ function mgSequence(difficulty) {
 
     setTimeout(() => play(0), 400);
 }
-
-// ── Frequency Match ──────────────────────────────────────────────────────────
 
 function mgFrequency(difficulty) {
     const target = 15 + Math.random() * 70;
@@ -345,8 +331,6 @@ function mgFrequency(difficulty) {
     MG.raf = requestAnimationFrame(frame);
 }
 
-// ── Wire Trace ───────────────────────────────────────────────────────────────
-
 function mgWireTrace(difficulty) {
     const WIRES = [
         { label: 'Red',    colour: '#ff5a5f' },
@@ -389,10 +373,6 @@ function mgWireTrace(difficulty) {
         mgEnd(pool[parseInt(row.dataset.i, 10)].label === answer.label);
     });
 }
-
-
-// ── Thermite ─────────────────────────────────────────────────────────────────
-// A pattern lights up on the grid. Watch it, then put it back.
 
 function mgThermite(difficulty) {
     const size = 3 + Math.min(2, difficulty - 1);
@@ -447,15 +427,10 @@ function mgThermite(difficulty) {
     });
 }
 
-// ── Fingerprint ──────────────────────────────────────────────────────────────
-// One of these matches the print on file. The others are close.
-
 function mgFingerprint(difficulty) {
     const options = 4 + difficulty * 2;
     const answer = Math.floor(Math.random() * options);
 
-    // Every print has to look different from every other one, or the puzzle is
-    // unfair. Build guaranteed-distinct ridge offsets rather than hashing a seed.
     const signature = () => Array.from({ length: 7 }, () => Math.floor(Math.random() * 9) - 4);
     const signatures = [];
     const seen = new Set();
@@ -502,9 +477,6 @@ function mgFingerprint(difficulty) {
         mgEnd(picked === answer);
     });
 }
-
-// ── Drill ────────────────────────────────────────────────────────────────────
-// Lean on it with W and ease off with S. Too much heat and the bit goes.
 
 function mgDrill(difficulty) {
     let depth = 0, heat = 0, pressure = 0;
@@ -556,9 +528,6 @@ function mgDrill(difficulty) {
 
     MG.raf = requestAnimationFrame(tick);
 }
-
-// ── Pin Pad ──────────────────────────────────────────────────────────────────
-// Guess the combination. Each guess tells you how close every digit is.
 
 function mgPinPad(difficulty) {
     const length = 3 + Math.min(2, difficulty - 1);
@@ -615,9 +584,6 @@ function mgPinPad(difficulty) {
     });
 }
 
-// ── Bypass ───────────────────────────────────────────────────────────────────
-// A cursor runs the track. Stop it inside each gate, in order.
-
 function mgBypass(difficulty) {
     const gates = 2 + difficulty;
     const width = 15 - difficulty * 2.5;
@@ -672,9 +638,6 @@ function mgBypass(difficulty) {
         }
     });
 }
-
-// ── Sweep ────────────────────────────────────────────────────────────────────
-// A radar sweep goes round. Hit it as it crosses the contact.
 
 function mgSweep(difficulty) {
     const hits = 2 + difficulty;

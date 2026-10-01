@@ -98,7 +98,7 @@ function Validate.Robbery(def)
         end
     end
 
-    if escapes == 0 then
+    if escapes == 0 and def.category ~= 'atm' then
         issue(issues, 'warn',
             'No escape zone. This finishes as soon as the last required stage is done, and pays on the spot. Right for an ATM, wrong for a bank.')
     end
@@ -197,6 +197,56 @@ function Validate.Robbery(def)
             if not seen[s.id] then
                 issue(issues, 'error', ('%s can never be reached.'):format(s.label or s.id), s.id)
             end
+        end
+    end
+
+    local anchor = Store.Anchor(def)
+    if anchor.kind == 'model' then
+        if #anchor.models == 0 then
+            issue(issues, 'error', 'This job finds its places by model, but no model is set. Pick one in Places.')
+        end
+    elseif #Store.LocationsFor(def.id) == 0 then
+        issue(issues, 'warn', 'It is not placed anywhere yet. Add a place in Places.')
+    end
+
+    local account = (def.payout or {}).account or 'cash'
+    if account ~= 'cash' and account ~= 'bank' and account ~= 'dirty' then
+        issue(issues, 'warn', ('Unknown payout type "%s". It pays as cash.'):format(tostring(account)))
+    end
+
+    local everyStage = {}
+    for _, st in ipairs(all) do everyStage[st.id] = true end
+
+    local propIds = {}
+    for index, prop in ipairs(def.props or {}) do
+        local name = prop.label or prop.model or ('Prop %d'):format(index)
+
+        if propIds[prop.id or ''] then
+            issue(issues, 'error', ('Two props share the id "%s".'):format(tostring(prop.id)))
+        end
+        propIds[prop.id or ''] = true
+
+        if not prop.model or prop.model == '' then
+            issue(issues, 'error', ('%s has no model.'):format(name))
+        end
+        if not prop.coords then
+            issue(issues, 'error', ('%s has not been placed.'):format(name))
+        end
+        if prop.linkStage and prop.linkStage ~= '' and not everyStage[prop.linkStage] then
+            issue(issues, 'warn', ('%s follows a step that no longer exists.'):format(name))
+        end
+        if prop.onDone == 'swap' and (not prop.swapModel or prop.swapModel == '') then
+            issue(issues, 'warn', ('%s swaps when its step is done, but has nothing to swap to.'):format(name))
+        end
+    end
+
+    for index, npc in ipairs(def.npcs or {}) do
+        local name = npc.label or npc.model or ('NPC %d'):format(index)
+        if not npc.model or npc.model == '' then
+            issue(issues, 'error', ('%s has no model.'):format(name))
+        end
+        if not npc.coords then
+            issue(issues, 'error', ('%s has not been placed.'):format(name))
         end
     end
 

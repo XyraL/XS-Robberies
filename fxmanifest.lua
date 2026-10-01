@@ -4,19 +4,9 @@ lua54 'yes'
 
 name 'XS-Robberies'
 author 'XyraL'
-description 'XS-Robberies. Build any robbery from an in-game NUI: stores, banks, jewelry, houses, custom MLOs. Standalone for QBox/QBCore.'
-version '0.11.0'
+description 'XS-Robberies. Build any robbery in-game: stores, ATMs, banks, jewelry, houses, vehicles, custom MLOs. QBox and QBCore.'
+version '1.0.0'
 
--- Works on QBox (qbx_core) OR QBCore (qb-core). The bridge auto-detects.
--- Inventory: ox_inventory / qb-inventory / qs-inventory / codem-inventory /
--- core_inventory / ps-inventory — bridge auto-detects, force via Config.Bridges.
--- Target: ox_target / qb-target, or a built-in marker and key prompt when the
--- server runs neither. See Config.Interaction.
--- Dispatch: XS-Dispatch / ps-dispatch / qs-dispatch / cd_dispatch /
--- core_dispatch / rcore_dispatch / origen_police, with a plain-notification
--- fallback so it works with none of them.
--- MDT: XS-MDT out of the box, any other through Config.Integrations.Generic
--- or the RegisterMdtProvider export. Entirely optional.
 dependencies {
     'ox_lib',
     'oxmysql',
@@ -38,6 +28,8 @@ client_scripts {
     'client/main.lua',
     'client/anchors.lua',
     'client/run.lua',
+    'client/props.lua',
+    'client/npcs.lua',
     'client/hazards.lua',
     'client/hud.lua',
     'client/sounds.lua',
@@ -58,7 +50,6 @@ server_scripts {
     'server/db.lua',
     'server/settings.lua',
     'server/store.lua',
-    'server/presets.lua',
     'server/runs.lua',
     'server/validate.lua',
     'server/main.lua',
@@ -69,17 +60,22 @@ ui_page 'html/index.html'
 
 files {
     'html/index.html',
-    'html/css/style.css',
+    'html/css/app.css',
+    'html/css/play.css',
     'html/js/core.js',
+    'html/js/model.js',
     'html/js/hud.js',
     'html/js/minigames.js',
+    'html/js/steps.js',
+    'html/js/views/plan.js',
+    'html/js/views/flow.js',
+    'html/js/views/loot.js',
+    'html/js/views/props.js',
+    'html/js/views/npcs.js',
+    'html/js/views/places.js',
+    'html/js/views/rules.js',
+    'html/js/views/server.js',
+    'html/js/inspector.js',
+    'html/js/setup.js',
     'html/js/app.js',
-    'html/js/panels/robberies.js',
-    'html/js/panels/editor.js',
-    'html/js/panels/graph.js',
-    'html/js/panels/locations.js',
-    'html/js/panels/loot.js',
-    'html/js/panels/live.js',
-    'html/js/panels/history.js',
-    'html/js/panels/settings.js',
 }

@@ -61,8 +61,6 @@ Settings.tunables = {
     { key = 'respectDuty',      label = 'Off-duty police and EMS may rob', kind = 'toggle' },
     { key = 'logRuns',          label = 'Write finished runs to history', kind = 'toggle' },
     { key = 'abandonAfter',     label = 'Abandon a run after', kind = 'number', min = 60, max = 7200, unit = 's' },
-    { key = 'theme',            label = 'Panel theme', kind = 'choice',
-      options = { 'emerald', 'amber', 'violet', 'rose', 'ice', 'gold' } },
 }
 
 local function fallbackFor(key)
@@ -71,7 +69,6 @@ local function fallbackFor(key)
     if key == 'respectDuty'      then return Config.BlockedJobsRespectDuty == true end
     if key == 'logRuns'          then return Config.Run.LogRuns ~= false end
     if key == 'abandonAfter'     then return Config.Run.AbandonAfter or 600 end
-    if key == 'theme'            then return Config.Builder.Theme or 'emerald' end
 end
 
 function Settings.Tunable(key)
