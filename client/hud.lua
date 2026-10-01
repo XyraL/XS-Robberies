@@ -1,7 +1,7 @@
 Hud = { visible = false }
 
 local function objectivesFor(state)
-    local location = Locations[state.locationId]
+    local location = Locations[state.locationId] or (ModelInstances or {})[state.locationId]
     if not location then return {} end
 
     local done, unlocked = {}, {}
@@ -36,8 +36,17 @@ function Hud.Update(state)
             escapeDeadline = state.escapeDeadline,
             serverTime = state.now or 0,
             objectives = objectivesFor(state),
+            codes = state.codes or {},
+            cancel = Config.Run.CancelCommand or '',
         },
     })
+end
+
+if Config.Run.CancelCommand and Config.Run.CancelCommand ~= '' then
+    CreateThread(function()
+        Wait(2000)
+        TriggerEvent('chat:addSuggestion', '/' .. Config.Run.CancelCommand, 'Call off the job you are on')
+    end)
 end
 
 function Hud.Hide()

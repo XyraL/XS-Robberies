@@ -164,6 +164,35 @@ function Target.AddEntity(entity, opts, distance)
     end
 end
 
+function Target.AddEntityOption(entity, option, distance)
+    local handle = { entity = entity, name = option.name, label = option.label }
+
+    if Target.name == 'ox_target' then
+        option.distance = option.distance or distance
+        exports.ox_target:addLocalEntity(entity, { option })
+    elseif Target.name == 'qb-target' then
+        exports['qb-target']:AddTargetEntity(entity, {
+            options = toQb({ option }), distance = distance or 2.0,
+        })
+    else
+        handle.builtin = builtinAdd({ entity = entity, options = { option } })
+    end
+
+    return handle
+end
+
+function Target.RemoveEntityOption(handle)
+    if not handle or not handle.entity then return end
+
+    if Target.name == 'ox_target' then
+        exports.ox_target:removeLocalEntity(handle.entity, handle.name)
+    elseif Target.name == 'qb-target' then
+        exports['qb-target']:RemoveTargetEntity(handle.entity, handle.label)
+    else
+        builtinRemove(handle.builtin)
+    end
+end
+
 function Target.RemoveEntity(entity)
     if Target.name == 'ox_target' then
         exports.ox_target:removeLocalEntity(entity)

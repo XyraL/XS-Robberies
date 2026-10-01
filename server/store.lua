@@ -157,6 +157,7 @@ function Store.Save(def, author)
         stages   = def.stages,
         props    = def.props,
         npcs     = def.npcs,
+        contact  = def.contact,
         notes    = def.notes,
     }
 
@@ -305,21 +306,46 @@ function Store.LayoutStages(def, origin, offsets, overrides)
 
     local off = switchedOff(def, overrides)
 
+    local live = {}
+    for _, stage in ipairs(def.stages or {}) do
+        if stage.coords and not off[stage.id] then live[stage.id] = true end
+    end
+
     local function keep(requires)
         local out = {}
         for _, id in ipairs(requires or {}) do
-            if not off[id] then out[#out + 1] = id end
+            if live[id] then out[#out + 1] = id end
+        end
+        return out
+    end
+
+    local function doorsFor(list)
+        local out = {}
+        for _, door in ipairs(type(list) == 'table' and list or {}) do
+            if door.x and door.y and door.z then
+                local at = place(door)
+                local moved = math.abs(at.x - door.x) + math.abs(at.y - door.y) + math.abs(at.z - door.z)
+                out[#out + 1] = {
+                    model = door.model,
+                    x = at.x, y = at.y, z = at.z, h = at.h,
+                    id = moved < 0.5 and door.id or nil,
+                    label = door.label,
+                }
+            elseif door.id and door.id ~= '' then
+                out[#out + 1] = { id = door.id, label = door.label }
+            end
         end
         return out
     end
 
     local stages = {}
     for _, stage in ipairs(def.stages or {}) do
-        if stage.coords and not off[stage.id] then
+        if live[stage.id] then
             local opts = {}
             for k, v in pairs(stage.opts or {}) do opts[k] = v end
-            if opts.codeFrom and off[opts.codeFrom] then opts.codeFrom = '' end
-            if opts.pairWith and off[opts.pairWith] then opts.pairWith = '' end
+            if opts.codeFrom and not live[opts.codeFrom] then opts.codeFrom = '' end
+            if opts.pairWith and not live[opts.pairWith] then opts.pairWith = '' end
+            if opts.doors then opts.doors = doorsFor(opts.doors) end
 
             stages[#stages + 1] = {
                 id = stage.id,
@@ -395,7 +421,40 @@ function Store.Anchor(def)
         pool = anchor.pool or 'object',
         scanRange = anchor.scanRange or 80.0,
         label = anchor.label,
+        areas = anchor.areas or {},
     }
+end
+
+function Store.InArea(areas, point)
+    if not areas or #areas == 0 then return true end
+    for _, area in ipairs(areas) do
+        local dx, dy = (point.x or 0.0) - (area.x or 0.0), (point.y or 0.0) - (area.y or 0.0)
+        if math.sqrt(dx * dx + dy * dy) <= (tonumber(area.radius) or 0.0) then return true end
+    end
+    return false
+end
+
+function Store.NeedsContact(def)
+    local c = def and def.contact
+    return c ~= nil and c.enabled == true and c.coords ~= nil and c.model ~= nil and c.model ~= ''
+end
+
+function Store.Contacts()
+    local out = {}
+    for _, def in pairs(Store.robberies) do
+        if def.enabled and Store.NeedsContact(def) then
+            local c = def.contact
+            out[#out + 1] = {
+                robberyId = def.id,
+                name = c.name,
+                model = c.model,
+                coords = c.coords,
+                scenario = c.scenario,
+                label = c.label,
+            }
+        end
+    end
+    return out
 end
 
 function Store.Resolve(locationId)
@@ -414,9 +473,11 @@ function Store.Resolve(locationId)
     return {
         id = loc.id,
         robberyId = def.id,
+        category = def.category or 'custom',
         name = def.name,
         label = loc.label,
         enabled = def.enabled and loc.enabled,
+        needsContact = Store.NeedsContact(def),
         origin = loc.origin,
         payoutMultiplier = overrides.payoutMultiplier or 1.0,
         payout = def.payout or {},
@@ -439,15 +500,18 @@ function Store.ResolveModel(robberyId, anchor)
     if not def or not def.enabled then return nil end
     if Store.Anchor(def).kind ~= 'model' then return nil end
     if not anchor or not anchor.x then return nil end
+    if not Store.InArea(Store.Anchor(def).areas, anchor) then return nil end
 
     local origin = { x = anchor.x, y = anchor.y, z = anchor.z, h = anchor.h or 0.0 }
 
     return {
         id = Store.InstanceId(robberyId, origin),
         robberyId = def.id,
+        category = def.category or 'custom',
         name = def.name,
         label = def.name,
         enabled = true,
+        needsContact = Store.NeedsContact(def),
         origin = origin,
         payoutMultiplier = 1.0,
         payout = def.payout or {},
@@ -473,6 +537,8 @@ function Store.ModelRobberies()
                 models = anchor.models,
                 pool = anchor.pool or 'object',
                 scanRange = anchor.scanRange,
+                areas = anchor.areas,
+                needsContact = Store.NeedsContact(def),
                 radius = def.radius or 30.0,
                 blip = def.blip or {},
                 stages = def.stages or {},

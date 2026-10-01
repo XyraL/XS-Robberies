@@ -17,7 +17,7 @@ local function spawnAt(model, coords)
     end
     if not HasModelLoaded(hash) then return nil end
 
-    local object = CreateObjectNoOffset(hash, coords.x, coords.y, coords.z, false, false, false)
+    local object = CreateObjectNoOffset(hash, coords.x, coords.y, coords.z + PropLift(hash), false, false, false)
     SetEntityHeading(object, coords.h or 0.0)
     FreezeEntityPosition(object, true)
     SetEntityInvincible(object, true)
@@ -57,17 +57,16 @@ function Props.Build(location)
     Props.Apply(location.id)
 end
 
-function Props.Track(location, stage, entity)
+function Props.Track(location, stage, entity, base)
     local opts = stage.opts or {}
     local onDone = opts.propDone or 'keep'
     if onDone == 'keep' then return end
 
-    local coords = GetEntityCoords(entity)
     local list = bucket(location.id)
     list[#list + 1] = {
         entity = entity,
         owned = false,
-        coords = { x = coords.x, y = coords.y, z = coords.z, h = GetEntityHeading(entity) },
+        coords = base,
         linkStage = stage.id,
         onDone = onDone,
         swapModel = opts.propSwap,

@@ -41,8 +41,12 @@ const RulesView = {
                         <div class="grid2">
                             ${fieldNumber('gates.locationCooldown', 'Place resets after', g.locationCooldown ?? 1800, { min: 0, unit: 's', hint: 'Robbed props come back when this runs out.' })}
                             ${fieldNumber('gates.playerCooldown', 'Each robber waits', g.playerCooldown ?? 900, { min: 0, unit: 's' })}
+                            ${fieldSelect('gates.playerCooldownScope', 'Before another', g.playerCooldownScope || 'type', [
+                                { value: 'type', label: `${jobType(job.category).label} job` },
+                                { value: 'job', label: 'Run of this job' },
+                                { value: 'all', label: 'Robbery of any kind' },
+                            ], { hint: 'The first one lets a robber hit a different kind of job straight away.' })}
                             ${fieldNumber('gates.globalCooldown', 'Every place of this job waits', g.globalCooldown ?? 0, { min: 0, unit: 's', hint: '0 for none.' })}
-                            <div></div>
                             ${fieldNumber('gates.proximityMetres', 'No other job within', g.proximityMetres ?? 0, { min: 0, unit: 'm' })}
                             ${fieldNumber('gates.proximitySeconds', 'For', g.proximitySeconds ?? 0, { min: 0, unit: 's', hint: 'Stops a crew hitting the whole street at once. Both need a number.' })}
                         </div>

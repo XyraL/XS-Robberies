@@ -98,10 +98,12 @@ RegisterNUICallback('beginPlacement', function(data, cb)
         colour = data.colour,
         mode = data.mode or 'point',
         radius = data.radius,
+        maxRadius = data.maxRadius,
         origin = data.origin,
         snapToGround = data.snapToGround,
         previewModel = data.previewModel,
         pickEntity = data.pickEntity,
+        pickDoor = data.pickDoor,
         layout = data.layout,
         guided = data.guided,
         session = data.session == true,
@@ -121,10 +123,12 @@ RegisterNUICallback('beginPlacement', function(data, cb)
         action = result.action,
         coords = coords,
         previewFailed = result.previewFailed == true,
-        pick = (placed and data.pickEntity) and {
+        pick = (placed and (data.pickEntity or data.pickDoor)) and {
             model = result.model,
             name = result.name,
             vehicle = result.vehicle,
+            doorId = result.doorId,
+            doorLock = result.doorLock,
         } or nil,
     })
 end)

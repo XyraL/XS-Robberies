@@ -1,4 +1,4 @@
-Runs = { active = {}, tokens = {}, state = {}, recent = {}, looted = {} }
+Runs = { active = {}, tokens = {}, state = {}, recent = {}, looted = {}, doorResets = {} }
 
 local function now()
     return os.time()
@@ -43,6 +43,39 @@ function Runs.CooldownLeft(scope, key)
 
     if not row or not row.expires then return 0 end
     return math.max(0, row.expires - now())
+end
+
+function Runs.CooldownLeftAny(scope, keys)
+    if #keys == 0 then return 0 end
+
+    local marks, params = {}, { scope }
+    for i, key in ipairs(keys) do
+        marks[i] = '?'
+        params[#params + 1] = tostring(key)
+    end
+
+    local row = MySQL.single.await(([[
+        SELECT MAX(UNIX_TIMESTAMP(expires_at)) AS expires FROM xs_robbery_cooldowns
+        WHERE scope = ? AND scope_key IN (%s)
+    ]]):format(table.concat(marks, ', ')), params)
+
+    if not row or not row.expires then return 0 end
+    return math.max(0, row.expires - now())
+end
+
+function Runs.PlayerCooldownKey(citizenid, job)
+    local scope = (job.gates or {}).playerCooldownScope or 'type'
+    if scope == 'all' then return tostring(citizenid) end
+    if scope == 'job' then return ('%s:job:%s'):format(citizenid, job.robberyId) end
+    return ('%s:type:%s'):format(citizenid, job.category or 'custom')
+end
+
+function Runs.PlayerCooldownLeft(citizenid, job)
+    return Runs.CooldownLeftAny('player', {
+        tostring(citizenid),
+        ('%s:type:%s'):format(citizenid, job.category or 'custom'),
+        ('%s:job:%s'):format(citizenid, job.robberyId),
+    })
 end
 
 local function distance(a, b)
@@ -166,6 +199,12 @@ function Runs.Push(run)
         alarm = run.alarm,
     })
 
+    local codes = {}
+    for stageId, code in pairs(run.codes) do
+        local stage = stageById(run.location, stageId)
+        codes[#codes + 1] = { label = stage and stage.label or stageId, code = code }
+    end
+
     for citizenid, entry in pairs(run.participants) do
         if entry.src then
             TriggerClientEvent('XS-Robberies:client:runState', entry.src, {
@@ -177,6 +216,7 @@ function Runs.Push(run)
                 unlocked = unlocked,
                 done = done,
                 pot = run.pot[citizenid] or {},
+                codes = codes,
                 escapeDeadline = run.escapeDeadline,
                 now = now(),
             })
@@ -185,10 +225,42 @@ function Runs.Push(run)
 end
 
 function Runs.Unlocked(run, stage)
-    for _, dep in ipairs(stage.requires or {}) do
-        if not (run.stages[dep] or {}).done then return false end
+    for _, dep in ipairs(Stages.Needs(stage)) do
+        if stageById(run.location, dep) and not (run.stages[dep] or {}).done then return false end
     end
     return true
+end
+
+local function isOptional(stage)
+    return (stage.opts or {}).optional == true
+end
+
+function Runs.RequiredDone(run)
+    for _, stage in ipairs(run.location.stages or {}) do
+        if not isOptional(stage) and not (run.stages[stage.id] or {}).done then return false end
+    end
+    return true
+end
+
+function Runs.EverythingDone(run)
+    for _, stage in ipairs(run.location.stages or {}) do
+        local skip = stage.type == 'escape' and isOptional(stage)
+        if not skip and not (run.stages[stage.id] or {}).done then return false end
+    end
+    return true
+end
+
+function Runs.AnythingDone(run)
+    return next(run.stages) ~= nil or next(run.grabs or {}) ~= nil
+end
+
+function Runs.Escaping(run)
+    for _, stage in ipairs(run.location.stages or {}) do
+        if stage.type == 'escape' and not (run.stages[stage.id] or {}).done and Runs.Unlocked(run, stage) then
+            return true
+        end
+    end
+    return false
 end
 
 function Runs.Get(locationId)
@@ -220,6 +292,10 @@ function Runs.Start(src, location)
         return nil, T('blockedJob')
     end
 
+    if not Contacts.Allowed(citizenid, location) then
+        return nil, T('needContact')
+    end
+
     local police = Framework.CountPolice(gates.policeOnDuty ~= false)
     if police < (gates.policeRequired or 0) then
         return nil, T('noPolice', police, gates.policeRequired or 0)
@@ -230,7 +306,7 @@ function Runs.Start(src, location)
         return nil, T('locationCooling', math.ceil(left / 60))
     end
 
-    left = Runs.CooldownLeft('player', citizenid)
+    left = Runs.PlayerCooldownLeft(citizenid, location)
     if left > 0 then
         return nil, T('playerCooling', math.ceil(left / 60))
     end
@@ -271,7 +347,7 @@ function Runs.Start(src, location)
 
     local hasEscape = false
     for _, stage in ipairs(location.stages or {}) do
-        if stage.type == 'escape' then hasEscape = true break end
+        if stage.type == 'escape' and not isOptional(stage) then hasEscape = true break end
     end
 
     local run = {
@@ -287,10 +363,12 @@ function Runs.Start(src, location)
         powerCut = false,
         codes = {},
         lastPresence = now(),
+        lastActivity = now(),
     }
 
     Runs.active[location.id] = run
     Runs.Join(run, src, citizenid)
+    Contacts.Consume(citizenid, location.robberyId)
 
     Runs.recent[#Runs.recent + 1] = { coords = location.origin, at = now() }
     while #Runs.recent > 40 do table.remove(Runs.recent, 1) end
@@ -332,14 +410,19 @@ function Runs.Join(run, src, citizenid)
     return true
 end
 
-function Runs.Finish(run, outcome)
+function Runs.Finish(run, outcome, opts)
     if not Runs.active[run.locationId] then return end
     Runs.active[run.locationId] = nil
+    opts = opts or {}
 
     local gates = run.location.gates or {}
-    Runs.Cooldown('location', run.locationId, gates.locationCooldown)
-    if (gates.globalCooldown or 0) > 0 then
-        Runs.Cooldown('global', run.location.robberyId, gates.globalCooldown)
+    local cooldowns = opts.cooldowns ~= false
+
+    if cooldowns then
+        Runs.Cooldown('location', run.locationId, gates.locationCooldown)
+        if (gates.globalCooldown or 0) > 0 then
+            Runs.Cooldown('global', run.location.robberyId, gates.globalCooldown)
+        end
     end
 
     local looted = {}
@@ -347,7 +430,7 @@ function Runs.Finish(run, outcome)
         if entry.done then looted[#looted + 1] = id end
     end
 
-    local resetIn = math.max(0, math.floor(tonumber(gates.locationCooldown) or 0))
+    local resetIn = cooldowns and math.max(0, math.floor(tonumber(gates.locationCooldown) or 0)) or 0
     if resetIn > 0 and #looted > 0 then
         Runs.looted[run.locationId] = { done = looted, untilAt = now() + resetIn }
     else
@@ -361,8 +444,8 @@ function Runs.Finish(run, outcome)
         resetIn = resetIn,
     })
 
-    for _, door in ipairs(run.doors or {}) do
-        Doors.SetState(door.id, door.restore)
+    if run.doors and #run.doors > 0 then
+        Runs.doorResets[#Runs.doorResets + 1] = { at = now() + math.max(resetIn, 120), run = run }
     end
 
     if run.blackout then
@@ -377,11 +460,14 @@ function Runs.Finish(run, outcome)
     end
 
     for citizenid, entry in pairs(run.participants) do
-        Runs.Cooldown('player', citizenid, gates.playerCooldown)
+        if cooldowns then
+            Runs.Cooldown('player', Runs.PlayerCooldownKey(citizenid, run.location), gates.playerCooldown)
+        end
         if entry.src then
             TriggerClientEvent('XS-Robberies:client:runEnded', entry.src, {
                 locationId = run.locationId,
                 outcome = outcome,
+                reason = opts.reason,
             })
         end
     end
@@ -392,18 +478,14 @@ function Runs.Finish(run, outcome)
     for _, earned in pairs(run.pot) do
         for _, amount in pairs(earned) do total = total + amount end
     end
+    total = total + (run.paidOut or 0)
 
     if Settings.Tunable('logRuns') and run.dbId then
-        local done = {}
-        for id, entry in pairs(run.stages) do
-            if entry.done then done[#done + 1] = id end
-        end
-
         MySQL.prepare.await([[
             UPDATE xs_robbery_runs
             SET ended_at = CURRENT_TIMESTAMP, outcome = ?, participants = ?, stages_done = ?, payout = ?
             WHERE id = ?
-        ]], { outcome, json.encode(participantList(run)), json.encode(done), math.floor(total), run.dbId })
+        ]], { outcome, json.encode(participantList(run)), json.encode(looted), math.floor(total), run.dbId })
     end
 
     if Config.Run.Webhook and Config.Run.Webhook ~= '' then
@@ -431,6 +513,48 @@ function Runs.Finish(run, outcome)
         participants = participantList(run),
         seconds = now() - run.startedAt,
     })
+end
+
+function Runs.Complete(run)
+    Runs.PayOut(run)
+    Runs.Finish(run, 'completed')
+end
+
+function Runs.Cancel(src)
+    local citizenid = Framework.GetCitizenId(src)
+    if not citizenid then return false end
+
+    for _, run in pairs(Runs.active) do
+        if run.participants[citizenid] then
+            local others = 0
+            for id, entry in pairs(run.participants) do
+                if id ~= citizenid and entry.src and GetPlayerName(entry.src) then others = others + 1 end
+            end
+
+            local worked = Runs.AnythingDone(run)
+
+            if others == 0 then
+                Runs.Finish(run, 'cancelled', { cooldowns = worked, reason = 'cancelled' })
+                return true
+            end
+
+            run.participants[citizenid] = nil
+            if worked then
+                Runs.Cooldown('player', Runs.PlayerCooldownKey(citizenid, run.location),
+                    (run.location.gates or {}).playerCooldown)
+            end
+
+            TriggerClientEvent('XS-Robberies:client:runEnded', src, {
+                locationId = run.locationId,
+                outcome = 'left',
+                reason = 'left',
+            })
+            Runs.Push(run)
+            return true
+        end
+    end
+
+    return false
 end
 
 local function payDirty(src, amount)
@@ -490,6 +614,7 @@ function Runs.Credit(run, src, account, amount)
             run.pot[share.citizenid][account] = (run.pot[share.citizenid][account] or 0) + each
         else
             payAccount(share.src, account, each)
+            run.paidOut = (run.paidOut or 0) + each
             if share.src ~= src then
                 Framework.Notify(share.src, T('crewShare', each), 'success')
             end
@@ -567,6 +692,51 @@ local function markLooted(locationId, stageId, restock)
     }
 end
 
+local function codeLength(location, stage)
+    local length = 0
+    for _, other in ipairs(location.stages or {}) do
+        local opts = other.opts or {}
+        if other.type == 'keypad' and opts.codeFrom == stage.id then
+            length = math.max(length, tonumber(opts.digits) or 4)
+        end
+    end
+    if length == 0 then length = tonumber((stage.opts or {}).revealCode) or 0 end
+    return math.min(8, math.floor(length))
+end
+
+local function markDone(run, stage, src)
+    run.stages[stage.id] = { done = true, by = Framework.GetCitizenId(src), at = now() }
+
+    local digits = codeLength(run.location, stage)
+    if digits > 0 and not run.codes[stage.id] then
+        local out = {}
+        for i = 1, digits do out[i] = tostring(math.random(0, 9)) end
+        run.codes[stage.id] = table.concat(out)
+    end
+
+    if Stages.HasDoors(stage) then
+        local opts = stage.opts or {}
+        local doors = {}
+        for _, door in ipairs(type(opts.doors) == 'table' and opts.doors or {}) do doors[#doors + 1] = door end
+        if opts.doorId and opts.doorId ~= '' then doors[#doors + 1] = { id = opts.doorId } end
+
+        CreateThread(function()
+            local records = Doors.Apply(doors, opts, src)
+            if opts.relockOnEnd == false or #records == 0 then return end
+
+            if Runs.active[run.locationId] == run then
+                run.doors = run.doors or {}
+                for _, record in ipairs(records) do run.doors[#run.doors + 1] = record end
+                return
+            end
+
+            local looted = Runs.looted[run.locationId]
+            local wait = looted and (looted.untilAt - now()) or 0
+            Runs.doorResets[#Runs.doorResets + 1] = { at = now() + math.max(wait, 120), run = { doors = records } }
+        end)
+    end
+end
+
 function Runs.EscapeDeadline(run)
     for _, stage in ipairs(run.location.stages or {}) do
         if stage.type == 'escape' and not (run.stages[stage.id] or {}).done then
@@ -618,6 +788,13 @@ function Runs.Begin(src, ref, stageId)
     local ped = GetPlayerPed(src)
     if distance(GetEntityCoords(ped), stage.coords) > 6.0 then
         return { ok = false, error = T('tooFar') }
+    end
+
+    local citizenid = Framework.GetCitizenId(src)
+    for otherId, other in pairs(Runs.active) do
+        if otherId ~= locationId and citizenid and other.participants[citizenid] then
+            return { ok = false, error = T('onAnotherJob') }
+        end
     end
 
     local run = Runs.active[locationId]
@@ -675,18 +852,32 @@ function Runs.Begin(src, ref, stageId)
     end
 
     if stage.type == 'escape' and run.escapeDeadline and now() > run.escapeDeadline then
-        Runs.Finish(run, 'failed')
+        Runs.Finish(run, 'failed', { reason = 'failed' })
         return { ok = false, error = T('outOfTime') }
     end
 
+    local code, crack = nil, false
+    if stage.type == 'keypad' then
+        local from = opts.codeFrom or ''
+        if from ~= '' and stageById(location, from) then
+            code = run.codes[from]
+            if not code then return { ok = false, error = T('noCodeYet') } end
+        else
+            crack = true
+        end
+    end
+
+    run.lastActivity = now()
     local duration = stageDuration(stage)
 
-    local token = ('%d:%d:%s'):format(src, now(), stageId)
+    Runs.issued = (Runs.issued or 0) + 1
+    local token = ('%d:%d:%s:%d'):format(src, now(), stageId, Runs.issued)
     Runs.tokens[token] = {
         src = src,
+        run = run,
         locationId = locationId,
         stageId = stageId,
-        startedAt = os.clock(),
+        startedAt = GetGameTimer(),
         duration = duration,
     }
 
@@ -711,7 +902,8 @@ function Runs.Begin(src, ref, stageId)
         minigame = opts.minigame,
         type = stage.type,
         opts = opts,
-        code = run.codes[opts.codeFrom or ''] or nil,
+        code = code,
+        crack = crack,
         grabsLeft = stage.type == 'container'
             and ((opts.grabs or 1) - (run.grabs[stageId] or 0)) or nil,
         partnerHeld = partnerHeld,
@@ -728,13 +920,13 @@ function Runs.FinishStage(src, token, success)
     Runs.tokens[token] = nil
 
     local run = Runs.active[ticket.locationId]
-    if not run then return { ok = false, error = T('runOver') } end
+    if not run or run ~= ticket.run then return { ok = false, error = T('runOver') } end
 
     local location = run.location
     local stage = stageById(location, ticket.stageId)
     if not stage then return { ok = false, error = T('stageGone') } end
 
-    local elapsed = os.clock() - ticket.startedAt
+    local elapsed = (GetGameTimer() - ticket.startedAt) / 1000
     if success and elapsed < (ticket.duration * 0.75) then
         return { ok = false, error = T('tooQuick') }
     end
@@ -746,6 +938,7 @@ function Runs.FinishStage(src, token, success)
 
     local opts = stage.opts or {}
     run.lastPresence = now()
+    run.lastActivity = now()
 
     if success and stage.type == 'twoman' then
         local partner = (run.holds or {})[opts.pairWith or '']
@@ -758,7 +951,7 @@ function Runs.FinishStage(src, token, success)
         if opts.onFail == 'escalate' then
             Runs.Dispatch(run, ('Something went wrong at %s.'):format(location.label or 'a business'))
         elseif opts.onFail == 'fail' then
-            Runs.Finish(run, 'failed')
+            Runs.Finish(run, 'failed', { reason = 'failed' })
             return { ok = true, failed = true, ended = true }
         elseif (location.response or {}).dispatchOnFail then
             Runs.Dispatch(run, ('Alarm at %s.'):format(location.label or 'a business'))
@@ -838,12 +1031,12 @@ function Runs.FinishStage(src, token, success)
         award()
     end
 
-    run.stages[stage.id] = { done = true, by = Framework.GetCitizenId(src), at = now() }
+    markDone(run, stage, src)
 
     if stage.type == 'twoman' then
-        local partnerId = opts.pairWith
-        if partnerId and not (run.stages[partnerId] or {}).done then
-            run.stages[partnerId] = { done = true, by = Framework.GetCitizenId(src), at = now() }
+        local partner = stageById(location, opts.pairWith or '')
+        if partner and not (run.stages[partner.id] or {}).done then
+            markDone(run, partner, src)
         end
     end
 
@@ -861,17 +1054,6 @@ function Runs.FinishStage(src, token, success)
             })
             run.blackout = true
         end
-    elseif stage.type == 'doorlock' then
-        local doorId = opts.doorId
-        if doorId and doorId ~= '' and Doors.Available() then
-            local lock = opts.doorAction == 'lock'
-            Doors.SetState(doorId, lock)
-
-            if opts.relockOnEnd ~= false then
-                run.doors = run.doors or {}
-                run.doors[#run.doors + 1] = { id = doorId, restore = not lock }
-            end
-        end
     elseif stage.type == 'hostage' then
         if (opts.stallFor or 0) > 0 and run.alarm == 'pending' and run.alarmAt then
             run.alarmAt = run.alarmAt + opts.stallFor
@@ -880,12 +1062,6 @@ function Runs.FinishStage(src, token, success)
             panicked = true
             Runs.Dispatch(run, ('Panic alarm from %s.'):format(location.label or 'a business'))
         end
-    end
-
-    local reveal = tonumber(opts.revealCode) or 0
-    if reveal > 0 then
-        local low = 10 ^ (reveal - 1)
-        run.codes[stage.id] = tostring(math.random(low, low * 10 - 1))
     end
 
     if opts.restock ~= nil then
@@ -899,35 +1075,23 @@ function Runs.FinishStage(src, token, success)
         end
 
         if run.escapeDeadline and now() > run.escapeDeadline then
-            Runs.Finish(run, 'failed')
+            Runs.Finish(run, 'failed', { reason = 'failed' })
             return { ok = true, failed = true, ended = true }
         end
 
-        Runs.PayOut(run)
-        Runs.Finish(run, 'completed')
-        return { ok = true, ended = true, completed = true }
+        Runs.Complete(run)
+        return { ok = true, ended = true, completed = true, paid = paid }
     end
 
-    if not run.hasEscape then
-        local outstanding = false
-        for _, other in ipairs(location.stages or {}) do
-            if not (other.opts or {}).optional and not (run.stages[other.id] or {}).done then
-                outstanding = true
-                break
-            end
-        end
-
-        if not outstanding then
-            Runs.PayOut(run)
-            Runs.Finish(run, 'completed')
-            return {
-                ok = true,
-                ended = true,
-                completed = true,
-                paid = paid,
-                code = run.codes[stage.id],
-            }
-        end
+    if not run.hasEscape and Runs.EverythingDone(run) then
+        Runs.Complete(run)
+        return {
+            ok = true,
+            ended = true,
+            completed = true,
+            paid = paid,
+            code = run.codes[stage.id],
+        }
     end
 
     Runs.EscapeDeadline(run)
@@ -967,9 +1131,10 @@ CreateThread(function()
                 Runs.Dispatch(run, 'Still in progress.')
             end
 
-            local present = false
+            local present, online = false, false
             for _, entry in pairs(run.participants) do
                 if entry.src and GetPlayerName(entry.src) then
+                    online = true
                     local coords = GetEntityCoords(GetPlayerPed(entry.src))
                     if distance(coords, run.location.origin) <= (Config.Run.PresenceRadius or 120.0) then
                         present = true
@@ -980,14 +1145,42 @@ CreateThread(function()
 
             if present then run.lastPresence = now() end
 
-            if now() - run.lastPresence > (Settings.Tunable('abandonAfter') or 600) then
-                Runs.Finish(run, 'abandoned')
+            local escaping = run.hasEscape and Runs.Escaping(run)
+            local idleAfter = Config.Run.IdleAfter or 0
+
+            if not online and now() - run.lastPresence > 60 then
+                Runs.Finish(run, 'abandoned', { reason = 'abandoned' })
+            elseif not present and not run.hasEscape and Runs.RequiredDone(run) then
+                Runs.Complete(run)
+            elseif not escaping and now() - run.lastPresence > (Settings.Tunable('abandonAfter') or 300) then
+                Runs.Finish(run, 'abandoned', { reason = 'abandoned' })
+            elseif not escaping and idleAfter > 0 and now() - (run.lastActivity or run.startedAt) > idleAfter then
+                Runs.Finish(run, 'abandoned', { reason = 'idle' })
             elseif (Config.Run.MaxDuration or 0) > 0
                 and now() - run.startedAt > Config.Run.MaxDuration then
-                Runs.Finish(run, 'failed')
+                Runs.Finish(run, 'failed', { reason = 'tooLong' })
+            end
+        end
+
+        local stale = GetGameTimer() - 3600000
+        for token, ticket in pairs(Runs.tokens) do
+            if ticket.startedAt < stale then Runs.tokens[token] = nil end
+        end
+
+        for index = #Runs.doorResets, 1, -1 do
+            local entry = Runs.doorResets[index]
+            if now() >= entry.at then
+                table.remove(Runs.doorResets, index)
+                Doors.Restore(entry.run.doors)
             end
         end
     end
+end)
+
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    for _, entry in ipairs(Runs.doorResets) do Doors.Restore(entry.run.doors) end
+    for _, run in pairs(Runs.active) do Doors.Restore(run.doors) end
 end)
 
 AddEventHandler('playerDropped', function()
@@ -1015,8 +1208,9 @@ function Runs.GuardDown(src, ref, stageId)
         return { ok = false }
     end
 
-    run.stages[stage.id] = { done = true, by = Framework.GetCitizenId(src), at = now() }
+    markDone(run, stage, src)
     run.lastPresence = now()
+    run.lastActivity = now()
 
     if (stage.opts or {}).alertOnDeath ~= false then
         Runs.Dispatch(run, T('guardDown', location.label or 'a business'))
@@ -1032,6 +1226,11 @@ function Runs.GuardDown(src, ref, stageId)
 
     if payout.lootTable and payout.lootTable ~= '' then
         rollLoot(src, payout.lootTable)
+    end
+
+    if not run.hasEscape and Runs.EverythingDone(run) then
+        Runs.Complete(run)
+        return { ok = true }
     end
 
     Runs.EscapeDeadline(run)

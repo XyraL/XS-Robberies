@@ -15,13 +15,13 @@ const MOCK_ITEMS = [
 
 const MOCK_SETTINGS = [
     { key: 'payoutMultiplier', label: 'Payout multiplier', kind: 'number', min: 0, max: 20, step: 0.05, value: 1, fromConfig: true },
-    { key: 'payoutOnEscape', label: "Hold each robber's money until the crew escapes", kind: 'toggle', value: true, fromConfig: false },
+    { key: 'payoutOnEscape', label: "Hold each robber's money until the crew escapes", kind: 'toggle', value: false, fromConfig: true },
     { key: 'respectDuty', label: 'Off-duty police and EMS may rob', kind: 'toggle', value: false, fromConfig: true },
     { key: 'logRuns', label: 'Write finished runs to history', kind: 'toggle', value: true, fromConfig: true },
-    { key: 'abandonAfter', label: 'Abandon a run after', kind: 'number', min: 60, max: 7200, unit: 's', value: 600, fromConfig: true },
+    { key: 'abandonAfter', label: 'Abandon a run after', kind: 'number', min: 60, max: 7200, unit: 's', value: 300, fromConfig: true },
 ];
 
-const DEF_GATES = { policeRequired: 2, policeOnDuty: true, minCrew: 1, maxCrew: 6, locationCooldown: 1800, playerCooldown: 900, globalCooldown: 0, proximityMetres: 0, proximitySeconds: 0 };
+const DEF_GATES = { policeRequired: 2, policeOnDuty: true, minCrew: 1, maxCrew: 6, locationCooldown: 1800, playerCooldown: 900, playerCooldownScope: 'type', globalCooldown: 0, proximityMetres: 0, proximitySeconds: 0 };
 const DEF_RESPONSE = { alarm: 'instant', alarmDelay: 30, camerasChangeTo: 'delayed', powerChangesTo: 'silent', code: '10-90', title: 'Robbery', repeatAlert: 120, dispatchOnFail: true };
 
 function mockDefaults(type) {
@@ -58,14 +58,15 @@ MOCK.jobs.fleeca_legion = {
     origin: { x: 146.3, y: -1046.1, z: 29.37, h: 250 },
     anchor: { kind: 'location', models: [], pool: 'object', scanRange: 80, label: 'the door panel' },
     payout: { account: 'dirty', split: 'crew', when: 'escape' },
+    contact: { enabled: true, model: 'a_m_m_business_01', name: 'Lester', line: 'Fleeca on Legion Square. Bring your own thermite.', label: 'Ask about work', scenario: 'WORLD_HUMAN_SMOKING', window: 30, cooldown: 60, fee: 2500, feeAccount: 'cash', item: '', takeItem: false, sends: 'nearest', waypoint: true, coords: { x: 707.3, y: -966.9, z: 30.4, h: 90 } },
     blip: { sprite: 500, colour: 1, scale: 0.8, showWhen: 'during', label: 'Fleeca' },
     gates: Object.assign({}, DEF_GATES, { policeRequired: 4, minCrew: 2, maxCrew: 4, locationCooldown: 5400, playerCooldown: 3600 }),
     response: Object.assign({}, DEF_RESPONSE, { alarm: 'delayed', alarmDelay: 45, title: 'Fleeca Robbery', code: '10-90' }),
     stages: [
         mockStage('camera_1', 'camera', 'Kill the cameras', [143.6, -1041.3, 29.37, 70], [], { optional: true, duration: 12, requiredItem: 'trojan_usb' }),
         mockStage('power_1', 'power', 'Cut the power', [139.9, -1052.6, 29.37, 160], [], { optional: true, duration: 10 }),
-        mockStage('hack_1', 'hack', 'Door panel', [146.3, -1046.1, 29.37, 250], [], { duration: 15, revealCode: 4, requiredItem: 'trojan_usb', consumeItem: true, notifyPolice: false }),
-        mockStage('keypad_1', 'keypad', 'Vault keypad', [148.6, -1045.2, 29.4, 250], ['hack_1'], { codeFrom: 'hack_1', digits: 4, duration: 4 }),
+        mockStage('hack_1', 'hack', 'Door panel', [146.3, -1046.1, 29.37, 250], [], { duration: 15, requiredItem: 'trojan_usb', consumeItem: true, notifyPolice: false }),
+        mockStage('keypad_1', 'keypad', 'Vault keypad', [148.6, -1045.2, 29.4, 250], ['hack_1'], { codeFrom: 'hack_1', digits: 4, duration: 4, doors: [{ model: joaat('v_ilev_gb_vauldr'), x: 148.025, y: -1044.364, z: 29.506, h: 249.8 }], doorAction: 'swing', swingAngle: -90 }),
         mockStage('tool_1', 'tool', 'Burn the gate', [149.1, -1047.8, 29.36, 160], ['keypad_1'], { toolKind: 'thermite', duration: 20, requiredItem: 'thermite', consumeItem: true, notifyPolice: true }),
         mockStage('container_1', 'container', 'Deposit boxes 1', [151.4, -1050.9, 29.36, 70], ['tool_1'], { grabs: 4, grabTime: 5 }, [800, 2000]),
         mockStage('container_2', 'container', 'Deposit boxes 2', [147.0, -1051.8, 29.36, 250], ['tool_1'], { grabs: 4, grabTime: 5 }, [800, 2000]),
@@ -104,7 +105,7 @@ MOCK.jobs.grove_247 = {
 MOCK.jobs.every_atm = {
     id: 'every_atm', name: 'Every ATM', category: 'atm', enabled: true, revision: 3, author: 'XyraL', radius: 25,
     origin: { x: 147.4, y: -1035.8, z: 29.34, h: 340 },
-    anchor: { kind: 'model', models: ['prop_atm_01', 'prop_atm_02', 'prop_fleeca_atm'], pool: 'object', scanRange: 60, label: 'the ATM' },
+    anchor: { kind: 'model', models: ['prop_atm_01', 'prop_atm_02', 'prop_fleeca_atm'], pool: 'object', scanRange: 60, label: 'the ATM', areas: [{ label: 'Downtown', x: 150.2, y: -1010.4, z: 29.3, radius: 900 }, { label: 'Vinewood', x: 310.6, y: 180.2, z: 104.1, radius: 450 }] },
     payout: { account: 'cash' },
     blip: { sprite: 500, colour: 1, scale: 0.8, showWhen: 'during', label: 'ATM' },
     gates: Object.assign({}, DEF_GATES, { policeRequired: 1, locationCooldown: 3600 }),
@@ -175,28 +176,28 @@ function mockValidate(def) {
     const out = [];
     const add = (level, message, stage) => out.push({ level, message, stage });
     const stages = (def.stages || []).filter(s => s.enabled !== false);
-    if (!stages.length) { add('error', 'No stages placed yet.'); return out; }
-    const ids = new Set(stages.map(s => s.id));
+    if (!(def.stages || []).length) { add('error', 'No steps yet. Add one from the Plan.'); return out; }
+    if (!stages.length) { add('error', 'Every step is switched off, so there is nothing to rob.'); return out; }
+    const ids = new Set(stages.filter(s => s.coords).map(s => s.id));
+    if (!ids.size) { add('error', 'Nothing is placed in the world yet.'); return out; }
     stages.forEach(s => {
         const label = (s.opts && s.opts.label) || s.label || s.id;
-        if (!s.coords) add('error', `${label} has not been placed in the world.`, s.id);
-        if (s.type === 'keypad') {
-            const from = stages.find(x => x.id === (s.opts || {}).codeFrom);
-            if (!from) add('error', `${label} has no stage to get its code from.`, s.id);
-            else if (!(Number(from.opts.revealCode) > 0)) add('error', `${label} reads a code from ${from.opts.label}, which never reveals one.`, s.id);
-        }
-        (s.requires || []).forEach(d => { if (!ids.has(d)) add('error', `${label} waits on a stage that no longer exists.`, s.id); });
+        const opts = s.opts || {};
+        if (!s.coords) add('warn', `${label} is not placed yet, so it is left out.`, s.id);
+        if ((s.requires || []).some(d => !ids.has(d))) add('warn', `${label} waits on a step that is gone or not placed. It is skipped.`, s.id);
+        if (s.type === 'keypad' && opts.codeFrom && !ids.has(opts.codeFrom)) add('warn', `${label} gets its code from a step that is gone, so it has to be cracked instead.`, s.id);
+        if (s.type === 'doorlock' && !(opts.doors || []).length && !opts.doorId) add('warn', `${label} has no door picked, so it opens nothing.`, s.id);
+        if (s.type === 'twoman' && !(opts.pairWith && ids.has(opts.pairWith))) add(opts.optional ? 'warn' : 'error', `${label} needs a second point to pair with. Nobody can finish it alone.`, s.id);
         if (['register', 'safe', 'container'].includes(s.type)) {
             const p = s.payout || {};
             const cash = p.cash && p.cash.max > 0;
             if (!cash && !(p.items || []).length && !p.lootTable) add('warn', `${label} pays out nothing.`, s.id);
         }
     });
-    if (!stages.some(s => s.type === 'escape') && def.category !== 'atm') add('warn', 'No escape zone. This finishes as soon as the last required stage is done, and pays on the spot. Right for an ATM, wrong for a bank.');
     const kind = (def.anchor || {}).kind || 'location';
     if (kind === 'model' && !((def.anchor || {}).models || []).length) add('error', 'This job finds its places by model, but no model is set. Pick one in Places.');
     if (kind === 'location' && !MOCK.locations.some(l => l.robberyId === def.id)) add('warn', 'It is not placed anywhere yet. Add a place in Places.');
-    (def.props || []).forEach(p => { if (!p.model) add('error', `${p.label || 'A prop'} has no model.`); });
+    (def.props || []).forEach(p => { if (!p.model) add('warn', `${p.label || 'A prop'} has no model, so it is left out.`); });
     return out;
 }
 
@@ -339,6 +340,10 @@ const MOCK_HANDLERS = {
                 PLACE_STATE.repeats[key] = (PLACE_STATE.repeats[key] || 0) + 1;
                 if (PLACE_STATE.repeats[key] > 1) { resolve({ ok: false, action: 'skip' }); return; }
             }
+            if (p.pickDoor) {
+                resolve({ ok: true, action: 'placed', coords: { x: 150.291, y: -1047.629, z: 29.666, h: 340 }, pick: { model: joaat('hei_v_ilev_bk_gate2_pris'), doorId: 14, doorLock: 'ox_doorlock' } });
+                return;
+            }
             if (p.pickEntity) {
                 resolve({ ok: true, action: 'placed', coords: { x: 147.4, y: -1035.8, z: 29.34, h: 340 }, pick: { model: joaat(p.guided && /vehicle/i.test(p.guided.title || '') ? 'stockade' : 'prop_atm_01'), vehicle: /vehicle/i.test((p.guided || {}).title || ''), name: /vehicle/i.test((p.guided || {}).title || '') ? 'stockade' : undefined } });
                 return;
@@ -369,6 +374,8 @@ const MOCK_HUD = {
     startedAt: Math.floor(Date.now() / 1000) - 232,
     serverTime: Math.floor(Date.now() / 1000),
     escapeDeadline: Math.floor(Date.now() / 1000) + 188,
+    codes: [{ label: 'Door panel', code: '4821' }],
+    cancel: 'cancelrobbery',
     objectives: [
         { id: 'camera_1', label: 'Kill the cameras', state: 'done', optional: true },
         { id: 'hack_1', label: 'Door panel', state: 'done' },

@@ -21,9 +21,11 @@ const LootView = {
         const stages = LootView.lootStages();
         stages.forEach(LootView.prep);
 
-        const hasEscape = (job.stages || []).some(s => s.type === 'escape' && s.enabled !== false);
-        const when = (job.payout && job.payout.when) || 'default';
-        const held = hasEscape && (when === 'escape' || (when === 'default' && (State.settings.find(s => s.key === 'payoutOnEscape') || {}).value !== false));
+        const hasEscape = (job.stages || []).some(s => s.type === 'escape' && s.enabled !== false && !(s.opts && s.opts.optional));
+        const serverHolds = (State.settings.find(s => s.key === 'payoutOnEscape') || {}).value === true;
+        let when = (job.payout && job.payout.when) || 'default';
+        if (when === 'default') when = serverHolds ? 'escape' : 'instant';
+        const held = hasEscape && when === 'escape';
 
         const opts = [
             { id: 'cash', icon: 'cash', title: 'Cash', text: 'Straight into their pockets as cash.' },
@@ -40,9 +42,11 @@ const LootView = {
                     </div>`).join('')}</div>
                 <div class="grid2" style="margin-top:12px" id="pay-rules">
                     ${fieldSeg('payout.split', 'Who gets the cash', job.payout.split || 'earner', [{ value: 'earner', label: 'Whoever did the step' }, { value: 'crew', label: 'Split across the crew' }])}
-                    ${fieldSeg('payout.when', 'When it pays', job.payout.when || 'default', [{ value: 'default', label: 'Server default' }, { value: 'escape', label: 'At the getaway' }, { value: 'instant', label: 'Straight away' }])}
+                    ${fieldSeg('payout.when', 'When it pays', when, [{ value: 'instant', label: 'On the spot' }, { value: 'escape', label: 'At the getaway' }])}
                 </div>
-                <div class="hint" style="margin-top:8px">Items always go to whoever took them. Holding the cash for the getaway only works if the job has one.</div>
+                <div class="hint" style="margin-top:8px">${hasEscape
+                    ? 'Items always go to whoever took them, on the spot.'
+                    : 'There is no getaway step, so everything pays on the spot. Add an escape zone if they should have to get away first.'}</div>
             </div>
 
             <div class="sum-bar" id="loot-sum"></div>
@@ -78,9 +82,10 @@ const LootView = {
             LootView.sum();
         }));
 
-        bindForm(el.querySelector('#pay-rules'), job, () => {
+        bindForm(el.querySelector('#pay-rules'), job, (k) => {
             markDirty();
-            LootView.sum();
+            if (k === 'payout.when') LootView.render(el);
+            else LootView.sum();
         });
 
         bindForm(el, (node) => {

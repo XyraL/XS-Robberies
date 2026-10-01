@@ -58,6 +58,8 @@ function hudShow(data) {
             <span class="hud-alarm-dot"></span>${esc(alarmLabel)}
         </div>
         ${data.escapeDeadline ? '<div class="hud-escape" id="hud-escape"></div>' : ''}
+        ${(data.codes || []).length ? `<div class="hud-codes">${data.codes.map(c => `
+            <div class="hud-code"><span>${esc(c.label)}</span><b>${esc(c.code)}</b></div>`).join('')}</div>` : ''}
         <div class="hud-objectives">
             ${(data.objectives || []).map(o => `
                 <div class="hud-objective ${o.state}">
@@ -65,7 +67,8 @@ function hudShow(data) {
                     <span class="hud-label">${esc(o.label)}</span>
                     ${o.optional ? '<span class="hud-opt">optional</span>' : ''}
                 </div>`).join('')}
-        </div>`;
+        </div>
+        ${data.cancel ? `<div class="hud-foot">/${esc(data.cancel)} to call it off</div>` : ''}`;
 
     hudTick();
     if (Hud.ticker) clearInterval(Hud.ticker);

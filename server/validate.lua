@@ -4,7 +4,15 @@ local function issue(list, level, message, stageId)
     list[#list + 1] = { level = level, message = message, stage = stageId }
 end
 
-local function hasCycle(stages)
+local function depsOf(stage, ids)
+    local out = {}
+    for _, dep in ipairs(Stages.Needs(stage)) do
+        if ids[dep] then out[#out + 1] = dep end
+    end
+    return out
+end
+
+local function hasCycle(stages, ids)
     local byId, state = {}, {}
     for _, s in ipairs(stages) do byId[s.id] = s end
 
@@ -13,8 +21,8 @@ local function hasCycle(stages)
         if state[id] == 'open' then return true end
 
         state[id] = 'open'
-        for _, dep in ipairs(byId[id] and byId[id].requires or {}) do
-            if byId[dep] and visit(dep) then return true end
+        for _, dep in ipairs(byId[id] and depsOf(byId[id], ids) or {}) do
+            if visit(dep) then return true end
         end
         state[id] = 'done'
         return false
@@ -24,26 +32,6 @@ local function hasCycle(stages)
         if visit(s.id) then return true, s.id end
     end
     return false
-end
-
-local function reachable(stages)
-    local byId, seen = {}, {}
-    for _, s in ipairs(stages) do byId[s.id] = s end
-
-    local changed = true
-    while changed do
-        changed = false
-        for _, s in ipairs(stages) do
-            if not seen[s.id] then
-                local ok = true
-                for _, dep in ipairs(s.requires or {}) do
-                    if not seen[dep] then ok = false break end
-                end
-                if ok then seen[s.id] = true changed = true end
-            end
-        end
-    end
-    return seen
 end
 
 local LOOT_STAGES = { register = true, safe = true, container = true }
@@ -57,7 +45,7 @@ function Validate.Robbery(def)
 
     local all = def.stages or {}
     if #all == 0 then
-        issue(issues, 'error', 'No stages placed yet.')
+        issue(issues, 'error', 'No steps yet. Add one from the Plan.')
         return issues
     end
 
@@ -71,97 +59,73 @@ function Validate.Robbery(def)
     end
 
     if #stages == 0 then
-        issue(issues, 'error', 'Every stage is switched off, so there is nothing to rob.')
+        issue(issues, 'error', 'Every step is switched off, so there is nothing to rob.')
         return issues
     end
 
     if switchedOff > 0 then
-        issue(issues, 'warn', ('%d stage%s switched off and will not appear in the world.')
+        issue(issues, 'warn', ('%d step%s switched off and will not appear in the world.')
             :format(switchedOff, switchedOff == 1 and ' is' or 's are'))
     end
 
-    local ids, escapes = {}, 0
+    local ids, seen, placed = {}, {}, 0
     for _, s in ipairs(stages) do
-        if ids[s.id] then
-            issue(issues, 'error', ('Two stages share the id "%s".'):format(s.id), s.id)
+        if seen[s.id] then
+            issue(issues, 'error', ('Two steps share the id "%s".'):format(s.id), s.id)
         end
-        ids[s.id] = true
+        seen[s.id] = true
 
         if not Stages.Get(s.type) then
-            issue(issues, 'error', ('Unknown stage type "%s".'):format(tostring(s.type)), s.id)
+            issue(issues, 'error', ('Unknown step type "%s".'):format(tostring(s.type)), s.id)
         end
 
-        if s.type == 'escape' then escapes = escapes + 1 end
-
-        if not s.coords then
-            issue(issues, 'error', ('%s has not been placed in the world.'):format(s.label or s.id), s.id)
+        if s.coords then
+            ids[s.id] = true
+            placed = placed + 1
+        else
+            issue(issues, 'warn', ('%s is not placed yet, so it is left out.'):format(s.label or s.id), s.id)
         end
     end
 
-    if escapes == 0 and def.category ~= 'atm' then
-        issue(issues, 'warn',
-            'No escape zone. This finishes as soon as the last required stage is done, and pays on the spot. Right for an ATM, wrong for a bank.')
+    if placed == 0 then
+        issue(issues, 'error', 'Nothing is placed in the world yet.')
+        return issues
     end
 
     for _, s in ipairs(stages) do
+        local name = s.label or s.id
+        local opts = s.opts or {}
+
         for _, dep in ipairs(s.requires or {}) do
             if not ids[dep] then
-                issue(issues, 'error',
-                    ('%s waits on a stage that no longer exists.'):format(s.label or s.id), s.id)
+                issue(issues, 'warn', ('%s waits on a step that is gone or not placed. It is skipped.'):format(name), s.id)
+                break
             end
         end
 
-        local opts = s.opts or {}
-        if opts.codeFrom and opts.codeFrom ~= '' and not ids[opts.codeFrom] then
-            issue(issues, 'error', ('%s reads a code from a stage that no longer exists.')
-                :format(s.label or s.id), s.id)
-        end
-        if s.type == 'keypad' then
-            if not opts.codeFrom or opts.codeFrom == '' then
-                issue(issues, 'error', ('%s has no stage to get its code from.')
-                    :format(s.label or s.id), s.id)
-            else
-                local source
-                for _, other in ipairs(stages) do
-                    if other.id == opts.codeFrom then source = other break end
-                end
-                if source and (tonumber((source.opts or {}).revealCode) or 0) <= 0 then
-                    issue(issues, 'error', ('%s reads a code from %s, which never reveals one.')
-                        :format(s.label or s.id, source.label or source.id), s.id)
-                end
-            end
+        if s.type == 'keypad' and opts.codeFrom and opts.codeFrom ~= '' and not ids[opts.codeFrom] then
+            issue(issues, 'warn', ('%s gets its code from a step that is gone, so it has to be cracked instead.'):format(name), s.id)
         end
 
-        if s.type == 'doorlock' then
-            if not opts.doorId or opts.doorId == '' then
-                issue(issues, 'error', ('%s has no door id, so it will never open anything.')
-                    :format(s.label or s.id), s.id)
-            elseif not Doors.Available() then
-                issue(issues, 'warn', ('%s needs a door lock resource, and none is running.')
-                    :format(s.label or s.id), s.id)
-            end
+        if s.type == 'doorlock' and not Stages.HasDoors(s) then
+            issue(issues, 'warn', ('%s has no door picked, so it opens nothing.'):format(name), s.id)
         end
 
-        if s.type == 'guard' then
-            if not opts.weapon or opts.weapon == '' then
-                issue(issues, 'warn', ('%s is an armed guard with no weapon.')
-                    :format(s.label or s.id), s.id)
-            end
+        if opts.doorId and opts.doorId ~= '' and not Doors.Available() then
+            issue(issues, 'warn', ('%s names door "%s", but no door lock resource is running.'):format(name, opts.doorId), s.id)
         end
 
-        if s.type == 'twoman' and (not opts.pairWith or opts.pairWith == '') then
-            issue(issues, 'error', ('%s needs a second point to pair with.')
-                :format(s.label or s.id), s.id)
+        if s.type == 'guard' and (not opts.weapon or opts.weapon == '') then
+            issue(issues, 'warn', ('%s is an armed guard with no weapon.'):format(name), s.id)
         end
 
-        if opts.pairWith and opts.pairWith ~= '' and not ids[opts.pairWith] then
-            issue(issues, 'error', ('%s is paired with a stage that no longer exists.')
-                :format(s.label or s.id), s.id)
+        if s.type == 'twoman' and (not opts.pairWith or opts.pairWith == '' or not ids[opts.pairWith]) then
+            issue(issues, opts.optional and 'warn' or 'error',
+                ('%s needs a second point to pair with. Nobody can finish it alone.'):format(name), s.id)
         end
 
         if opts.requiredItem and opts.requiredItem ~= '' and not Inv.Exists(opts.requiredItem) then
-            issue(issues, 'warn', ('%s needs "%s", which no inventory item matches.')
-                :format(s.label or s.id, opts.requiredItem), s.id)
+            issue(issues, 'warn', ('%s needs "%s", which no inventory item matches.'):format(name, opts.requiredItem), s.id)
         end
 
         if LOOT_STAGES[s.type] then
@@ -171,33 +135,25 @@ function Validate.Robbery(def)
             local emptyLoot = not reward.lootTable or reward.lootTable == ''
 
             if emptyCash and emptyItems and emptyLoot then
-                issue(issues, 'warn', ('%s pays out nothing.'):format(s.label or s.id), s.id)
+                issue(issues, 'warn', ('%s pays out nothing.'):format(name), s.id)
             end
 
             if reward.lootTable and reward.lootTable ~= '' and not Store.loot[reward.lootTable] then
-                issue(issues, 'error', ('%s uses a loot table that no longer exists.')
-                    :format(s.label or s.id), s.id)
+                issue(issues, 'warn', ('%s uses a loot table that no longer exists.'):format(name), s.id)
             end
 
             for _, entry in ipairs(reward.items or {}) do
                 if entry.item and entry.item ~= '' and not Inv.Exists(entry.item) then
                     issue(issues, 'warn', ('%s pays out "%s", which no inventory item matches.')
-                        :format(s.label or s.id, entry.item), s.id)
+                        :format(name, entry.item), s.id)
                 end
             end
         end
     end
 
-    local cycle, at = hasCycle(stages)
+    local cycle, at = hasCycle(stages, ids)
     if cycle then
-        issue(issues, 'error', 'Stage requirements loop back on themselves.', at)
-    else
-        local seen = reachable(stages)
-        for _, s in ipairs(stages) do
-            if not seen[s.id] then
-                issue(issues, 'error', ('%s can never be reached.'):format(s.label or s.id), s.id)
-            end
-        end
+        issue(issues, 'error', 'Some steps wait on each other in a loop, so none of them can ever open.', at)
     end
 
     local anchor = Store.Anchor(def)
@@ -222,15 +178,15 @@ function Validate.Robbery(def)
         local name = prop.label or prop.model or ('Prop %d'):format(index)
 
         if propIds[prop.id or ''] then
-            issue(issues, 'error', ('Two props share the id "%s".'):format(tostring(prop.id)))
+            issue(issues, 'warn', ('Two props share the id "%s".'):format(tostring(prop.id)))
         end
         propIds[prop.id or ''] = true
 
         if not prop.model or prop.model == '' then
-            issue(issues, 'error', ('%s has no model.'):format(name))
+            issue(issues, 'warn', ('%s has no model, so it is left out.'):format(name))
         end
         if not prop.coords then
-            issue(issues, 'error', ('%s has not been placed.'):format(name))
+            issue(issues, 'warn', ('%s is not placed yet, so it is left out.'):format(name))
         end
         if prop.linkStage and prop.linkStage ~= '' and not everyStage[prop.linkStage] then
             issue(issues, 'warn', ('%s follows a step that no longer exists.'):format(name))
@@ -240,13 +196,39 @@ function Validate.Robbery(def)
         end
     end
 
+    local contact = def.contact
+    if contact and contact.enabled then
+        if not contact.coords then
+            issue(issues, 'warn', 'The contact is switched on but not placed, so for now nobody has to talk to them.')
+        elseif not contact.model or contact.model == '' then
+            issue(issues, 'warn', 'The contact has no ped model, so for now nobody has to talk to them.')
+        end
+    end
+
+    if anchor.kind == 'model' and #(anchor.areas or {}) == 0 then
+        for _, other in pairs(Store.robberies) do
+            local them = Store.Anchor(other)
+            if other.id ~= def.id and other.enabled and them.kind == 'model' and #(them.areas or {}) == 0 then
+                local shared = false
+                for _, a in ipairs(anchor.models) do
+                    for _, b in ipairs(them.models) do
+                        if tostring(a) == tostring(b) then shared = true end
+                    end
+                end
+                if shared then
+                    issue(issues, 'warn', ('%s also covers every one of these models with no area. Give one of them an area in Places so each knows which ones are theirs.'):format(other.name))
+                end
+            end
+        end
+    end
+
     for index, npc in ipairs(def.npcs or {}) do
         local name = npc.label or npc.model or ('NPC %d'):format(index)
         if not npc.model or npc.model == '' then
-            issue(issues, 'error', ('%s has no model.'):format(name))
+            issue(issues, 'warn', ('%s has no model, so it is left out.'):format(name))
         end
         if not npc.coords then
-            issue(issues, 'error', ('%s has not been placed.'):format(name))
+            issue(issues, 'warn', ('%s is not placed yet, so it is left out.'):format(name))
         end
     end
 
@@ -257,7 +239,7 @@ function Validate.Robbery(def)
             :format(gates.policeRequired, slots))
     end
     if (gates.minCrew or 1) > (gates.maxCrew or 1) then
-        issue(issues, 'error', 'Minimum crew is larger than maximum crew.')
+        issue(issues, 'warn', 'Smallest crew is larger than the biggest crew.')
     end
 
     return issues

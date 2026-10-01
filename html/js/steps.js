@@ -9,18 +9,16 @@ const Steps = {
             return;
         }
 
-        const groups = Object.keys(GROUPS);
-        const body = groups.map(g => {
+        const order = ['puzzle', 'tool', 'loot', 'people', 'control', 'entry'];
+        const body = `<div class="type-flow">${order.map(g => {
             const types = (State.stageTypes || []).filter(t => t.group === g);
             if (!types.length) return '';
-            return `<div class="group-label">${esc(GROUPS[g].label)}</div>
-                <div class="type-grid">${types.map((t, i) => `
-                    <div class="type-card" data-type="${esc(t.id)}" style="${colourVars(t.colour)};animation-delay:${i * 25}ms">
-                        <div class="ti">${icon(t.id, 18)}</div>
-                        <b>${esc(t.label)}</b>
-                        <small>${esc(t.blurb || '')}</small>
-                    </div>`).join('')}</div>`;
-        }).join('');
+            return `<div class="type-set"><div class="group-label">${esc(GROUPS[g].label)}</div>${types.map((t, i) => `
+                <div class="type-row" data-type="${esc(t.id)}" style="${colourVars(t.colour)};animation-delay:${i * 25}ms">
+                    <div class="ti">${icon(t.id, 16)}</div>
+                    <div><b>${esc(t.label)}</b><small>${esc(t.blurb || '')}</small></div>
+                </div>`).join('')}</div>`;
+        }).join('')}</div>`;
 
         modal({
             title: 'Add a step',

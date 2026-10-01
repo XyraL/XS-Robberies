@@ -6,7 +6,7 @@ Config.Bridges = {
     inventory = 'auto',   -- auto | ox_inventory | qb-inventory | qs-inventory | codem-inventory | core_inventory | ps-inventory
     target    = 'auto',   -- auto | ox_target | qb-target | builtin
     dispatch  = 'auto',   -- auto | XS-Dispatch | ps-dispatch | qs-dispatch | cd_dispatch | core_dispatch | rcore_dispatch | linden_outlawalert | none
-    doorlock  = 'auto',   -- auto | ox_doorlock | qb-doorlock | nui_doorlock | jd_doorlock | none
+    doorlock  = 'auto',   -- auto | ox_doorlock | mri_Qdoorlock | qb-doorlock | rcore_doorlock | qs-doorlock-creator | doors_creator | cd_doorlock | none
 }
 
 -- Nothing about a robbery is hard-coded here. Everything — locations, stages,
@@ -96,7 +96,15 @@ Config.Payout = {
 Config.Run = {
     -- A run with nobody near it for this many seconds ends itself. Stops one
     -- abandoned attempt from locking a location until a restart.
-    AbandonAfter = 600,
+    AbandonAfter = 300,
+
+    -- A run where nobody has started or finished a step for this many seconds
+    -- ends itself, even with the crew still standing there. 0 = never.
+    IdleAfter = 900,
+
+    -- Players type this to call off the job they are on. If nothing was done
+    -- yet, nobody goes on cooldown. Empty turns it off.
+    CancelCommand = 'cancelrobbery',
 
     -- How far from the robbery origin a participant can be before they stop
     -- counting as present. Metres.
@@ -105,11 +113,11 @@ Config.Run = {
     -- Hard cap on a single run, seconds. 0 = none.
     MaxDuration = 3600,
 
-    -- Cash from a stage goes into a pot that only pays out when the crew
-    -- reaches the escape zone. Off pays each stage the moment it is finished.
-    -- Loot items are always handed over at the stage itself, so anyone caught
-    -- on the way out is caught holding them.
-    PayoutOnEscape = true,
+    -- Off (default): every step pays the moment it is done, getaway or not.
+    -- On: cash from a job with a getaway step is held until the crew reaches
+    -- it. Owners can still pick either per job, under Loot. Items are always
+    -- handed over at the step itself.
+    PayoutOnEscape = false,
 
     -- What a loot container asks for when the owner ticks "Requires a bag".
     BagItem = 'bag',
@@ -296,12 +304,29 @@ Config.Text = {
     grabsLeft       = '%d more in there.',
     paid            = 'You took $%d.',
     crewShare       = 'Your cut: $%d.',
+    needContact     = 'You need to talk to someone about this first.',
+    contactBusy     = 'Nothing for you right now.',
+    contactNoPolice = 'Too quiet out there. Come back later.',
+    contactCooling  = 'I already gave you something. Come back in %d minutes.',
+    contactItem     = 'Come back when you have what you need.',
+    contactFee      = 'That costs $%d. Come back when you have it.',
     stageDone       = 'Done.',
     codeFound       = 'Written down here: %s',
     retryLeft       = 'That slipped. %d left.',
     heardNearby     = 'You hear something being worked on nearby.',
     partnerReady    = 'Someone is on the other one. Go.',
     partnerNeeded   = 'Nobody is on %s yet. You both have to hold at once.',
+    notInRun        = 'You are not on a job.',
+    runCancelled    = 'You called it off.',
+    runLeft         = 'You walked away from the job.',
+    runAbandoned    = 'Everyone left, so the job is off.',
+    runIdle         = 'Nothing happened for too long, so the job is off.',
+    runTooLong      = 'That took too long. The job is off.',
+    runFailed       = 'The job is blown.',
+    runFinished     = 'The job is done.',
+    noCodeYet       = 'You do not have the code yet.',
+    onAnotherJob    = 'Finish or call off the job you are on first.',
+    crackIt         = 'No code to go on. Crack it.',
 }
 -- ── Defaults for a new robbery ───────────────────────────────────────────────
 -- What the builder pre-fills when someone clicks Create. Owners change any of
@@ -322,6 +347,10 @@ Config.Defaults = {
         maxCrew         = 6,
         locationCooldown = 1800,
         playerCooldown   = 900,
+        -- type: a robber can still hit a different type of job straight away
+        -- job:  only this job waits, any other job is fine
+        -- all:  every robbery waits
+        playerCooldownScope = 'type',
         globalCooldown   = 0,
         proximityMetres  = 0,
         proximitySeconds = 0,

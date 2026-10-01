@@ -9,6 +9,13 @@ function FloorUnder(x, y, z)
     return z
 end
 
+function PropLift(model)
+    local hash = type(model) == 'number' and model or (tonumber(model) or joaat(model))
+    if not hash or not IsModelValid(hash) then return 0.0 end
+    local low = GetModelDimensions(hash)
+    return -(low and low.z or 0.0)
+end
+
 local function ensureAdmin()
     if checkedAdmin then return isAdmin end
     isAdmin = lib.callback.await('XS-Robberies:isAdmin', false) == true

@@ -3,6 +3,7 @@ const LOOK_KEYS = ['prop', 'propZ', 'propDone', 'propSwap', 'scenario', 'animDic
 const Inspector = {
     moreOpen: false,
     lookOpen: false,
+    doorsOpen: false,
     resolved: {},
 
     render(el) {
@@ -46,8 +47,10 @@ const Inspector = {
                 </div>`;
         }
         if (f.type === 'stage') {
-            const others = (State.current.stages || []).filter(s => !State.sel || s.id !== State.sel.id);
-            return fieldSelect(k, f.label, v, [{ value: '', label: 'None' }].concat(others.map(o => ({ value: o.id, label: stageLabel(o) }))), { hint: f.hint, wide: true });
+            let others = (State.current.stages || []).filter(s => !State.sel || s.id !== State.sel.id);
+            if (f.key === 'codeFrom') others = others.filter(s => !['escape', 'keypad'].includes(s.type));
+            if (f.key === 'pairWith') others = others.filter(s => s.type === 'twoman');
+            return fieldSelect(k, f.label, v, [{ value: '', label: f.none || 'None' }].concat(others.map(o => ({ value: o.id, label: stageLabel(o) }))), { hint: f.hint, wide: true });
         }
         if (f.type === 'item') {
             return `<div class="f wide"><label>${esc(f.label)}</label>${itemPicker(k, v, 'None needed')}${f.hint ? `<div class="fh">${esc(f.hint)}</div>` : ''}</div>`;
@@ -62,9 +65,14 @@ const Inspector = {
         const index = stageIndex(job, stage.id) + 1;
         const colour = stageColour(stage);
 
-        const basic = fields.filter(f => !f.advanced && !LOOK_KEYS.includes(f.key) && !['label', 'duration', 'requiredItem', 'consumeItem'].includes(f.key));
+        const shown = (f) => !f.hidden && f.section !== 'doors' && !(stage.type === 'keypad' && f.key === 'minigame' && stage.opts.codeFrom);
+        const basic = fields.filter(f => shown(f) && !f.advanced && !LOOK_KEYS.includes(f.key) && !['label', 'duration', 'requiredItem', 'consumeItem'].includes(f.key));
         const look = fields.filter(f => LOOK_KEYS.includes(f.key));
-        const advanced = fields.filter(f => f.advanced && !LOOK_KEYS.includes(f.key) && !['optional', 'notifyPolice'].includes(f.key));
+        const advanced = fields.filter(f => shown(f) && f.advanced && !LOOK_KEYS.includes(f.key) && !['optional', 'notifyPolice'].includes(f.key));
+        const readers = (job.stages || []).filter(s => s.type === 'keypad' && s.opts && s.opts.codeFrom === stage.id);
+        const doors = Array.isArray(stage.opts.doors) ? stage.opts.doors : [];
+        const doorCount = doors.length + (stage.opts.doorId ? 1 : 0);
+        const doorsOpen = Inspector.doorsOpen || stage.type === 'doorlock' || doorCount > 0;
         const timed = !['container', 'twoman', 'guard'].includes(stage.type);
         const others = (job.stages || []).filter(s => s.id !== stage.id);
         const pays = LOOT_TYPES.includes(stage.type) || stage.type === 'guard';
@@ -88,6 +96,7 @@ const Inspector = {
             ${!stage.coords ? `<div class="issue warn" style="margin-bottom:14px"><i>!</i><span>Not placed in the world yet. Use Move.</span></div>` : ''}
             ${stage.enabled === false ? `<div class="issue warn" style="margin-bottom:14px"><i>?</i><span>Switched off. It is not in the world and anything waiting on it carries on without it.</span></div>` : ''}
             <div class="hint" style="margin:-4px 0 14px">${esc(def ? def.blurb : '')}</div>
+            ${readers.length ? `<div class="issue ok" style="margin-bottom:14px"><i>#</i><span>Gives the code for ${esc(readers.map(stageLabel).join(', '))}. Whoever finishes it sees the code, and so does the rest of the crew.</span></div>` : ''}
 
             <div class="sec">
                 <div class="grid2">
@@ -106,6 +115,19 @@ const Inspector = {
                     <div class="hint" style="margin-top:8px">${(stage.requires || []).length ? 'All of these have to be done first.' : 'Nothing picked, so this step can start the job.'}</div>`
                     : '<div class="hint">Nothing else to wait on yet.</div>'}
             </div>
+
+            <div class="more ${doorsOpen ? 'open' : ''}" data-fold="doors">Doors · ${doorCount ? `${doorCount} picked` : 'none'} <span class="car">▾</span></div>
+            <div class="fold ${doorsOpen ? 'open' : ''}" data-fold-body="doors"><div style="padding-bottom:14px">
+                ${Inspector.doorList(doors)}
+                <button class="btn sm" id="ins-door-pick" style="margin:10px 0 12px">${icon('doorlock', 13)} Pick a door</button>
+                <div class="grid2">
+                    ${fieldSeg('opts.doorAction', 'When this step is done', stage.opts.doorAction || 'unlock', [{ value: 'unlock', label: 'Unlock' }, { value: 'lock', label: 'Lock' }, { value: 'swing', label: 'Swing open' }], { wide: true })}
+                    ${stage.opts.doorAction === 'swing' ? fieldNumber('opts.swingAngle', 'Swing by', stage.opts.swingAngle ?? 90, { min: -180, max: 180, unit: '°', hint: 'For vault doors and gates. Negative swings it the other way.' }) : ''}
+                    ${fieldSwitch('opts.relockOnEnd', 'Put it back when the place resets', stage.opts.relockOnEnd !== false, { wide: true })}
+                    ${fieldText('opts.doorId', 'Or type a door id', stage.opts.doorId || '', { wide: true, placeholder: 'From your door lock resource', hint: 'For a door you cannot aim at. Exactly as your door lock resource names it.' })}
+                </div>
+                <div class="hint" style="margin-top:8px">${esc(Inspector.doorNote())}</div>
+            </div></div>
 
             ${pays ? `
             <div class="sec">
@@ -147,6 +169,11 @@ const Inspector = {
         bindForm(el, stage, (k, value, node, type) => {
             if (k === 'opts.label') stage.label = value;
             markDirty();
+            if (k === 'opts.codeFrom') {
+                if (value && !(stage.requires || []).includes(value)) stage.requires = (stage.requires || []).concat(value);
+                renderInspector();
+            }
+            if (k === 'opts.doorAction') renderInspector();
             if (k === 'opts.requiredItem' && type === 'change') renderInspector();
             if (k === 'enabled' || k === 'opts.optional' || k === 'opts.notifyPolice' || k.startsWith('payout.')) softRefresh();
             else if (k === 'opts.label' || k === 'opts.duration' || k.startsWith('opts.')) softRefresh();
@@ -181,6 +208,31 @@ const Inspector = {
             go('loot');
         });
 
+        el.querySelector('#ins-door-pick').addEventListener('click', async () => {
+            const res = await place({ label: 'Door', colour: colour, pickDoor: true, origin: stage.coords || undefined });
+            if (!res.ok || !res.coords || !res.pick) return;
+            const door = { model: res.pick.model, x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h };
+            if (res.pick.doorId !== undefined && res.pick.doorId !== null && res.pick.doorId !== '') door.id = res.pick.doorId;
+            stage.opts.doors = (Array.isArray(stage.opts.doors) ? stage.opts.doors : []).concat(door);
+            Inspector.doorsOpen = true;
+            markDirty();
+            renderInspector();
+            softRefresh();
+            toast('Door picked', door.id !== undefined ? `${res.pick.doorLock || 'Your door lock'} knows it as ${door.id}.` : 'Nothing manages it, so the game opens it itself.', 'success', 3200);
+        });
+
+        el.querySelectorAll('[data-door-del]').forEach(b => b.addEventListener('click', () => {
+            stage.opts.doors.splice(Number(b.dataset.doorDel), 1);
+            markDirty();
+            renderInspector();
+            softRefresh();
+        }));
+
+        el.querySelectorAll('[data-door-go]').forEach(b => b.addEventListener('click', () => {
+            const door = stage.opts.doors[Number(b.dataset.doorGo)];
+            if (door) nui('teleport', { coords: door, heading: door.h });
+        }));
+
         el.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
             const key = b.dataset.pick;
             PropsView.pick((model) => {
@@ -208,7 +260,27 @@ const Inspector = {
             head.classList.toggle('open', open);
             if (key === 'more') Inspector.moreOpen = open;
             if (key === 'look') Inspector.lookOpen = open;
+            if (key === 'doors') Inspector.doorsOpen = open;
         }));
+    },
+
+    doorList(doors) {
+        if (!doors.length) return '<div class="hint">No door picked. Aim at one in the world and it opens, locks or swings when this step is done.</div>';
+        return `<div class="door-list">${doors.map((d, i) => `
+            <div class="door-row">
+                <span class="door-ic">${icon('doorlock', 14)}</span>
+                <div class="grow"><b>${esc(d.label || (d.id !== undefined ? `Door ${d.id}` : `Door ${i + 1}`))}</b>
+                    <small>${d.id !== undefined ? `${esc(State.boot && State.boot.doorlock || 'Door lock')} id ${esc(d.id)}` : esc(State.boot && State.boot.doorlock ? `Looked up in ${State.boot.doorlock} when it opens` : 'The game opens it itself')}</small></div>
+                <button class="icon-btn" data-door-go="${i}" title="Go to it">${icon('goto', 13)}</button>
+                <button class="icon-btn" data-door-del="${i}" title="Remove">${icon('trash', 13)}</button>
+            </div>`).join('')}</div>`;
+    },
+
+    doorNote() {
+        const lock = State.boot && State.boot.doorlock;
+        return lock
+            ? `Using ${lock}. A door it does not know about is opened by the game itself.`
+            : 'No door lock resource is running, so the game opens and locks doors itself. Swing open is for vault doors that are not real doors.';
     },
 
     prop(el, prop) {

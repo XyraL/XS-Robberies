@@ -91,7 +91,7 @@ Views.live = {
     },
 };
 
-const OUTCOME = { completed: ['Got away', 'on'], failed: ['Failed', 'bad'], abandoned: ['Abandoned', 'warn'], active: ['Running', 'info'] };
+const OUTCOME = { completed: ['Got away', 'on'], failed: ['Failed', 'bad'], abandoned: ['Abandoned', 'warn'], cancelled: ['Called off', 'warn'], 'stopped by staff': ['Stopped by staff', 'warn'], active: ['Running', 'info'] };
 
 Views.history = {
     async render(el) {

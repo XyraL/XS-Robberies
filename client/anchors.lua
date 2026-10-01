@@ -5,6 +5,7 @@ ModelInstances = {}
 local hashes = {}
 local pools = { CObject = true }
 local scanning = false
+local lastList = nil
 
 local POOLS = {
     object  = 'CObject',
@@ -33,7 +34,10 @@ local function rebuildHashes()
     for _, def in ipairs(ModelRobberies) do
         for _, model in ipairs(def.models or {}) do
             local key = modelKey(model)
-            if key then hashes[key] = def end
+            if key then
+                hashes[key] = hashes[key] or {}
+                table.insert(hashes[key], def)
+            end
         end
 
         local pool = POOLS[def.pool or 'object'] or 'CObject'
@@ -142,6 +146,27 @@ local function layoutStages(def, anchor)
     return stages, layoutProps(def, anchor, off), layoutNpcs(def, anchor)
 end
 
+local function pickDef(list, coords)
+    local best, bestRadius, fallback = nil, math.huge, nil
+
+    for _, def in ipairs(list) do
+        local areas = def.areas or {}
+        if #areas == 0 then
+            fallback = fallback or def
+        else
+            for _, area in ipairs(areas) do
+                local dx, dy = coords.x - (area.x or 0.0), coords.y - (area.y or 0.0)
+                local radius = tonumber(area.radius) or 0.0
+                if math.sqrt(dx * dx + dy * dy) <= radius and radius < bestRadius then
+                    best, bestRadius = def, radius
+                end
+            end
+        end
+    end
+
+    return best or fallback
+end
+
 local function scan()
     if #ModelRobberies == 0 then
         ModelInstances = {}
@@ -160,11 +185,11 @@ local function scan()
     end
 
     for _, object in ipairs(entities) do
-        local def = hashes[unsigned(GetEntityModel(object))]
+        local list = hashes[unsigned(GetEntityModel(object))]
+        local coords = list and GetEntityCoords(object)
+        local def = list and pickDef(list, coords)
 
         if def then
-            local coords = GetEntityCoords(object)
-
             if #(here - coords) <= (def.scanRange or 80.0) then
                 local anchor = {
                     x = coords.x,
@@ -186,6 +211,7 @@ local function scan()
                     blip = def.blip or {},
                     entity = object,
                     modelAnchored = true,
+                    needsContact = def.needsContact,
                     stages = stages,
                     props = props,
                     npcs = npcs,
@@ -215,6 +241,10 @@ function Anchors.OnFound(instance) end
 function Anchors.OnLost(instance) end
 
 RegisterNetEvent('XS-Robberies:client:modelRobberies', function(list)
+    local signature = json.encode(list or {})
+    if signature == lastList then return end
+    lastList = signature
+
     for id, instance in pairs(ModelInstances) do
         Anchors.OnLost(instance)
         ModelInstances[id] = nil

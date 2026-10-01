@@ -16,10 +16,18 @@ QBox and QBCore.
   Skip anything you do not want. Or start blank and add exactly the steps you want.
 - **15 kinds of step.** Hack, tool (lockpick, drill, thermite, grinder, torch,
   crowbar), keypad, cameras, power box, till, safe, loot container, two-man
-  switch, clerk, hold point, door lock, armed guard, laser grid, getaway zone.
-- **Steps unlock each other.** By default it is a straight line. Change what opens
-  what and you get parallel paths, a code found in one room for a keypad in
-  another, optional steps that only add to the take.
+  switch, clerk, hold point, door, armed guard, laser grid, getaway zone.
+- **Build it your way.** A bank can be a keypad and a vault and nothing else. The
+  getaway is optional, and only a job that cannot work at all is kept from going live.
+- **Steps unlock each other.** By default it is a straight line, and players only
+  see the step they can do next. Change what opens what and you get parallel
+  paths, a code found in one room for a keypad in another, or a keypad they have
+  to crack, and optional steps that only add to the take.
+- **Doors.** Aim at a door and any step can unlock it, lock it, or swing a vault
+  door open when it is done. It all goes back when the place resets.
+- **Contacts.** Put a ped somewhere who has to be talked to before a job opens.
+  They can charge a fee, want an item, and send the player to the nearest place
+  or a random one.
 - **A plan of the job.** Every point drawn to scale around the anchor, with the
   way each one faces and the distances between them. A flow view shows the order
   and when the alarm goes.
@@ -31,13 +39,16 @@ QBox and QBCore.
 - **Payouts your way.** Each job pays as cash, dirty money or bank, and any step
   can pay differently. Set the least and most, add items with their own odds, or
   point at a shared loot table. Choose whether the cash goes to whoever did the
-  step or is split across the crew, and whether it pays straight away or at the
-  getaway.
+  step or is split across the crew, and whether it pays on the spot (the default)
+  or at the getaway.
 - **Stamp it anywhere.** Build a 24/7 once and place it at every 24/7. You line up
   the anchor and the whole job turns with it. Each place can nudge single points,
   switch steps off, or set its own payout, police and cooldown.
 - **Jobs that find their own spots.** Aim at an ATM and every ATM with that model
-  becomes the job. Same for vehicles.
+  becomes the job. Same for vehicles. Give a job areas and ATMs in different parts
+  of the map can be different jobs.
+- **Cooldowns that make sense.** A robber's wait covers one type of job, so after a
+  bank they can still do a store. Or just that job, or every robbery.
 - **The alarm is yours.** Instant, delayed, silent or none. Cutting the cameras or
   the power can change it. Steps can call the police, failed steps can too, and the
   call repeats on a timer while the job is running.
@@ -45,7 +56,8 @@ QBox and QBCore.
   already run (list below). Every step picks its own and how hard it is. Try any
   of them from the builder.
 - **Live control.** See every robbery happening right now, end one, ban someone
-  from robberies, or switch them all off.
+  from robberies, or switch them all off. Players can call off their own job, and
+  a job nobody is working ends itself.
 
 ## Install
 
@@ -86,7 +98,7 @@ Everything outside the script goes through a bridge that finds what you already 
 | Inventory | ox_inventory, qb-inventory, qs-inventory, codem-inventory, core_inventory, ps-inventory |
 | Target | ox_target, qb-target. With neither, a marker and a key prompt. |
 | Dispatch | ps-dispatch, qs-dispatch, cd_dispatch, core_dispatch, rcore_dispatch, linden_outlawalert, XS-Dispatch, or any export through `Config.Integrations.GenericDispatch`. With none, police get a notification and a blip. |
-| Door locks | ox_doorlock, qb-doorlock, nui_doorlock, jd_doorlock, or your own through `RegisterDoorProvider` |
+| Door locks | ox_doorlock, mri_Qdoorlock, qb-doorlock, rcore_doorlock, Quasar Doorlock Creator, jaksam's Doors Creator, cd_doorlock, or your own through `RegisterDoorProvider`. With none, the game opens doors itself. |
 | MDT | XS-MDT, or any other through `Config.Integrations.Generic` or `RegisterMdtProvider`. Optional. |
 | Minigames | 12 built in, plus ox_lib, ps-ui (or ps_lib), bl_ui, qb-minigames, glow_minigames, utk_fingerprint, ultra-voltlab, mhacking, SN-Hacking, boii_minigames, memorygame and howdy-hackminigame. 53 in all, each with an easy, normal and hard setting. |
 
@@ -113,6 +125,7 @@ A `markedbills.png` ships in `inventory_images/` in case you need one.
 | `/robberies` | admins | Opens the builder |
 | `/robberylist` | admins, console | Every job with its crew, police and places |
 | `/robberylive <id>` | admins, console | Switches a job live from chat or the console |
+| `/cancelrobbery` | players | Calls off the job they are on. The name is `Config.Run.CancelCommand`. |
 
 ## Hooking your own systems in
 

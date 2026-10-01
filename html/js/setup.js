@@ -4,27 +4,28 @@ const RECIPES = {
             { key: 'till', type: 'register', title: 'The till', name: 'Till', anchor: 'the first till', subtitle: 'Aim at the till behind the counter.', repeat: true, opts: { duration: 12 }, pay: [200, 600] },
             { key: 'clerk', type: 'hostage', title: 'The clerk', name: 'Clerk', subtitle: 'Where the clerk stands. Skip it for an empty shop.', optional: true },
             { key: 'safe', type: 'safe', title: 'The safe', name: 'Back-room safe', subtitle: 'The back-room safe. Skip it if there is none.', optional: true, after: ['till'], pay: [1500, 4000] },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Where they must get to before the cash pays. Skip to pay on the spot.', zone: 50, after: ['safe', 'till'] },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 50, after: ['safe', 'till'], skipOnly: true },
         ],
     },
     atm: {
         pick: { title: 'Aim at an ATM', subtitle: 'Every ATM with the same model becomes this job.', pool: 'object', anchor: 'the ATM' },
         steps: [
             { key: 'drill', type: 'tool', title: 'Where they drill', name: 'Drill the ATM', subtitle: 'Stand in front of the ATM, facing it.', opts: { toolKind: 'drill', duration: 25, notifyPolice: true } },
-            { key: 'cash', type: 'container', samePoint: 'drill', name: 'Cash cassette', after: ['drill'], opts: { grabs: 3, grabTime: 5 }, pay: [300, 700] },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Skip to pay on the spot.', zone: 60, after: ['cash'], skipOnly: true },
+            { key: 'cash', type: 'container', samePoint: 'drill', title: 'The cash cassette', subtitle: 'Where they take the cash.', name: 'Cash cassette', after: ['drill'], opts: { grabs: 3, grabTime: 5 }, pay: [300, 700] },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 60, after: ['cash'], skipOnly: true },
         ],
     },
     bank: {
         steps: [
             { key: 'cams', type: 'camera', title: 'The security room', name: 'Kill the cameras', anchor: 'the security panel', subtitle: 'Where the cameras are cut. Turning them off softens the alarm. Skip for none.', optional: true },
             { key: 'power', type: 'power', title: 'The power box', name: 'Cut the power', anchor: 'the power box', subtitle: 'Cutting it darkens the building. Skip for none.', optional: true },
-            { key: 'panel', type: 'hack', title: 'The door panel', name: 'Door panel', anchor: 'the door panel', subtitle: 'The panel they hack. It shows them the vault code.', opts: { revealCode: 4, duration: 15 } },
-            { key: 'keypad', type: 'keypad', title: 'The vault keypad', name: 'Vault keypad', anchor: 'the vault keypad', subtitle: 'Where the code from the panel gets typed in.', needs: ['panel'], after: ['panel'], opts: { digits: 4, duration: 4 }, codeFrom: 'panel' },
-            { key: 'vault', type: 'tool', title: 'The vault door', name: 'Burn the vault door', anchor: 'the vault door', subtitle: 'Where they burn through.', after: ['keypad', 'panel'], opts: { toolKind: 'thermite', duration: 20, notifyPolice: true } },
+            { key: 'panel', type: 'hack', title: 'The door panel', name: 'Door panel', anchor: 'the door panel', subtitle: 'The panel they hack. It gives them the vault code. Skip it and the keypad has to be cracked.', opts: { duration: 15 } },
+            { key: 'keypad', type: 'keypad', title: 'The vault keypad', name: 'Vault keypad', anchor: 'the vault keypad', subtitle: 'Where the code gets typed in.', after: ['panel'], opts: { digits: 4, duration: 4 }, codeFrom: 'panel' },
+            { key: 'vaultdoor', door: 'keypad', title: 'The vault door', subtitle: 'Optional. Aim at the door the keypad opens.' },
+            { key: 'vault', type: 'tool', title: 'The inner gate', name: 'Burn the gate', anchor: 'the inner gate', subtitle: 'Optional. A gate they burn through to reach the boxes.', skipOnly: true, after: ['keypad', 'panel'], opts: { toolKind: 'thermite', duration: 20, notifyPolice: true } },
             { key: 'boxes', type: 'container', title: 'Deposit boxes', name: 'Deposit boxes', subtitle: 'Aim at each bank of boxes.', repeat: true, after: ['vault', 'keypad', 'panel'], opts: { grabs: 4, grabTime: 5 }, pay: [800, 2000] },
             { key: 'trolley', type: 'container', title: 'Cash trolleys', name: 'Cash trolley', subtitle: 'Optional. A trolley is spawned on each one and empties when taken.', repeat: true, optional: true, after: ['vault', 'keypad', 'panel'], opts: { grabs: 6, grabTime: 4, prop: 'hei_prop_hei_cash_trolly_01', propDone: 'swap', propSwap: 'hei_prop_hei_cash_trolly_03', optional: true }, pay: [1000, 2500] },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Where the crew must get to before the cash pays.', zone: 80, after: ['vault', 'keypad', 'panel'] },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 80, after: ['boxes', 'vault', 'keypad', 'panel'], skipOnly: true },
         ],
     },
     jewelry: {
@@ -32,7 +33,7 @@ const RECIPES = {
             { key: 'alarm', type: 'hack', title: 'The alarm panel', name: 'Alarm panel', anchor: 'the alarm panel', subtitle: 'Optional. Hacking it first keeps things quiet.', optional: true, opts: { duration: 12 } },
             { key: 'cases', type: 'container', title: 'Display cases', name: 'Display case', anchor: 'the first case', subtitle: 'Aim at each case to smash.', repeat: true, opts: { grabs: 1, grabTime: 6 }, pay: [500, 1200] },
             { key: 'safe', type: 'safe', title: 'The back office safe', name: 'Office safe', subtitle: 'Skip if there is none.', optional: true, after: ['cases'], pay: [2000, 5000] },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Where they must get to before the cash pays.', zone: 60, after: ['cases'] },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 60, after: ['cases'], skipOnly: true },
         ],
     },
     house: {
@@ -40,16 +41,16 @@ const RECIPES = {
             { key: 'door', type: 'tool', title: 'The front door', name: 'Pick the lock', anchor: 'the front door', subtitle: 'Where they pick the lock.', opts: { toolKind: 'lockpick', duration: 8 } },
             { key: 'search', type: 'container', title: 'Places to search', name: 'Search', subtitle: 'Drawers, wardrobes, cupboards. One at a time.', repeat: true, after: ['door'], opts: { grabs: 1, grabTime: 6 }, pay: [100, 400] },
             { key: 'safe', type: 'safe', title: 'The safe', name: 'Safe', subtitle: 'Skip if there is none.', optional: true, after: ['door'], pay: [1000, 3000] },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Skip to pay on the spot.', zone: 50, after: ['door'], skipOnly: true },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 50, after: ['door'], skipOnly: true },
         ],
     },
     vehicle: {
         pick: { title: 'Aim at the vehicle', subtitle: 'Every one of this model on the road becomes this job.', pool: 'vehicle', anchor: 'the vehicle' },
         steps: [
             { key: 'doors', type: 'tool', title: 'The rear doors', name: 'Blow the doors', subtitle: 'Where they place the charge.', opts: { toolKind: 'thermite', duration: 15, notifyPolice: true } },
-            { key: 'cargo', type: 'container', samePoint: 'doors', name: 'The cargo', after: ['doors'], opts: { grabs: 5, grabTime: 4 }, pay: [800, 1600] },
+            { key: 'cargo', type: 'container', samePoint: 'doors', title: 'The cargo', subtitle: 'Where they take the cargo.', name: 'The cargo', after: ['doors'], opts: { grabs: 5, grabTime: 4 }, pay: [800, 1600] },
             { key: 'guards', type: 'guard', title: 'Guards', name: 'Guard', subtitle: 'Optional. Each one fights back.', repeat: true, optional: true },
-            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Skip to pay on the spot.', zone: 100, after: ['cargo'], skipOnly: true },
+            { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 100, after: ['cargo'], skipOnly: true },
         ],
     },
 };
@@ -68,9 +69,9 @@ const Setup = {
         recipe.steps.forEach(st => {
             const t = stageType(st.type);
             rows.push({
-                c: t ? t.colour : [90, 162, 255],
+                c: t ? t.colour : [124, 196, 255],
                 t: st.title || st.name,
-                s: [t ? t.label : st.type, st.samePoint ? 'same spot' : '', st.repeat ? 'as many as you like' : '', st.optional || st.skipOnly ? 'skippable' : ''].filter(Boolean).join(' · '),
+                s: [st.door ? 'aim at the door' : t ? t.label : st.type, st.samePoint ? 'same spot' : '', st.repeat ? 'as many as you like' : '', st.optional || st.skipOnly || st.door ? 'optional' : ''].filter(Boolean).join(' · '),
             });
         });
         return `<div class="walk">${rows.map((r, i) => `<div class="walk-row" style="${colourVars(r.c)}"><span class="no">${i + 1}</span><span>${esc(r.t)}</span><small>${esc(r.s)}</small></div>`).join('')}</div>`;
@@ -174,7 +175,7 @@ const Setup = {
     async walk(job, recipe) {
 
         const steps = recipe.steps;
-        const total = steps.filter(s => !s.samePoint).length + (recipe.pick && !jobOrigin(job) ? 1 : 0);
+        let total = steps.filter(s => !s.samePoint).length + (recipe.pick && !jobOrigin(job) ? 1 : 0);
         const placed = {};
         const skipped = [];
         let n = 0;
@@ -208,10 +209,37 @@ const Setup = {
 
             if (step.samePoint) {
                 const src = placed[step.samePoint] && job.stages.find(s => s.id === placed[step.samePoint][0]);
-                if (!src) { skipped.push(step); continue; }
-                const stage = Setup.makeStage(job, step, clone(src.coords), 0, placed);
-                job.stages.push(stage);
-                placed[step.key] = [stage.id];
+                if (src) {
+                    const stage = Setup.makeStage(job, step, clone(src.coords), 0, placed);
+                    job.stages.push(stage);
+                    placed[step.key] = [stage.id];
+                    continue;
+                }
+                total++;
+            }
+
+            if (step.door) {
+                const target = placed[step.door] && job.stages.find(s => s.id === placed[step.door][0]);
+                if (!target) { skipped.push(step); continue; }
+
+                n++;
+                const res = await place({
+                    label: step.title,
+                    colour: [124, 196, 255],
+                    pickDoor: true,
+                    origin: last,
+                    session: true,
+                    guided: { step: n, total, title: step.title, subtitle: step.subtitle, skippable: true },
+                });
+
+                if (res.action === 'stop') { stopped = true; break; }
+                if (res.ok && res.coords && res.pick) {
+                    const door = { model: res.pick.model, x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h };
+                    const known = res.pick.doorId !== undefined && res.pick.doorId !== null && res.pick.doorId !== '';
+                    if (known) door.id = res.pick.doorId;
+                    target.opts.doors = (target.opts.doors || []).concat(door);
+                    target.opts.doorAction = known ? 'unlock' : 'swing';
+                }
                 continue;
             }
 

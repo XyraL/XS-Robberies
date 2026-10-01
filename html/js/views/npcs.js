@@ -9,7 +9,40 @@ const NpcsView = {
         const sel = State.sel && State.sel.kind === 'npc' ? State.sel.id : null;
         const steps = (job.stages || []).filter(s => s.type === 'hostage' || s.type === 'guard');
 
+        const c = job.contact || (job.contact = { enabled: false });
+
         el.innerHTML = `
+            <div class="sec" id="ct-wrap">
+                <div class="sec-title">Contact</div>
+                <div class="card" style="padding:14px">
+                    ${fieldSwitch('contact.enabled', 'Players have to talk to someone before this job opens', c.enabled, { wide: true, hint: 'Until they do, none of the steps show for them. A fixer who hands out bank jobs, a guy who knows where the ATMs are.' })}
+                    ${c.enabled ? `
+                    <div class="grid3" style="margin-top:12px">
+                        <div class="f wide"><label>Where they stand</label>
+                            <div style="display:grid;grid-template-columns:1fr auto auto;gap:6px">
+                                <div class="inp" style="color:${c.coords ? 'var(--ink)' : 'var(--gold)'}">${c.coords ? esc(fmtCoords(c.coords)) : 'Not placed yet'}</div>
+                                <button class="btn sm" id="ct-place">${icon('place', 12)} ${c.coords ? 'Move' : 'Place them'}</button>
+                                ${c.coords ? `<button class="btn sm" id="ct-go">${icon('goto', 12)}</button>` : ''}
+                            </div>
+                            <div class="fh">Anywhere on the map. They do not move when the job is stamped somewhere else.</div>
+                        </div>
+                        <div class="f"><label>Ped model</label>
+                            <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="contact.model" value="${esc(c.model || '')}" placeholder="a_m_m_business_01" spellcheck="false"><button class="btn sm" id="ct-pick">${icon('twoman', 12)}</button></div></div>
+                        ${fieldText('contact.name', 'Their name', c.name || '', { placeholder: 'Lester' })}
+                        ${fieldSelect('contact.scenario', 'Doing', c.scenario || '', SCENARIOS)}
+                        ${fieldText('contact.line', 'What they say', c.line || '', { wide: true, placeholder: 'Fleeca on Legion Square. Bring your own thermite.' })}
+                        ${fieldText('contact.label', 'Button', c.label || '', { placeholder: 'Ask about work' })}
+                        ${fieldNumber('contact.window', 'Job stays open for', c.window ?? 30, { min: 1, unit: 'min' })}
+                        ${fieldNumber('contact.cooldown', 'Ask again after', c.cooldown ?? 0, { min: 0, unit: 'min' })}
+                        ${fieldNumber('contact.fee', 'Fee', c.fee ?? 0, { min: 0, unit: '$' })}
+                        ${fieldSeg('contact.feeAccount', 'Paid from', c.feeAccount || 'cash', [{ value: 'cash', label: 'Cash' }, { value: 'bank', label: 'Bank' }])}
+                        <div class="f"><label>Needs an item</label>${itemPicker('contact.item', c.item || '', 'None')}</div>
+                        ${anchorKind(job) === 'location' ? fieldSeg('contact.sends', 'Sends them to', c.sends || 'any', [{ value: 'any', label: 'Any place' }, { value: 'nearest', label: 'The nearest' }, { value: 'random', label: 'A random one' }], { wide: true }) : ''}
+                        ${fieldSwitch('contact.takeItem', 'Takes the item', c.takeItem)}
+                        ${fieldSwitch('contact.waypoint', 'Marks it on their map', c.waypoint !== false)}
+                    </div>` : ''}
+                </div>
+            </div>
             <div class="sec">
                 <div class="sec-title"><span>People in the room</span><button class="btn xs act primary" id="npc-add">${icon('plus', 12)} Place an NPC</button></div>
                 <div class="hint" style="margin-bottom:14px">Tellers behind the glass, a guard by the door, a customer at the counter. They stand where you put them doing whatever you pick, and react when the robbery starts. Every place this job is stamped at gets them.</div>
@@ -32,6 +65,30 @@ const NpcsView = {
                         <div class="acts"><button class="btn xs" data-open-stage="${esc(s.id)}">Open</button></div>
                     </div>`).join('')}</div>
             </div>` : ''}`;
+
+        const wrap = el.querySelector('#ct-wrap');
+        bindPickers(wrap);
+        bindForm(wrap, job, (k, value, node, type) => {
+            markDirty();
+            if (k === 'contact.enabled') renderView();
+        });
+
+        el.querySelector('#ct-place')?.addEventListener('click', async () => {
+            const res = await place({ label: c.name || 'contact', colour: [255, 93, 115], mode: 'point', previewModel: c.model || 'a_m_m_business_01', origin: c.coords || undefined });
+            if (!res.ok || !res.coords) return;
+            c.coords = { x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h || 0 };
+            if (!c.model) c.model = 'a_m_m_business_01';
+            await saveJob(true);
+            renderView();
+        });
+
+        el.querySelector('#ct-go')?.addEventListener('click', () => nui('teleport', { coords: c.coords, heading: c.coords.h }));
+
+        el.querySelector('#ct-pick')?.addEventListener('click', () => NpcsView.pick((model) => {
+            c.model = model;
+            markDirty();
+            renderView();
+        }, c.model || ''));
 
         el.querySelector('#npc-add')?.addEventListener('click', () => NpcsView.add());
         el.querySelector('#npc-add2')?.addEventListener('click', () => NpcsView.add());

@@ -76,7 +76,7 @@ const FlowView = {
         const bits = [mmss(stageSeconds(s))];
         if (s.type === 'container') bits.push(`${o.grabs || 1} grabs`);
         if (o.requiredItem) bits.push(o.requiredItem);
-        else if (o.minigame && o.minigame !== 'none') {
+        else if (o.minigame && o.minigame !== 'none' && !(s.type === 'keypad' && o.codeFrom)) {
             const mg = (State.minigames || []).find(m => m.id === o.minigame);
             bits.push(mg ? mg.label.toLowerCase() : 'minigame');
         }

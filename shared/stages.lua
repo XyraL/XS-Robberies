@@ -95,7 +95,7 @@ define('hack', {
         { key = 'minigame', label = 'Minigame',  type = 'minigame', default = 'xs:signal_lock' },
         { key = 'attempts', label = 'Attempts',  type = 'number', default = 3, min = 1, max = 10 },
         { key = 'revealCode', label = 'Reveals a code', type = 'number', default = 0, min = 0, max = 8,
-          advanced = true, hint = 'How many digits. 0 for none. A keypad elsewhere can ask for it.' },
+          hidden = true },
     },
 })
 
@@ -124,10 +124,13 @@ define('keypad', {
     group = 'puzzle',
     icon = 'grip',
     colour = MARKER.puzzle,
-    blurb = 'A code entry. The code comes from another stage, so the crew has to split up.',
+    blurb = 'A code entry. Point it at the step that gives the code, like a hack or a safe, or leave it to be cracked.',
     fields = {
         { key = 'digits',   label = 'Code length', type = 'number', default = 4, min = 3, max = 8 },
-        { key = 'codeFrom', label = 'Code found at', type = 'stage', default = '' },
+        { key = 'codeFrom', label = 'Code found at', type = 'stage', default = '', none = 'Nowhere, they crack it',
+          hint = 'Whoever finishes that step is shown the code, and so is the rest of the crew.' },
+        { key = 'minigame', label = 'Cracking it', type = 'minigame', default = 'xs:pinpad',
+          hint = 'Only used when the code is not found anywhere.' },
         { key = 'attempts', label = 'Attempts',    type = 'number', default = 3, min = 1, max = 10 },
     },
 })
@@ -137,7 +140,7 @@ define('camera', {
     group = 'control',
     icon = 'video',
     colour = MARKER.control,
-    blurb = 'Disable to change what the alarm does. The change itself is set under Police Response.',
+    blurb = 'Disable to change what the alarm does. Set the change under Rules.',
     fields = {
         { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'xs:wire_trace' },
     },
@@ -177,7 +180,7 @@ define('safe', {
         { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'xs:circuit' },
         { key = 'restock',  label = 'Restocks after', type = 'number', default = 7200, min = 0, max = 86400, unit = 's' },
         { key = 'revealCode', label = 'Reveals a code', type = 'number', default = 0, min = 0, max = 8,
-          advanced = true, hint = 'How many digits. 0 for none. A keypad elsewhere can ask for it.' },
+          hidden = true },
     },
 })
 
@@ -239,16 +242,8 @@ define('doorlock', {
     group = 'control',
     icon = 'door-closed',
     colour = MARKER.control,
-    blurb = 'Unlocks a door in your door lock resource. Put the door id in and it opens when this stage is done.',
+    blurb = 'A point where they work a door open. Pick the door under Doors. Any other step can open a door too.',
     fields = {
-        { key = 'doorId',      label = 'Door id',        type = 'text',   default = '',
-          hint = 'Exactly as your door lock resource names it. ox_doorlock uses a number or a name.' },
-        { key = 'doorAction',  label = 'Do what',        type = 'select', default = 'unlock',
-          options = {
-              { value = 'unlock', label = 'Unlock it' },
-              { value = 'lock',   label = 'Lock it' },
-          } },
-        { key = 'relockOnEnd', label = 'Put it back when the run ends', type = 'toggle', default = true },
         { key = 'minigame',    label = 'Minigame',       type = 'minigame', default = 'xs:signal_lock' },
         { key = 'attempts',    label = 'Attempts',       type = 'number', default = 3, min = 1, max = 10 },
     },
@@ -259,7 +254,7 @@ define('guard', {
     group = 'people',
     icon = 'user-shield',
     colour = MARKER.people,
-    blurb = 'A guard who fights back. There is nothing to press: the stage is done when they are down.',
+    blurb = 'A guard who fights back. There is nothing to press: the step is done when they are down.',
     fields = {
         { key = 'ped',         label = 'Ped model',      type = 'text',   default = 's_m_m_security_01' },
         { key = 'weapon',      label = 'Weapon',         type = 'text',   default = 'WEAPON_PISTOL' },
@@ -293,13 +288,47 @@ define('escape', {
     group = 'entry',
     icon = 'flag-checkered',
     colour = MARKER.entry,
-    blurb = 'Where the run resolves and everything pays out. Every robbery needs one.',
+    blurb = 'Optional. Where the run ends. Use it when the crew has to get away before the job counts.',
     fields = {
         { key = 'radius',    label = 'Radius',       type = 'number', default = 25.0, min = 5.0, max = 300.0, unit = 'm' },
         { key = 'inVehicle', label = 'Must be in a vehicle', type = 'toggle', default = false },
         { key = 'timeLimit', label = 'Time limit',   type = 'number', default = 0, min = 0, max = 3600, unit = 's', advanced = true },
     },
 })
+
+Stages.doorFields = {
+    { key = 'doors',       section = 'doors', label = 'Doors',    type = 'doors',  default = nil },
+    { key = 'doorId',      section = 'doors', label = 'Door id',  type = 'text',   default = '' },
+    { key = 'doorAction',  section = 'doors', label = 'Do what',  type = 'select', default = 'unlock',
+      options = {
+          { value = 'unlock', label = 'Unlock' },
+          { value = 'lock',   label = 'Lock' },
+          { value = 'swing',  label = 'Swing open' },
+      } },
+    { key = 'swingAngle',  section = 'doors', label = 'Swing by', type = 'number', default = 90, min = -180, max = 180, unit = '°' },
+    { key = 'relockOnEnd', section = 'doors', label = 'Put it back when the place resets', type = 'toggle', default = true },
+}
+
+function Stages.Needs(stage)
+    local out = {}
+    for _, id in ipairs(stage.requires or {}) do out[#out + 1] = id end
+
+    local opts = stage.opts or {}
+    if stage.type == 'keypad' and opts.codeFrom and opts.codeFrom ~= '' then
+        local listed = false
+        for _, id in ipairs(out) do
+            if id == opts.codeFrom then listed = true break end
+        end
+        if not listed then out[#out + 1] = opts.codeFrom end
+    end
+
+    return out
+end
+
+function Stages.HasDoors(stage)
+    local opts = stage.opts or {}
+    return (type(opts.doors) == 'table' and #opts.doors > 0) or (opts.doorId ~= nil and opts.doorId ~= '')
+end
 
 function Stages.Get(typeId)
     return Stages.types[typeId]
@@ -312,6 +341,7 @@ function Stages.FieldsFor(typeId)
     local out = {}
     for _, f in ipairs(Stages.commonFields) do out[#out + 1] = f end
     for _, f in ipairs(def.fields or {}) do out[#out + 1] = f end
+    for _, f in ipairs(Stages.doorFields) do out[#out + 1] = f end
     return out
 end
 

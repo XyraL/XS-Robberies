@@ -24,6 +24,16 @@
 - Every outside minigame follows the step's difficulty.
 - Try any minigame from the builder.
 - The database tables are created on first start.
+- Contacts: place a ped who has to be talked to before a job opens. They can charge a fee, want an item, and send the player to the nearest place or a random one.
+- ATM jobs can be split by area, so ATMs in one part of the map can take and pay different things.
+- Players only see the step they can do next.
+- Doors: aim at a door and any step can unlock it, lock it, or swing a vault door open.
+- Doors work with ox_doorlock, mri_Qdoorlock, qb-doorlock, rcore_doorlock, Quasar Doorlock Creator, jaksam's Doors Creator and cd_doorlock, and on their own with none of them.
+- Doors go back to how they were when the place resets.
+- `/cancelrobbery` calls off the job you are on. If nothing was done yet, nobody goes on cooldown.
+- A run where nobody does anything for 15 minutes ends itself, and so does one where everyone has gone offline.
+- A keypad with no code to find is cracked with a minigame instead.
+- Codes found during a job show on the HUD for the whole crew.
 
 ### Changed
 
@@ -31,6 +41,15 @@
 - Police alerts go out once, from the server.
 - The HUD and the minigames match the new look.
 - Finished the rename off the Cipher name. Old tables are renamed on first start and every robbery comes with them.
+- Everything pays on the spot by default. Holding the cash until the getaway is a choice per job.
+- The getaway is optional. Without one, the job ends when everything is done, or when the crew walks away with the required steps done.
+- A robber's cooldown covers one type of job by default, so after a bank they can still do a store. It can cover just that job, or every robbery.
+- Only a job that cannot work at all is kept from going live. Everything else is a warning.
+- A keypad gets its code from whichever step it points at. Nothing else to set.
+- Every minigame is easier, at every difficulty.
+- The step picker is a compact list that fits on screen.
+- A run with nobody near it ends after 5 minutes instead of 10.
+- Dropped nui_doorlock (ESX only) and jd_doorlock.
 
 ### Fixed
 
@@ -48,6 +67,16 @@
 - Database setup could fail on servers that still had the old Cipher tables.
 - Places would not save on some servers moved over from Cipher. It repairs itself on start.
 - Left and right were swapped when flying the placement camera.
+- Cash trolleys and other props sat half in the floor.
+- The Add a step window was cut off.
+- A keypad added by hand could never be opened.
+- Signal Lock could not be beaten.
+- Finishing a minigame or a hack could say it was too quick.
+- A step could stay stuck after an error.
+- ox_target kept warning about replacing options.
+- qb-doorlock never actually changed a door.
+- Staff could not end an ATM or vehicle run from Live.
+- History showed $0 for jobs that paid on the spot.
 
 ## 0.11.0
 

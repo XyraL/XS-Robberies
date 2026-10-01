@@ -9,6 +9,7 @@ end
 function SyncLocations(target)
     TriggerClientEvent('XS-Robberies:client:locations', target or -1, Store.ResolveAll())
     TriggerClientEvent('XS-Robberies:client:modelRobberies', target or -1, Store.ModelRobberies())
+    TriggerClientEvent('XS-Robberies:client:contacts', target or -1, Store.Contacts())
 end
 
 local READ_ONLY = {
@@ -84,11 +85,19 @@ end)
 RegisterNetEvent('XS-Robberies:server:ready', function()
     SyncLocations(source)
     SyncTunables(source)
+    Doors.SyncTo(source)
 
     for _, entry in ipairs(Runs.PublicSnapshot()) do
         TriggerClientEvent('XS-Robberies:client:runPublic', source, entry)
     end
 end)
+
+if Config.Run.CancelCommand and Config.Run.CancelCommand ~= '' then
+    RegisterCommand(Config.Run.CancelCommand, function(src)
+        if src == 0 then return end
+        if not Runs.Cancel(src) then Framework.Notify(src, T('notInRun'), 'error') end
+    end, false)
+end
 
 guard('XS-Robberies:saveTunables', function(src, values)
     if type(values) ~= 'table' then return { ok = false, error = 'Nothing to save.' } end
@@ -256,7 +265,7 @@ guard('XS-Robberies:createRobbery', function(src, payload)
         blip = json.decode(json.encode(D.blip)),
         gates = json.decode(json.encode(D.gates)),
         response = json.decode(json.encode(D.response)),
-        payout = { account = D.payoutAccount or 'cash' },
+        payout = { account = D.payoutAccount or 'cash', when = 'instant' },
         anchor = {
             kind = anchor.kind == 'model' and 'model' or 'location',
             pool = anchor.pool or 'object',
@@ -394,14 +403,10 @@ guard('XS-Robberies:live', function()
 end)
 
 guard('XS-Robberies:forceEnd', function(src, locationId)
-    local run = Runs.Get(tonumber(locationId))
+    local run = Runs.Get(tonumber(locationId) or locationId)
     if not run then return { ok = false, error = 'That run already ended.' } end
 
-    for _, entry in pairs(run.participants) do
-        if entry.src then Framework.Notify(entry.src, T('forcedEnd'), 'inform') end
-    end
-
-    Runs.Finish(run, 'stopped by staff')
+    Runs.Finish(run, 'stopped by staff', { reason = 'staff' })
     return { ok = true, runs = Runs.Live() }
 end)
 
@@ -448,7 +453,7 @@ lib.callback.register('XS-Robberies:finishStage', function(src, payload)
 end)
 
 lib.callback.register('XS-Robberies:runState', function(src, locationId)
-    local run = Runs.Get(tonumber(locationId))
+    local run = Runs.Get(tonumber(locationId) or locationId)
     if not run then return { ok = true, active = false } end
 
     local unlocked, done = {}, {}

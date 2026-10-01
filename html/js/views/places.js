@@ -162,7 +162,64 @@ const PlacesView = {
                     <div class="f"><label>Built around</label><div class="inp" style="color:var(--ink2)">${esc(fmtCoords(jobOrigin(job)))}</div><div class="fh">The one you aimed at first. Steps are offsets from it.</div></div>
                 </div>
                 ${jobOrigin(job) ? `<div class="card-row"><button class="btn sm" id="pm-repick">${icon('place', 13)} Rebuild around a different one</button></div>` : ''}
+            </div>
+            <div class="sec">
+                <div class="sec-title"><span>Where it works</span><button class="btn xs act primary" id="pm-area">${icon('plus', 12)} Add an area</button></div>
+                <div class="hint" style="margin-bottom:12px">Leave this empty and the job covers every one of these on the map. Add areas to keep it to parts of the map, then build other jobs for other areas with their own steps, items and payouts. Where areas overlap, the smaller one wins.</div>
+                ${(a.areas || []).length ? `<div class="ov-list">${a.areas.map((ar, i) => `
+                    <div class="ov-row">
+                        <span class="badge info">${Math.round(ar.radius)} m</span>
+                        <div style="display:grid;grid-template-columns:1fr 110px;gap:6px">
+                            <input class="inp" data-area-label="${i}" value="${esc(ar.label || `Area ${i + 1}`)}" style="padding:6px 9px">
+                            <div class="unit"><input class="inp" type="number" min="5" data-area-radius="${i}" value="${Math.round(ar.radius)}" style="padding:6px 9px"><em>m</em></div>
+                        </div>
+                        <div class="acts">
+                            <button class="btn xs" data-area-move="${i}">${icon('place', 11)} Move</button>
+                            <button class="btn xs" data-area-go="${i}">${icon('goto', 11)}</button>
+                            <button class="btn xs danger" data-area-del="${i}">${icon('trash', 11)}</button>
+                        </div>
+                    </div>`).join('')}</div>` : '<span class="tag static">Everywhere</span>'}
             </div>`;
+
+        const areas = () => (a.areas = a.areas || []);
+        const placeArea = async (index) => {
+            const current = index === undefined ? null : areas()[index];
+            const res = await place({
+                label: 'area',
+                colour: [255, 195, 90],
+                mode: 'zone',
+                radius: current ? current.radius : 150,
+                maxRadius: 2000,
+                origin: current ? { x: current.x, y: current.y, z: current.z, h: 0 } : undefined,
+                guided: { step: 1, total: 1, title: 'Mark the area', subtitle: 'Every one inside this circle uses this job. Scroll to size it.', skippable: true },
+            });
+            if (!res.ok || !res.coords) return;
+            const next = { label: current ? current.label : `Area ${areas().length + 1}`, x: res.coords.x, y: res.coords.y, z: res.coords.z, radius: res.coords.radius || 150 };
+            if (current) areas()[index] = next; else areas().push(next);
+            await saveJob(true);
+            renderView();
+        };
+
+        el.querySelector('#pm-area').addEventListener('click', () => placeArea());
+        el.querySelectorAll('[data-area-move]').forEach(b => b.addEventListener('click', () => placeArea(Number(b.dataset.areaMove))));
+        el.querySelectorAll('[data-area-go]').forEach(b => b.addEventListener('click', () => {
+            const ar = areas()[Number(b.dataset.areaGo)];
+            nui('teleport', { coords: ar });
+        }));
+        el.querySelectorAll('[data-area-del]').forEach(b => b.addEventListener('click', async () => {
+            areas().splice(Number(b.dataset.areaDel), 1);
+            await saveJob(true);
+            renderView();
+        }));
+        el.querySelectorAll('[data-area-label]').forEach(input => input.addEventListener('input', () => {
+            areas()[Number(input.dataset.areaLabel)].label = input.value;
+            markDirty();
+        }));
+        el.querySelectorAll('[data-area-radius]').forEach(input => input.addEventListener('change', () => {
+            const v = parseFloat(input.value);
+            if (Number.isFinite(v) && v > 0) areas()[Number(input.dataset.areaRadius)].radius = v;
+            markDirty();
+        }));
 
         bindForm(el.querySelector('#pm-form'), job, () => markDirty());
         el.querySelector('#pm-pick').addEventListener('click', () => PlacesView.pickModel());

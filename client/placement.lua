@@ -8,10 +8,12 @@ local mode = 'point'
 local label = 'Point'
 local colour = { 90, 162, 255 }
 local radius = 10.0
+local maxRadius = 300.0
 local guided = nil
 local layout = nil
 local preview = { entity = nil, model = nil, ped = false, failed = false }
 local pickEntity = false
+local pickDoor = false
 local picked = nil
 local keepCam = false
 
@@ -74,7 +76,7 @@ end
 
 local function nearestEntity(point)
     local best, bestDist = nil, 2.5
-    for _, pool in ipairs({ 'CObject', 'CVehicle' }) do
+    for _, pool in ipairs(pickDoor and { 'CObject' } or { 'CObject', 'CVehicle' }) do
         for _, entity in ipairs(GetGamePool(pool)) do
             local dist = #(GetEntityCoords(entity) - point)
             if dist < bestDist then best, bestDist = entity, dist end
@@ -109,7 +111,7 @@ local function drawHeader()
         return
     end
 
-    text(pickEntity and 'AIM AT IT' or ('PLACING  ' .. string.upper(label)), 0.5, 0.036, 0.44, colour[1], colour[2], colour[3], 255)
+    text(pickEntity and (pickDoor and 'AIM AT THE DOOR' or 'AIM AT IT') or ('PLACING  ' .. string.upper(label)), 0.5, 0.036, 0.44, colour[1], colour[2], colour[3], 255)
 
     local grid = GRID_STEPS[gridIndex]
     text(('%.2f  %.2f  %.2f   facing %d°   %s   grid %s')
@@ -203,7 +205,7 @@ local function drawGhost()
         if preview.ped then
             SetEntityCoords(preview.entity, ghost.x, ghost.y, ghost.z, false, false, false, false)
         else
-            SetEntityCoordsNoOffset(preview.entity, ghost.x, ghost.y, ghost.z, false, false, false)
+            SetEntityCoordsNoOffset(preview.entity, ghost.x, ghost.y, ghost.z + (preview.lift or 0.0), false, false, false)
         end
         SetEntityHeading(preview.entity, ghost.h)
     else
@@ -235,7 +237,7 @@ local function clearPreview()
     if preview.entity and DoesEntityExist(preview.entity) then
         DeleteEntity(preview.entity)
     end
-    preview.entity, preview.model, preview.ped = nil, nil, false
+    preview.entity, preview.model, preview.ped, preview.lift = nil, nil, false, 0.0
 end
 
 local function makePreview(model)
@@ -266,7 +268,8 @@ local function makePreview(model)
         SetBlockingOfNonTemporaryEvents(entity, true)
         SetEntityInvincible(entity, true)
     else
-        entity = CreateObjectNoOffset(hash, ghost.x, ghost.y, ghost.z, false, false, false)
+        preview.lift = PropLift(hash)
+        entity = CreateObjectNoOffset(hash, ghost.x, ghost.y, ghost.z + preview.lift, false, false, false)
     end
 
     SetEntityCollision(entity, false, false)
@@ -316,7 +319,7 @@ end
 local function pickResult(entity)
     local coords = GetEntityCoords(entity)
     local model = GetEntityModel(entity)
-    return {
+    local result = {
         x = math.floor(coords.x * 1000 + 0.5) / 1000,
         y = math.floor(coords.y * 1000 + 0.5) / 1000,
         z = math.floor(coords.z * 1000 + 0.5) / 1000,
@@ -325,6 +328,12 @@ local function pickResult(entity)
         vehicle = IsEntityAVehicle(entity),
         name = IsEntityAVehicle(entity) and string.lower(GetDisplayNameFromVehicleModel(model) or '') or nil,
     }
+
+    if pickDoor then
+        result.doorId, result.doorLock = DoorsClient.Identify(entity)
+    end
+
+    return result
 end
 
 function Placement.Start(opts)
@@ -335,9 +344,11 @@ function Placement.Start(opts)
     label = opts.label or 'Point'
     colour = opts.colour or { 90, 162, 255 }
     radius = opts.radius or 10.0
+    maxRadius = opts.maxRadius or 300.0
     guided = opts.guided
     layout = opts.layout
-    pickEntity = opts.pickEntity == true
+    pickEntity = opts.pickEntity == true or opts.pickDoor == true
+    pickDoor = opts.pickDoor == true
     picked = nil
     keepCam = opts.session == true
     pinned = false
@@ -423,7 +434,7 @@ function Placement.Start(opts)
                 local candidate = nil
 
                 if didHit and entity and entity ~= 0 and DoesEntityExist(entity)
-                    and (IsEntityAnObject(entity) or IsEntityAVehicle(entity)) then
+                    and (IsEntityAnObject(entity) or (not pickDoor and IsEntityAVehicle(entity))) then
                     candidate = entity
                 elseif didHit then
                     candidate = nearestEntity(hit)
@@ -484,8 +495,9 @@ function Placement.Start(opts)
                 if IsDisabledControlPressed(0, CONTROLS.shrinkZ) then ghost.z = ghost.z - step manual = true end
 
                 if mode == 'zone' then
-                    if IsDisabledControlPressed(0, CONTROLS.grow) then radius = math.min(300.0, radius + 0.5) end
-                    if IsDisabledControlPressed(0, CONTROLS.shrink) then radius = math.max(1.0, radius - 0.5) end
+                    local stepR = math.max(0.5, radius * 0.04)
+                    if IsDisabledControlPressed(0, CONTROLS.grow) then radius = math.min(maxRadius, radius + stepR) end
+                    if IsDisabledControlPressed(0, CONTROLS.shrink) then radius = math.max(1.0, radius - stepR) end
                 else
                     if IsDisabledControlPressed(0, CONTROLS.grow) then ghost.h = (ghost.h + 2.0) % 360 end
                     if IsDisabledControlPressed(0, CONTROLS.shrink) then ghost.h = (ghost.h - 2.0) % 360 end

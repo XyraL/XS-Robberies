@@ -120,6 +120,35 @@
 .hud-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hud-opt { font: 800 9px var(--font-ui); letter-spacing: 1px; text-transform: uppercase; color: var(--ink3); }
 
+.hud-codes {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-bottom: 9px;
+    margin-bottom: 9px;
+    border-bottom: 1px solid var(--edge);
+}
+
+.hud-code {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    font: 600 11px var(--font-ui);
+    color: var(--ink3);
+}
+
+.hud-code span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-code b { font: 700 14px var(--font-mono); letter-spacing: 3px; color: var(--gold); }
+
+.hud-foot {
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--edge);
+    font: 600 10.5px var(--font-ui);
+    color: var(--ink3);
+}
+
 #minigame {
     position: fixed;
     inset: 0;
@@ -203,6 +232,8 @@
 }
 
 .mg-pin-fill { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent-dim); border-top: 1px solid var(--accent); }
+.mg-notch { position: absolute; left: 0; right: 0; background: rgba(255, 195, 90, .18); border-top: 1px solid rgba(255, 195, 90, .7); border-bottom: 1px solid rgba(255, 195, 90, .7); }
+.mg-pins > .mg-pin.set .mg-notch { opacity: 0; }
 .mg-pins > .mg-pin.set .mg-pin-fill { background: var(--accent); }
 .mg-pins > .mg-pin.active { border-color: var(--accent); box-shadow: 0 0 12px var(--accent-glow); }
 
@@ -268,6 +299,9 @@
 .mg-gauge span { position: absolute; bottom: -19px; left: 0; right: 0; text-align: center; font: 800 9.5px var(--font-ui); letter-spacing: 1px; text-transform: uppercase; color: var(--ink3); }
 .mg-gauge-fill { width: 100%; height: 0; border-radius: 9px; background: linear-gradient(0deg, var(--blue), var(--ice)); transition: height .05s linear; }
 .mg-gauge.heat .mg-gauge-fill { background: linear-gradient(0deg, var(--gold), var(--red)); }
+.mg-gauge.press .mg-gauge-fill { background: linear-gradient(0deg, #2a5fd0, var(--ice)); transition: none; }
+.mg-gauge-line { position: absolute; left: -5px; right: -5px; height: 2px; background: var(--gold); box-shadow: 0 0 8px rgba(255, 195, 90, .7); z-index: 2; }
+.mg-gate.miss { background: var(--red-dim); border-color: var(--red); }
 
 .mg-stage > .mg-pin { display: flex; flex-direction: column; gap: 10px; align-items: center; }
 .mg-pin-entry { display: flex; gap: 8px; }
