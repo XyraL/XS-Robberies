@@ -108,7 +108,11 @@ function Db.Migrate()
     local moved = 0
 
     for _, entry in ipairs(LEGACY) do
-        if tableExists(entry.old) and not tableExists(entry.new) then
+        if tableExists(entry.new) then return 0 end
+    end
+
+    for _, entry in ipairs(LEGACY) do
+        if tableExists(entry.old) then
             local ok = pcall(function()
                 MySQL.query.await(('RENAME TABLE `%s` TO `%s`'):format(entry.old, entry.new))
             end)
@@ -141,8 +145,59 @@ function Db.Install()
     return true
 end
 
+local LINKS = {
+    { child = 'xs_robbery_locations', column = 'robbery_id', parent = 'xs_robberies' },
+    { child = 'xs_robbery_state', column = 'location_id', parent = 'xs_robbery_locations' },
+}
+
+local function foreignKeys(child, column)
+    return MySQL.query.await([[
+        SELECT CONSTRAINT_NAME AS name, REFERENCED_TABLE_NAME AS parent
+        FROM information_schema.KEY_COLUMN_USAGE
+        WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+          AND REFERENCED_TABLE_NAME IS NOT NULL
+    ]], { child, column }) or {}
+end
+
+local function orphans(link)
+    return tonumber(MySQL.scalar.await(([[
+        SELECT COUNT(*) FROM `%s` c LEFT JOIN `%s` p ON p.id = c.`%s` WHERE p.id IS NULL
+    ]]):format(link.child, link.parent, link.column))) or 0
+end
+
+function Db.Repair()
+    for _, link in ipairs(LINKS) do
+        local good, wrong = false, {}
+
+        for _, key in ipairs(foreignKeys(link.child, link.column)) do
+            if key.parent == link.parent then good = true else wrong[#wrong + 1] = key end
+        end
+
+        for _, key in ipairs(wrong) do
+            local ok, err = pcall(MySQL.query.await, ('ALTER TABLE `%s` DROP FOREIGN KEY `%s`'):format(link.child, key.name))
+            if ok then
+                print(('^2[XS-Robberies]^0 %s was still linked to %s. Fixed.'):format(link.child, key.parent))
+            else
+                print(('^1[XS-Robberies]^0 could not unlink %s from %s: %s'):format(link.child, key.parent, tostring(err)))
+            end
+        end
+
+        if not good then
+            local stray = orphans(link)
+            if stray == 0 then
+                pcall(MySQL.query.await, ('ALTER TABLE `%s` ADD FOREIGN KEY (`%s`) REFERENCES `%s` (`id`) ON DELETE CASCADE')
+                    :format(link.child, link.column, link.parent))
+            elseif #wrong > 0 then
+                print(('^3[XS-Robberies]^0 %d old row%s in %s belong to robberies that are not in %s. They are left alone and do nothing.')
+                    :format(stray, stray == 1 and '' or 's', link.child, link.parent))
+            end
+        end
+    end
+end
+
 function Db.Setup()
     Db.Migrate()
     Db.ready = Db.Install()
+    if Db.ready then pcall(Db.Repair) end
     return Db.ready
 end
