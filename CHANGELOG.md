@@ -46,6 +46,8 @@
 - Closing the builder lost unsaved changes.
 - The HUD could show a black box behind it in game.
 - Database setup could fail on servers that still had the old Cipher tables.
+- Places would not save on some servers moved over from Cipher. It repairs itself on start.
+- Left and right were swapped when flying the placement camera.
 
 ## 0.11.0
 
