@@ -340,7 +340,10 @@ const MOCK_HANDLERS = {
     },
     setEditorStages: () => ({ ok: true }),
     teleport: () => ({ ok: true }),
-    close: () => ({ ok: true }),
+    close: () => {
+        setTimeout(() => window.postMessage(mockOpen(), '*'), 80);
+        return { ok: true };
+    },
     minigameResult: (p) => {
         if (PLACE_STATE.mg) { const done = PLACE_STATE.mg; PLACE_STATE.mg = null; done(p.passed); }
         return { ok: true };
@@ -414,6 +417,33 @@ const MOCK_HUD = {
     ],
 };
 
+function mockOpen() {
+    return {
+        action: 'open',
+        data: {
+            ok: true,
+            admin: true,
+            framework: 'qbox',
+            inventory: 'ox_inventory',
+            target: 'ox_target',
+            dispatch: 'ps-dispatch',
+            doorlock: 'ox_doorlock',
+            mdt: 'generic',
+            version: '1.0.0',
+            stageTypes: CATALOGUE.stageTypes,
+            minigames: CATALOGUE.minigames,
+            accounts: CATALOGUE.accounts,
+            dirtyItem: CATALOGUE.dirtyItem,
+            items: MOCK_ITEMS,
+            defaults: {},
+            robberies: mockList(),
+            locations: clone(MOCK.locations),
+            loot: clone(MOCK.loot),
+            settings: clone(MOCK_SETTINGS),
+        },
+    };
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     if (PARAMS.has('mg')) {
         setTimeout(() => window.postMessage({ action: 'minigame', kind: PARAMS.get('mg'), difficulty: parseInt(PARAMS.get('d') || '2', 10) }, '*'), 120);
@@ -426,30 +456,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     setTimeout(() => {
-        window.postMessage({
-            action: 'open',
-            data: {
-                ok: true,
-                admin: true,
-                framework: 'qbox',
-                inventory: 'ox_inventory',
-                target: 'ox_target',
-                dispatch: 'ps-dispatch',
-                doorlock: 'ox_doorlock',
-                mdt: 'generic',
-                version: '1.0.0',
-                stageTypes: CATALOGUE.stageTypes,
-                minigames: CATALOGUE.minigames,
-                accounts: CATALOGUE.accounts,
-                dirtyItem: CATALOGUE.dirtyItem,
-                items: MOCK_ITEMS,
-                defaults: {},
-                robberies: mockList(),
-                locations: clone(MOCK.locations),
-                loot: clone(MOCK.loot),
-                settings: clone(MOCK_SETTINGS),
-            },
-        }, '*');
+        window.postMessage(mockOpen(), '*');
 
         const job = PARAMS.get('job');
         if (job) {

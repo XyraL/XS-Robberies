@@ -9,6 +9,9 @@ add before it works. Every robbery on your server is one you built.
 
 QBox and QBCore.
 
+This is a beta. Everything is in and working, but it has not been through many
+servers yet. If something breaks or feels wrong, tell me on Discord.
+
 ## What you get
 
 - **A guided setup.** Pick Store, ATM, Bank, Jewelry, House or Vehicle and it
