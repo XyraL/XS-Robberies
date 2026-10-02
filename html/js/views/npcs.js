@@ -28,7 +28,7 @@ const NpcsView = {
                         </div>
                         <div class="f"><label>Ped model</label>
                             <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="contact.model" value="${esc(c.model || '')}" placeholder="a_m_m_business_01" spellcheck="false"><button class="btn sm" id="ct-pick">${icon('twoman', 12)}</button></div></div>
-                        ${fieldText('contact.name', 'Their name', c.name || '', { placeholder: 'Lester' })}
+                        ${fieldText('contact.name', 'Their name', c.name || '', { placeholder: 'Dex' })}
                         ${fieldSelect('contact.scenario', 'Doing', c.scenario || '', SCENARIOS)}
                         ${fieldText('contact.line', 'What they say', c.line || '', { wide: true, placeholder: 'Fleeca on Legion Square. Bring your own thermite.' })}
                         ${fieldText('contact.label', 'Button', c.label || '', { placeholder: 'Ask about work' })}

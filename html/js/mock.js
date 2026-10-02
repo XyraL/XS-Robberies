@@ -58,7 +58,7 @@ MOCK.jobs.fleeca_legion = {
     origin: { x: 146.3, y: -1046.1, z: 29.37, h: 250 },
     anchor: { kind: 'location', models: [], pool: 'object', scanRange: 80, label: 'the door panel' },
     payout: { account: 'dirty', split: 'crew', when: 'escape' },
-    contact: { enabled: true, model: 'a_m_m_business_01', name: 'Lester', line: 'Fleeca on Legion Square. Bring your own thermite.', label: 'Ask about work', scenario: 'WORLD_HUMAN_SMOKING', window: 30, cooldown: 60, fee: 2500, feeAccount: 'cash', item: '', takeItem: false, sends: 'nearest', waypoint: true, coords: { x: 707.3, y: -966.9, z: 30.4, h: 90 } },
+    contact: { enabled: true, model: 'a_m_m_business_01', name: 'Dex', line: 'Fleeca on Legion Square. Bring your own thermite.', label: 'Ask about work', scenario: 'WORLD_HUMAN_SMOKING', window: 30, cooldown: 60, fee: 2500, feeAccount: 'cash', item: '', takeItem: false, sends: 'nearest', waypoint: true, coords: { x: 707.3, y: -966.9, z: 30.4, h: 90 } },
     blip: { sprite: 500, colour: 1, scale: 0.8, showWhen: 'during', label: 'Fleeca' },
     gates: Object.assign({}, DEF_GATES, { policeRequired: 4, minCrew: 2, maxCrew: 4, locationCooldown: 5400, playerCooldown: 3600 }),
     response: Object.assign({}, DEF_RESPONSE, { alarm: 'delayed', alarmDelay: 45, title: 'Fleeca Robbery', code: '10-90' }),
