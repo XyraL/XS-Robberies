@@ -56,6 +56,7 @@
 - Vault doors swing open slowly, like the heavy doors they are.
 - The Doors section is always on show on a step.
 - A loot step shows its prop up front.
+- A loot container's time box is called Each grab takes, so it is not mistaken for money.
 
 ### Fixed
 
@@ -84,6 +85,7 @@
 - Staff could not end an ATM or vehicle run from Live.
 - History showed $0 for jobs that paid on the spot.
 - Doing steps back to back could fail with "The server did not answer", like looting an ATM right after drilling it.
+- Number boxes in the builder could go past their limits, like a 500 second grab. They now stop at the limit and say so, and saved jobs are brought back into range.
 
 ## 0.11.0
 

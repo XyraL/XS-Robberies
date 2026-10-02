@@ -192,7 +192,8 @@ define('container', {
     blurb = 'Grab into a bag, one handful at a time. Give it a prop like a cash or gold trolley and it empties as they take it.',
     fields = {
         { key = 'grabs',     label = 'Grabs available', type = 'number', default = 6, min = 1, max = 40 },
-        { key = 'grabTime',  label = 'Per grab',        type = 'number', default = 4, min = 1, max = 60, unit = 's' },
+        { key = 'grabTime',  label = 'Each grab takes', type = 'number', default = 4, min = 1, max = 60, unit = 's',
+          hint = 'Seconds. What it pays is set under Pays out.' },
         { key = 'needsBag',  label = 'Requires a bag',  type = 'toggle', default = false, advanced = true },
         { key = 'bagItem',   label = 'Bag item',        type = 'item',   default = '', advanced = true,
           hint = 'The item that counts as a bag. Empty uses the one in config.lua.' },
@@ -328,6 +329,26 @@ end
 function Stages.HasDoors(stage)
     local opts = stage.opts or {}
     return (type(opts.doors) == 'table' and #opts.doors > 0) or (opts.doorId ~= nil and opts.doorId ~= '')
+end
+
+function Stages.Clamp(typeId, opts)
+    if type(opts) ~= 'table' then return opts end
+
+    for _, f in ipairs(Stages.FieldsFor(typeId)) do
+        local value = opts[f.key]
+        if f.type == 'number' and value ~= nil then
+            local n = tonumber(value)
+            if n == nil then
+                opts[f.key] = f.default
+            else
+                if f.min and n < f.min then n = f.min end
+                if f.max and n > f.max then n = f.max end
+                opts[f.key] = n
+            end
+        end
+    end
+
+    return opts
 end
 
 function Stages.Get(typeId)

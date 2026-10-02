@@ -326,6 +326,15 @@ function normaliseJob(job) {
         s.opts = s.opts || {};
         s.requires = s.requires || [];
         if (!s.opts.label) s.opts.label = s.label || s.id;
+        const def = stageType(s.type);
+        (def ? def.fields : []).forEach(f => {
+            if (f.type !== 'number' || s.opts[f.key] === undefined || s.opts[f.key] === null) return;
+            let n = Number(s.opts[f.key]);
+            if (!Number.isFinite(n)) n = f.default;
+            if (f.min !== undefined && n < f.min) n = f.min;
+            if (f.max !== undefined && n > f.max) n = f.max;
+            s.opts[f.key] = n;
+        });
     });
 }
 

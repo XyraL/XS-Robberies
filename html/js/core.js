@@ -199,7 +199,8 @@ function bindForm(root, target, onChange) {
         if (!el || !root.contains(el) || el.classList.contains('seg')) return;
         const tgt = resolve(el);
         if (!tgt) return;
-        const value = readInput(el);
+        let value = readInput(el);
+        if (e.type === 'change' && el.dataset.t === 'num') value = keepInRange(el, value);
         setPath(tgt, el.dataset.k, value);
         root._formChange && root._formChange(el.dataset.k, value, el, e.type);
     };
@@ -219,6 +220,21 @@ function bindForm(root, target, onChange) {
         setPath(tgt, group.dataset.k, value);
         root._formChange && root._formChange(group.dataset.k, value, group, 'seg');
     });
+}
+
+function keepInRange(el, value) {
+    if (!Number.isFinite(value)) return value;
+    const min = el.min !== '' ? parseFloat(el.min) : -Infinity;
+    const max = el.max !== '' ? parseFloat(el.max) : Infinity;
+    const kept = Math.min(max, Math.max(min, value));
+    if (kept === value) return value;
+
+    el.value = kept;
+    const field = el.closest('.f');
+    const label = (field && field.querySelector('label') && field.querySelector('label').textContent.trim()) || 'That';
+    const unit = (field && field.querySelector('.unit em') && field.querySelector('.unit em').textContent.trim()) || '';
+    toast(`${label} set to ${kept}${unit ? ' ' + unit : ''}`, value > max ? `The most it takes is ${max}${unit ? ' ' + unit : ''}.` : `The least it takes is ${min}${unit ? ' ' + unit : ''}.`, 'warning', 3600);
+    return kept;
 }
 
 function fieldNumber(k, label, value, opts = {}) {

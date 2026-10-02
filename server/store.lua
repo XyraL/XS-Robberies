@@ -146,6 +146,10 @@ function Store.Save(def, author)
     def.npcs = def.npcs or {}
     def.payout = def.payout or {}
 
+    for _, stage in ipairs(def.stages) do
+        if type(stage.opts) == 'table' then Stages.Clamp(stage.type, stage.opts) end
+    end
+
     local payload = {
         anchor   = def.anchor or {},
         blip     = def.blip or {},
@@ -345,6 +349,7 @@ function Store.LayoutStages(def, origin, offsets, overrides)
         if live[stage.id] then
             local opts = {}
             for k, v in pairs(stage.opts or {}) do opts[k] = v end
+            Stages.Clamp(stage.type, opts)
             if opts.codeFrom and not live[opts.codeFrom] then opts.codeFrom = '' end
             if opts.pairWith and not live[opts.pairWith] then opts.pairWith = '' end
             if opts.doors then opts.doors = doorsFor(opts.doors) end

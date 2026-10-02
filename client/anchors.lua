@@ -115,29 +115,36 @@ end
 local function layoutStages(def, anchor)
     local place = placer(def, anchor)
 
-    local off = {}
+    local off, live = {}, {}
     for _, stage in ipairs(def.stages or {}) do
         if stage.enabled == false then off[stage.id] = true end
+        if stage.coords and stage.enabled ~= false then live[stage.id] = true end
     end
 
     local function keep(requires)
         local out = {}
         for _, id in ipairs(requires or {}) do
-            if not off[id] then out[#out + 1] = id end
+            if live[id] then out[#out + 1] = id end
         end
         return out
     end
 
     local stages = {}
     for _, stage in ipairs(def.stages or {}) do
-        if stage.coords and stage.enabled ~= false then
+        if live[stage.id] then
+            local opts = {}
+            for k, v in pairs(stage.opts or {}) do opts[k] = v end
+            Stages.Clamp(stage.type, opts)
+            if opts.codeFrom and not live[opts.codeFrom] then opts.codeFrom = '' end
+            if opts.pairWith and not live[opts.pairWith] then opts.pairWith = '' end
+
             stages[#stages + 1] = {
                 id = stage.id,
                 type = stage.type,
                 label = stage.label,
                 requires = keep(stage.requires),
                 payout = stage.payout or {},
-                opts = stage.opts or {},
+                opts = opts,
                 coords = place(stage.coords),
             }
         end
