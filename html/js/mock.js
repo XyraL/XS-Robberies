@@ -66,7 +66,7 @@ MOCK.jobs.fleeca_legion = {
         mockStage('camera_1', 'camera', 'Kill the cameras', [143.6, -1041.3, 29.37, 70], [], { optional: true, duration: 12, requiredItem: 'trojan_usb' }),
         mockStage('power_1', 'power', 'Cut the power', [139.9, -1052.6, 29.37, 160], [], { optional: true, duration: 10 }),
         mockStage('hack_1', 'hack', 'Door panel', [146.3, -1046.1, 29.37, 250], [], { duration: 15, requiredItem: 'trojan_usb', consumeItem: true, notifyPolice: false }),
-        mockStage('keypad_1', 'keypad', 'Vault keypad', [148.6, -1045.2, 29.4, 250], ['hack_1'], { codeFrom: 'hack_1', digits: 4, duration: 4, doors: [{ model: joaat('v_ilev_gb_vauldr'), x: 148.025, y: -1044.364, z: 29.506, h: 249.8 }], doorAction: 'swing', swingAngle: -90 }),
+        mockStage('keypad_1', 'keypad', 'Vault keypad', [148.6, -1045.2, 29.4, 250], ['hack_1'], { codeFrom: 'hack_1', digits: 4, duration: 4, doors: [{ model: joaat('v_ilev_gb_vauldr'), x: 148.025, y: -1044.364, z: 29.506, h: 249.8, label: 'Fleeca vault door', action: 'swing', angle: -90 }] }),
         mockStage('tool_1', 'tool', 'Burn the gate', [149.1, -1047.8, 29.36, 160], ['keypad_1'], { toolKind: 'thermite', duration: 20, requiredItem: 'thermite', consumeItem: true, notifyPolice: true }),
         mockStage('container_1', 'container', 'Deposit boxes 1', [151.4, -1050.9, 29.36, 70], ['tool_1'], { grabs: 4, grabTime: 5 }, [800, 2000]),
         mockStage('container_2', 'container', 'Deposit boxes 2', [147.0, -1051.8, 29.36, 250], ['tool_1'], { grabs: 4, grabTime: 5 }, [800, 2000]),
@@ -341,7 +341,12 @@ const MOCK_HANDLERS = {
                 if (PLACE_STATE.repeats[key] > 1) { resolve({ ok: false, action: 'skip' }); return; }
             }
             if (p.pickDoor) {
-                resolve({ ok: true, action: 'placed', coords: { x: 150.291, y: -1047.629, z: 29.666, h: 340 }, pick: { model: joaat('hei_v_ilev_bk_gate2_pris'), doorId: 14, doorLock: 'ox_doorlock' } });
+                PLACE_STATE.doors = (PLACE_STATE.doors || 0) + 1;
+                if (PLACE_STATE.doors % 2 === 1) {
+                    resolve({ ok: true, action: 'placed', coords: { x: 148.025, y: -1044.364, z: 29.506, h: 249.8 }, pick: { model: joaat('v_ilev_gb_vauldr') } });
+                } else {
+                    resolve({ ok: true, action: 'placed', coords: { x: 150.291, y: -1047.629, z: 29.666, h: 340 }, pick: { model: joaat('hei_v_ilev_bk_gate2_pris'), doorId: 14, doorLock: 'ox_doorlock' } });
+                }
                 return;
             }
             if (p.pickEntity) {

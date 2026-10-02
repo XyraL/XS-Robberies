@@ -17,6 +17,37 @@ const GROUPS = {
     control: { label: 'Security', colour: [124, 196, 255] },
 };
 
+const VAULT_DOORS = [
+    { model: 'v_ilev_gb_vauldr', label: 'Fleeca vault door', angle: -90 },
+    { model: 'v_ilev_bk_vaultdoor', label: 'Pacific Standard vault door', angle: -90 },
+    { model: 'v_ilev_cbankvauldoor01', label: 'Paleto vault door', angle: 85 },
+];
+
+function knownDoor(model) {
+    if (model === undefined || model === null || model === '') return null;
+    const hash = /^-?\d+$/.test(String(model)) ? Number(model) >>> 0 : joaat(model);
+    return VAULT_DOORS.find(d => joaat(d.model) === hash) || null;
+}
+
+function doorFromPick(res) {
+    const door = { model: res.pick.model, x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h };
+    const id = res.pick.doorId;
+    if (id !== undefined && id !== null && id !== '') door.id = id;
+
+    const known = knownDoor(door.model);
+    if (known) {
+        door.label = known.label;
+        door.action = 'swing';
+        door.angle = known.angle;
+    } else if (door.id !== undefined) {
+        door.action = 'unlock';
+    } else {
+        door.action = 'swing';
+        door.angle = 90;
+    }
+    return door;
+}
+
 const LOOT_TYPES = ['register', 'safe', 'container'];
 const ZONE_TYPES = ['escape', 'hold'];
 

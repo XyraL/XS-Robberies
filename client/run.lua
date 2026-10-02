@@ -253,7 +253,7 @@ local function attemptInner(location, stage)
         end
     end
 
-    local begun = lib.callback.await('XS-Robberies:beginStage', 10000, {
+    local begun = lib.callback.await('XS-Robberies:beginStage', false, {
         locationId = location.modelAnchored and nil or location.id,
         robberyId = location.modelAnchored and location.robberyId or nil,
         anchor = location.modelAnchored and location.origin or nil,
@@ -285,7 +285,7 @@ local function attemptInner(location, stage)
     if stage.type == 'keypad' and begun.code then
         local entered = keypadPrompt(stage, #begun.code)
         if entered == nil then
-            lib.callback.await('XS-Robberies:finishStage', 15000, { token = begun.token, success = false })
+            lib.callback.await('XS-Robberies:finishStage', false, { token = begun.token, success = false })
             return
         end
         Wait(math.floor(duration * 1000))
@@ -294,7 +294,7 @@ local function attemptInner(location, stage)
         Framework.Notify(T('crackIt'), 'inform')
         local finished = runProgress(stage, duration)
         if not finished then
-            lib.callback.await('XS-Robberies:finishStage', 15000, { token = begun.token, success = false })
+            lib.callback.await('XS-Robberies:finishStage', false, { token = begun.token, success = false })
             Framework.Notify(T('youStopped'), 'inform')
             return
         end
@@ -312,7 +312,7 @@ local function attemptInner(location, stage)
         takeHandProp(held)
 
         if not finished then
-            lib.callback.await('XS-Robberies:finishStage', 15000, { token = begun.token, success = false })
+            lib.callback.await('XS-Robberies:finishStage', false, { token = begun.token, success = false })
             Framework.Notify(T('youStopped'), 'inform')
             return
         end
@@ -322,7 +322,7 @@ local function attemptInner(location, stage)
         end
     end
 
-    local result = lib.callback.await('XS-Robberies:finishStage', 15000, {
+    local result = lib.callback.await('XS-Robberies:finishStage', false, {
         token = begun.token,
         success = success,
     })

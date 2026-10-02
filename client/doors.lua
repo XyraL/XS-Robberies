@@ -110,22 +110,28 @@ local function turnTo(object, target, ms)
     end)
 end
 
+local function swingTime(entry)
+    return math.floor(math.min(7000, math.max(1500, math.abs(entry.angle or 90.0) / 90.0 * 5000)))
+end
+
 local function swing(entry, on, animate)
     local state = DoorsClient.swung[entry.key]
 
     if not on then
         DoorsClient.swung[entry.key] = nil
-        if state and DoesEntityExist(state.object) then turnTo(state.object, state.base, animate and 2500 or 0) end
+        if state and DoesEntityExist(state.object) then
+            turnTo(state.object, state.base, animate and swingTime(entry) or 0)
+        end
         return
     end
 
     local object = findEntity(entry)
     if object == 0 or (state and state.object == object) then return end
 
-    local base = entry.h or GetEntityHeading(object)
+    local base = GetEntityHeading(object)
     DoorsClient.swung[entry.key] = { object = object, base = base }
     FreezeEntityPosition(object, true)
-    turnTo(object, base + (entry.angle or 90.0), animate and 2500 or 0)
+    turnTo(object, base + (entry.angle or 90.0), animate and swingTime(entry) or 0)
 end
 
 local function system(entry, on)

@@ -34,6 +34,9 @@
 - A run where nobody does anything for 15 minutes ends itself, and so does one where everyone has gone offline.
 - A keypad with no code to find is cracked with a minigame instead.
 - Codes found during a job show on the HUD for the whole crew.
+- Any placed prop can be made lootable. A gold trolley in the vault can pay cash, any items, or a loot table.
+- Picking a Fleeca, Pacific Standard or Paleto vault door sets it to swing open the right way by itself.
+- Each door on a step has its own Unlock, Lock or Swing, so one step can swing the vault open and unlock a gate.
 
 ### Changed
 
@@ -50,6 +53,9 @@
 - The step picker is a compact list that fits on screen.
 - A run with nobody near it ends after 5 minutes instead of 10.
 - Dropped nui_doorlock (ESX only) and jd_doorlock.
+- Vault doors swing open slowly, like the heavy doors they are.
+- The Doors section is always on show on a step.
+- A loot step shows its prop up front.
 
 ### Fixed
 
@@ -77,6 +83,7 @@
 - qb-doorlock never actually changed a door.
 - Staff could not end an ATM or vehicle run from Live.
 - History showed $0 for jobs that paid on the spot.
+- Doing steps back to back could fail with "The server did not answer", like looting an ATM right after drilling it.
 
 ## 0.11.0
 

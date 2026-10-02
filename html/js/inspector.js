@@ -3,7 +3,7 @@ const LOOK_KEYS = ['prop', 'propZ', 'propDone', 'propSwap', 'scenario', 'animDic
 const Inspector = {
     moreOpen: false,
     lookOpen: false,
-    doorsOpen: false,
+    typingDoor: false,
     resolved: {},
 
     render(el) {
@@ -67,12 +67,18 @@ const Inspector = {
 
         const shown = (f) => !f.hidden && f.section !== 'doors' && !(stage.type === 'keypad' && f.key === 'minigame' && stage.opts.codeFrom);
         const basic = fields.filter(f => shown(f) && !f.advanced && !LOOK_KEYS.includes(f.key) && !['label', 'duration', 'requiredItem', 'consumeItem'].includes(f.key));
-        const look = fields.filter(f => LOOK_KEYS.includes(f.key));
+        const lootLook = LOOT_TYPES.includes(stage.type);
+        const look = fields.filter(f => LOOK_KEYS.includes(f.key) && !(lootLook && ['propDone', 'propSwap'].includes(f.key)));
+        const propBlock = `<div class="f wide"><label>Prop at this point</label>
+                        <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="opts.prop" value="${esc(stage.opts.prop || '')}" placeholder="Leave empty for none" spellcheck="false"><button class="btn sm" data-pick="opts.prop">${icon('prop', 12)} Pick</button></div>
+                        <div class="fh">Spawned here and becomes the thing they interact with. A cash trolley, a gold stack.</div></div>`;
+        const lootProp = lootLook ? propBlock + (stage.opts.prop ? fieldSeg('opts.propDone', 'When it is taken', stage.opts.propDone || 'keep', [{ value: 'keep', label: 'Leave it' }, { value: 'remove', label: 'Remove it' }, { value: 'swap', label: 'Swap it' }], { wide: true }) : '')
+            + (stage.opts.prop && stage.opts.propDone === 'swap' ? `<div class="f wide"><label>Swap to</label>
+                        <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="opts.propSwap" value="${esc(stage.opts.propSwap || '')}" placeholder="hei_prop_hei_cash_trolly_03" spellcheck="false"><button class="btn sm" data-pick="opts.propSwap">${icon('prop', 12)} Pick</button></div></div>` : '') : '';
         const advanced = fields.filter(f => shown(f) && f.advanced && !LOOK_KEYS.includes(f.key) && !['optional', 'notifyPolice'].includes(f.key));
         const readers = (job.stages || []).filter(s => s.type === 'keypad' && s.opts && s.opts.codeFrom === stage.id);
         const doors = Array.isArray(stage.opts.doors) ? stage.opts.doors : [];
-        const doorCount = doors.length + (stage.opts.doorId ? 1 : 0);
-        const doorsOpen = Inspector.doorsOpen || stage.type === 'doorlock' || doorCount > 0;
+        const typing = Inspector.typingDoor || !!stage.opts.doorId;
         const timed = !['container', 'twoman', 'guard'].includes(stage.type);
         const others = (job.stages || []).filter(s => s.id !== stage.id);
         const pays = LOOT_TYPES.includes(stage.type) || stage.type === 'guard';
@@ -102,6 +108,7 @@ const Inspector = {
                 <div class="grid2">
                     ${timed ? Inspector.field({ key: 'duration', label: stage.type === 'hold' ? 'Hold for' : 'Takes', type: 'number', min: 1, max: 900, unit: 's', default: 10 }, stage.opts.duration) : ''}
                     ${basic.map(f => Inspector.field(f, stage.opts[f.key])).join('')}
+                    ${lootProp}
                     ${Inspector.field({ key: 'requiredItem', label: 'Needs an item', type: 'item', default: '' }, stage.opts.requiredItem)}
                     ${stage.opts.requiredItem ? fieldSwitch('opts.consumeItem', 'Used up when done', stage.opts.consumeItem, { wide: true }) : ''}
                     ${fieldSwitch('opts.notifyPolice', 'Calls the police when started', stage.opts.notifyPolice, { wide: true })}
@@ -116,18 +123,17 @@ const Inspector = {
                     : '<div class="hint">Nothing else to wait on yet.</div>'}
             </div>
 
-            <div class="more ${doorsOpen ? 'open' : ''}" data-fold="doors">Doors · ${doorCount ? `${doorCount} picked` : 'none'} <span class="car">▾</span></div>
-            <div class="fold ${doorsOpen ? 'open' : ''}" data-fold-body="doors"><div style="padding-bottom:14px">
-                ${Inspector.doorList(doors)}
-                <button class="btn sm" id="ins-door-pick" style="margin:10px 0 12px">${icon('doorlock', 13)} Pick a door</button>
-                <div class="grid2">
-                    ${fieldSeg('opts.doorAction', 'When this step is done', stage.opts.doorAction || 'unlock', [{ value: 'unlock', label: 'Unlock' }, { value: 'lock', label: 'Lock' }, { value: 'swing', label: 'Swing open' }], { wide: true })}
-                    ${stage.opts.doorAction === 'swing' ? fieldNumber('opts.swingAngle', 'Swing by', stage.opts.swingAngle ?? 90, { min: -180, max: 180, unit: '°', hint: 'For vault doors and gates. Negative swings it the other way.' }) : ''}
-                    ${fieldSwitch('opts.relockOnEnd', 'Put it back when the place resets', stage.opts.relockOnEnd !== false, { wide: true })}
-                    ${fieldText('opts.doorId', 'Or type a door id', stage.opts.doorId || '', { wide: true, placeholder: 'From your door lock resource', hint: 'For a door you cannot aim at. Exactly as your door lock resource names it.' })}
-                </div>
+            <div class="sec">
+                <div class="sec-title"><span>Doors</span><button class="btn xs act" id="ins-door-pick">${icon('doorlock', 12)} Pick a door</button></div>
+                ${Inspector.doorList(doors, stage)}
+                ${typing ? `
+                <div class="grid2" style="margin-top:10px">
+                    ${fieldText('opts.doorId', 'Door id', stage.opts.doorId || '', { placeholder: 'From your door lock', hint: 'For a door you cannot aim at, exactly as your door lock names it.' })}
+                    ${fieldSeg('opts.doorAction', 'Does', stage.opts.doorAction === 'lock' ? 'lock' : 'unlock', [{ value: 'unlock', label: 'Unlock' }, { value: 'lock', label: 'Lock' }])}
+                </div>` : `<button class="btn xs" id="ins-door-type" style="margin-top:8px">Type a door id instead</button>`}
+                ${doors.length || stage.opts.doorId ? `<div style="margin-top:10px">${fieldSwitch('opts.relockOnEnd', 'Put it back when the place resets', stage.opts.relockOnEnd !== false, { wide: true })}</div>` : ''}
                 <div class="hint" style="margin-top:8px">${esc(Inspector.doorNote())}</div>
-            </div></div>
+            </div>
 
             ${pays ? `
             <div class="sec">
@@ -144,9 +150,7 @@ const Inspector = {
             <div class="more ${Inspector.lookOpen ? 'open' : ''}" data-fold="look">Look and feel <span class="car">▾</span></div>
             <div class="fold ${Inspector.lookOpen ? 'open' : ''}" data-fold-body="look"><div>
                 <div class="grid2" style="padding-bottom:14px">
-                    <div class="f wide"><label>Prop at this point</label>
-                        <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="opts.prop" value="${esc(stage.opts.prop || '')}" placeholder="Leave empty for none" spellcheck="false"><button class="btn sm" data-pick="opts.prop">${icon('prop', 12)} Pick</button></div>
-                        <div class="fh">Spawned here and becomes the thing they interact with.</div></div>
+                    ${lootLook ? '' : propBlock}
                     ${look.filter(f => f.key !== 'prop').map(f => Inspector.field(f, stage.opts[f.key])).join('')}
                 </div>
             </div></div>
@@ -173,8 +177,8 @@ const Inspector = {
                 if (value && !(stage.requires || []).includes(value)) stage.requires = (stage.requires || []).concat(value);
                 renderInspector();
             }
-            if (k === 'opts.doorAction') renderInspector();
             if (k === 'opts.requiredItem' && type === 'change') renderInspector();
+            if (k === 'opts.propDone' || (k === 'opts.prop' && type === 'change')) renderInspector();
             if (k === 'enabled' || k === 'opts.optional' || k === 'opts.notifyPolice' || k.startsWith('payout.')) softRefresh();
             else if (k === 'opts.label' || k === 'opts.duration' || k.startsWith('opts.')) softRefresh();
         });
@@ -211,15 +215,39 @@ const Inspector = {
         el.querySelector('#ins-door-pick').addEventListener('click', async () => {
             const res = await place({ label: 'Door', colour: colour, pickDoor: true, origin: stage.coords || undefined });
             if (!res.ok || !res.coords || !res.pick) return;
-            const door = { model: res.pick.model, x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h };
-            if (res.pick.doorId !== undefined && res.pick.doorId !== null && res.pick.doorId !== '') door.id = res.pick.doorId;
+            const door = doorFromPick(res);
             stage.opts.doors = (Array.isArray(stage.opts.doors) ? stage.opts.doors : []).concat(door);
-            Inspector.doorsOpen = true;
             markDirty();
             renderInspector();
             softRefresh();
-            toast('Door picked', door.id !== undefined ? `${res.pick.doorLock || 'Your door lock'} knows it as ${door.id}.` : 'Nothing manages it, so the game opens it itself.', 'success', 3200);
+            const note = door.label ? `${door.label}. It swings open when this step is done.`
+                : door.id !== undefined ? `${res.pick.doorLock || 'Your door lock'} knows it as ${door.id}. It unlocks when this step is done.`
+                : 'No door lock knows it, so it swings open. Change that on the door below.';
+            toast('Door picked', note, 'success', 3600);
         });
+
+        el.querySelector('#ins-door-type')?.addEventListener('click', () => {
+            Inspector.typingDoor = true;
+            renderInspector();
+        });
+
+        el.querySelectorAll('[data-door-act]').forEach(b => b.addEventListener('click', () => {
+            const [i, act] = b.dataset.doorAct.split(':');
+            const door = stage.opts.doors[Number(i)];
+            if (!door) return;
+            door.action = act;
+            if (act === 'swing' && door.angle === undefined) door.angle = (knownDoor(door.model) || { angle: 90 }).angle;
+            markDirty();
+            renderInspector();
+        }));
+
+        el.querySelectorAll('[data-door-angle]').forEach(input => input.addEventListener('input', () => {
+            const door = stage.opts.doors[Number(input.dataset.doorAngle)];
+            const value = parseFloat(input.value);
+            if (!door || !Number.isFinite(value)) return;
+            door.angle = Math.max(-180, Math.min(180, value));
+            markDirty();
+        }));
 
         el.querySelectorAll('[data-door-del]').forEach(b => b.addEventListener('click', () => {
             stage.opts.doors.splice(Number(b.dataset.doorDel), 1);
@@ -235,8 +263,12 @@ const Inspector = {
 
         el.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
             const key = b.dataset.pick;
-            PropsView.pick((model) => {
+            PropsView.pick((model, known) => {
                 setPath(stage, key, model);
+                if (key === 'opts.prop' && known && known.swap && !stage.opts.propSwap) {
+                    stage.opts.propSwap = known.swap;
+                    if (!stage.opts.propDone || stage.opts.propDone === 'keep') stage.opts.propDone = 'swap';
+                }
                 markDirty();
                 renderInspector();
                 softRefresh();
@@ -260,27 +292,40 @@ const Inspector = {
             head.classList.toggle('open', open);
             if (key === 'more') Inspector.moreOpen = open;
             if (key === 'look') Inspector.lookOpen = open;
-            if (key === 'doors') Inspector.doorsOpen = open;
         }));
     },
 
-    doorList(doors) {
-        if (!doors.length) return '<div class="hint">No door picked. Aim at one in the world and it opens, locks or swings when this step is done.</div>';
-        return `<div class="door-list">${doors.map((d, i) => `
-            <div class="door-row">
-                <span class="door-ic">${icon('doorlock', 14)}</span>
-                <div class="grow"><b>${esc(d.label || (d.id !== undefined ? `Door ${d.id}` : `Door ${i + 1}`))}</b>
-                    <small>${d.id !== undefined ? `${esc(State.boot && State.boot.doorlock || 'Door lock')} id ${esc(d.id)}` : esc(State.boot && State.boot.doorlock ? `Looked up in ${State.boot.doorlock} when it opens` : 'The game opens it itself')}</small></div>
-                <button class="icon-btn" data-door-go="${i}" title="Go to it">${icon('goto', 13)}</button>
-                <button class="icon-btn" data-door-del="${i}" title="Remove">${icon('trash', 13)}</button>
-            </div>`).join('')}</div>`;
+    doorList(doors, stage) {
+        if (!doors.length) return '<div class="hint">Nothing opens when this step is done. Pick a door and it can unlock, lock, or swing a vault door open.</div>';
+        const lock = State.boot && State.boot.doorlock;
+        const fallbackAction = stage.opts.doorAction || 'unlock';
+        return `<div class="door-list">${doors.map((d, i) => {
+            const action = d.action || fallbackAction;
+            const angle = d.angle ?? stage.opts.swingAngle ?? 90;
+            const sub = action === 'swing' ? 'The game swings it open'
+                : d.id !== undefined ? `${lock || 'Door lock'} id ${d.id}`
+                : lock ? `Looked up in ${lock} when it opens` : 'The game opens it itself';
+            return `
+            <div class="door-card">
+                <div class="door-row">
+                    <span class="door-ic">${icon('doorlock', 14)}</span>
+                    <div class="grow"><b>${esc(d.label || (d.id !== undefined ? `Door ${d.id}` : `Door ${i + 1}`))}</b><small>${esc(sub)}</small></div>
+                    <button class="icon-btn" data-door-go="${i}" title="Go to it">${icon('goto', 13)}</button>
+                    <button class="icon-btn" data-door-del="${i}" title="Remove">${icon('trash', 13)}</button>
+                </div>
+                <div class="door-opts">
+                    <div class="seg">${[['unlock', 'Unlock'], ['lock', 'Lock'], ['swing', 'Swing']].map(([v, l]) => `<button type="button" data-door-act="${i}:${v}" class="${action === v ? 'on' : ''}">${l}</button>`).join('')}</div>
+                    ${action === 'swing' ? `<div class="unit door-angle"><input type="number" class="inp" data-door-angle="${i}" value="${esc(angle)}" min="-180" max="180" step="5"><em>°</em></div>` : ''}
+                </div>
+            </div>`;
+        }).join('')}</div>`;
     },
 
     doorNote() {
         const lock = State.boot && State.boot.doorlock;
         return lock
-            ? `Using ${lock}. A door it does not know about is opened by the game itself.`
-            : 'No door lock resource is running, so the game opens and locks doors itself. Swing open is for vault doors that are not real doors.';
+            ? `Unlock and Lock go through ${lock}. Swing open turns the door itself, for vault doors. A negative angle swings it the other way.`
+            : 'No door lock resource is running, so the game unlocks and locks doors itself. Swing open turns the door itself, for vault doors. A negative angle swings it the other way.';
     },
 
     prop(el, prop) {
@@ -306,6 +351,11 @@ const Inspector = {
                     <div class="f wide"><label>Model</label>
                         <div style="display:grid;grid-template-columns:1fr auto;gap:6px"><input class="inp" data-k="model" value="${esc(prop.model)}" spellcheck="false"><button class="btn sm" data-pick="model">${icon('prop', 12)} Pick</button></div></div>
                 </div>
+            </div>
+            <div class="sec">
+                <div class="sec-title">Loot</div>
+                <div class="hint" style="margin-bottom:10px">Let the crew take it. It becomes a loot step right here with this prop, and you set what it pays: cash, dirty money, bank, any items, or a loot table.</div>
+                <button class="btn primary sm" id="pp-loot">${icon('container', 13)} Make it lootable</button>
             </div>
             <div class="sec">
                 <div class="sec-title">Tie it to a step</div>
@@ -334,6 +384,8 @@ const Inspector = {
             markDirty();
             softRefresh();
         });
+
+        el.querySelector('#pp-loot').addEventListener('click', () => PropsView.makeLootable(prop));
 
         el.querySelectorAll('[data-a]').forEach(b => b.addEventListener('click', () => {
             const a = b.dataset.a;

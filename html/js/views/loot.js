@@ -62,7 +62,7 @@ const LootView = {
                         ? 'Cash is held until the crew reaches the getaway. Items go straight into their pockets, so anyone caught on the way out is holding the goods.'
                         : 'Cash is paid the moment each step is done. Items always go straight into their pockets.'}
                         Containers pay per grab, so the amounts are multiplied by the grabs.</div>`
-                    : `<div class="empty inline"><p>No step here pays out yet. Tills, safes, containers and guards carry loot. Add one from Plan.</p></div>`}
+                    : `<div class="empty inline"><p>No step here pays out yet. Tills, safes, containers and guards carry loot. Add one from Plan, or make a placed prop lootable in Props.</p></div>`}
             </div>
 
             <div class="sec">

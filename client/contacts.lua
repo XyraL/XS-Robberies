@@ -10,7 +10,7 @@ local function remove(robberyId)
 end
 
 local function talk(contact)
-    local res = lib.callback.await('XS-Robberies:talk', 10000, contact.robberyId)
+    local res = lib.callback.await('XS-Robberies:talk', false, contact.robberyId)
 
     if not res then
         Framework.Notify(T('serverSilent'), 'error')

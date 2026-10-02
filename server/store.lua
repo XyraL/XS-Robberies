@@ -330,9 +330,11 @@ function Store.LayoutStages(def, origin, offsets, overrides)
                     x = at.x, y = at.y, z = at.z, h = at.h,
                     id = moved < 0.5 and door.id or nil,
                     label = door.label,
+                    action = door.action,
+                    angle = door.angle,
                 }
             elseif door.id and door.id ~= '' then
-                out[#out + 1] = { id = door.id, label = door.label }
+                out[#out + 1] = { id = door.id, label = door.label, action = door.action }
             end
         end
         return out

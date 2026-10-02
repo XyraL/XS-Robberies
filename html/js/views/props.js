@@ -24,7 +24,7 @@ const PropsView = {
             ${stepProps.length ? `
             <div class="sec">
                 <div class="sec-title">Props that belong to a step</div>
-                <div class="hint" style="margin-bottom:10px">Set on the step itself, under Look and feel. These are what the player interacts with.</div>
+                <div class="hint" style="margin-bottom:10px">These are what the player interacts with, lootable props included. Change one on its step.</div>
                 <div class="ov-list">${stepProps.map(s => `
                     <div class="ov-row">
                         <div class="type-dot" style="${colourVars(stageColour(s))};width:28px;height:28px">${icon(s.type, 13)}</div>
@@ -41,6 +41,7 @@ const PropsView = {
             if (act && act.dataset.act === 'move') { PropsView.move(prop); return; }
             if (act && act.dataset.act === 'copy') { PropsView.copy(prop); return; }
             if (act && act.dataset.act === 'del') { PropsView.remove(prop); return; }
+            if (act && act.dataset.act === 'loot') { PropsView.makeLootable(prop); return; }
             select('prop', prop.id, { view: false });
         }));
         el.querySelectorAll('[data-open-stage]').forEach(b => b.addEventListener('click', () => select('stage', b.dataset.openStage, { view: false })));
@@ -70,6 +71,7 @@ const PropsView = {
                 </div>
                 <div class="hint" style="margin-top:8px">${esc(when)}</div>
                 <div class="card-row">
+                    <button class="btn xs" data-act="loot">${icon('container', 12)} Lootable</button>
                     <button class="btn xs" data-act="move">${icon('place', 12)} Move</button>
                     <button class="btn xs" data-act="copy">${icon('copy', 12)} Copy</button>
                     <button class="btn xs danger" data-act="del">${icon('trash', 12)}</button>
@@ -175,6 +177,31 @@ const PropsView = {
         State.sel = { kind: 'prop', id: dup.id };
         await saveJob(true);
         refresh({ view: true, inspector: true, tabs: true });
+    },
+
+    async makeLootable(prop) {
+        const job = State.current;
+        if (!prop || !prop.coords) {
+            toast('Place it first', 'Put it in the world, then make it lootable.', 'warning');
+            return;
+        }
+
+        const known = PROP_CATALOGUE.find(p => p.model === prop.model);
+        const swap = prop.swapModel || (known && known.swap) || '';
+        const last = [...(job.stages || [])].reverse().find(s => s.type !== 'escape');
+
+        const stage = Steps.make('container', prop.coords, {
+            label: propLabel(prop),
+            opts: { prop: prop.model, propDone: swap ? 'swap' : 'remove', propSwap: swap, grabs: 4, grabTime: 4, optional: true },
+            requires: last ? [last.id] : [],
+        });
+
+        job.stages.push(stage);
+        job.props = job.props.filter(p => p.id !== prop.id);
+        State.sel = { kind: 'stage', id: stage.id };
+        await saveJob(true);
+        refresh({ view: true, inspector: true, tabs: true, head: true });
+        toast(`${stageLabel(stage)} can be looted`, 'It is a loot step now, optional and opening after the last step. Set what it pays below, items included.', 'success', 5200);
     },
 
     remove(prop) {

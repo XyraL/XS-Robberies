@@ -189,7 +189,7 @@ define('container', {
     group = 'loot',
     icon = 'box-open',
     colour = MARKER.loot,
-    blurb = 'Grab into a bag, one handful at a time, up to a weight limit.',
+    blurb = 'Grab into a bag, one handful at a time. Give it a prop like a cash or gold trolley and it empties as they take it.',
     fields = {
         { key = 'grabs',     label = 'Grabs available', type = 'number', default = 6, min = 1, max = 40 },
         { key = 'grabTime',  label = 'Per grab',        type = 'number', default = 4, min = 1, max = 60, unit = 's' },

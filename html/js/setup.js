@@ -234,11 +234,7 @@ const Setup = {
 
                 if (res.action === 'stop') { stopped = true; break; }
                 if (res.ok && res.coords && res.pick) {
-                    const door = { model: res.pick.model, x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h };
-                    const known = res.pick.doorId !== undefined && res.pick.doorId !== null && res.pick.doorId !== '';
-                    if (known) door.id = res.pick.doorId;
-                    target.opts.doors = (target.opts.doors || []).concat(door);
-                    target.opts.doorAction = known ? 'unlock' : 'swing';
+                    target.opts.doors = (target.opts.doors || []).concat(doorFromPick(res));
                 }
                 continue;
             }

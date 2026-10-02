@@ -207,14 +207,15 @@ function Doors.SyncTo(src)
 end
 
 function Doors.Apply(doors, opts, src)
-    local action = opts.doorAction or 'unlock'
     local records = {}
     local lookup = nil
 
     for index, door in ipairs(doors) do
+        local action = door.action or opts.doorAction or 'unlock'
+
         if action == 'swing' then
             if door.x and door.model then
-                records[#records + 1] = { builtin = Doors.SetBuiltin(door, 'swing', opts.swingAngle, true), door = door }
+                records[#records + 1] = { builtin = Doors.SetBuiltin(door, 'swing', door.angle or opts.swingAngle, true), door = door }
             end
         else
             local locked = action == 'lock'
