@@ -129,6 +129,25 @@ Config.Run = {
     Webhook = '',
 }
 
+-- ── Armoured trucks ──────────────────────────────────────────────────────────
+-- For a vehicle job set to be sent out by its contact (Places in the builder).
+-- Talking to the contact puts one on the road with the job's guards riding in it.
+-- Needs OneSync, which nearly every server already runs.
+Config.Trucks = {
+    -- How far from the contact a truck can start when it starts on a road
+    -- nearby. Metres. Each job can set its own in Places.
+    SpawnDistance = { min = 250, max = 650 },
+
+    -- Seconds a robbed truck stays before it is cleaned up.
+    CleanUpAfter = 60,
+
+    -- Who drives when no guard step is set to drive.
+    Driver = { ped = 's_m_m_security_01', weapon = 'WEAPON_PISTOL' },
+
+    -- The blip the crew sees on the truck.
+    Blip = { sprite = 67, colour = 1, scale = 0.9 },
+}
+
 -- ── Police paperwork ─────────────────────────────────────────────────────────
 -- An alarm can open an incident in the MDT by itself, the way a monitoring
 -- company would phone one in. Officers get a case to work rather than a blip
@@ -326,6 +345,13 @@ Config.Text = {
     runFinished     = 'The job is done.',
     noCodeYet       = 'You do not have the code yet.',
     onAnotherJob    = 'Finish or call off the job you are on first.',
+    truckOut        = 'There is already a truck out on this one. Wait for it.',
+    noTruckRoad     = 'No truck could be sent out right now. Try again in a moment.',
+    noOneSync       = 'Trucks need OneSync turned on.',
+    mustStop        = 'Stop it first.',
+    truckGone       = 'The truck is gone.',
+    truckGotAway    = 'The truck made its drop. It got away.',
+    truckLeft       = 'The truck finished its round. The job is off.',
     crackIt         = 'No code to go on. Crack it.',
 }
 -- ── Defaults for a new robbery ───────────────────────────────────────────────

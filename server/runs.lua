@@ -301,7 +301,7 @@ function Runs.Start(src, location)
         return nil, T('noPolice', police, gates.policeRequired or 0)
     end
 
-    local left = Runs.CooldownLeft('location', location.id)
+    local left = Runs.CooldownLeft('location', location.cooldownKey or location.id)
     if left > 0 then
         return nil, T('locationCooling', math.ceil(left / 60))
     end
@@ -320,7 +320,7 @@ function Runs.Start(src, location)
 
     if (gates.minCrew or 1) > 1 then
         local near = 0
-        local origin = location.origin
+        local origin = location.crewOrigin or location.origin
         for _, sid in ipairs(GetPlayers()) do
             sid = tonumber(sid)
             if not Framework.IsBlockedJob(sid) then
@@ -380,7 +380,9 @@ function Runs.Start(src, location)
         ]], { location.robberyId, location.id, json.encode(participantList(run)) })
     end
 
-    Runs.RaiseAlarm(run, 'Break-in reported.')
+    if not location.spawned then
+        Runs.RaiseAlarm(run, 'Break-in reported.')
+    end
 
     TriggerEvent('XS-Robberies:runStarted', {
         robberyId = location.robberyId,
@@ -419,7 +421,7 @@ function Runs.Finish(run, outcome, opts)
     local cooldowns = opts.cooldowns ~= false
 
     if cooldowns then
-        Runs.Cooldown('location', run.locationId, gates.locationCooldown)
+        Runs.Cooldown('location', run.location.cooldownKey or run.locationId, gates.locationCooldown)
         if (gates.globalCooldown or 0) > 0 then
             Runs.Cooldown('global', run.location.robberyId, gates.globalCooldown)
         end
@@ -503,6 +505,8 @@ function Runs.Finish(run, outcome, opts)
     end
 
     saveState(run.locationId)
+
+    if run.truck and Trucks then Trucks.RunEnded(run, outcome) end
 
     TriggerEvent('XS-Robberies:runEnded', {
         robberyId = run.location.robberyId,
@@ -705,7 +709,7 @@ local function codeLength(location, stage)
 end
 
 local function markDone(run, stage, src)
-    run.stages[stage.id] = { done = true, by = Framework.GetCitizenId(src), at = now() }
+    run.stages[stage.id] = { done = true, by = src and Framework.GetCitizenId(src) or nil, at = now() }
 
     local digits = codeLength(run.location, stage)
     if digits > 0 and not run.codes[stage.id] then
@@ -764,6 +768,9 @@ local function stageDuration(stage)
 end
 
 function Runs.Resolve(ref)
+    if type(ref) == 'table' and ref.truckId then
+        return Trucks.Resolve(ref.truckId)
+    end
     if type(ref) == 'table' and ref.robberyId then
         return Store.ResolveModel(ref.robberyId, ref.anchor)
     end
@@ -813,6 +820,10 @@ function Runs.Begin(src, ref, stageId)
 
     if not Runs.Unlocked(run, stage) then
         return { ok = false, error = T('locked') }
+    end
+
+    if location.spawned and Trucks.Moving(location.truckId) then
+        return { ok = false, error = T('mustStop') }
     end
 
     local opts = stage.opts or {}
@@ -923,6 +934,12 @@ function Runs.FinishStage(src, token, success)
     if not run or run ~= ticket.run then return { ok = false, error = T('runOver') } end
 
     local location = run.location
+    if location.spawned then
+        local fresh = Trucks.Resolve(location.truckId)
+        if not fresh then return { ok = false, error = T('truckGone') } end
+        location = fresh
+    end
+
     local stage = stageById(location, ticket.stageId)
     if not stage then return { ok = false, error = T('stageGone') } end
 
@@ -1191,6 +1208,39 @@ AddEventHandler('playerDropped', function()
         end
     end
 end)
+
+function Runs.StageDone(run, stageId, src, quiet)
+    if Runs.active[run.locationId] ~= run then return end
+
+    local stage = stageById(run.location, stageId)
+    if not stage or (run.stages[stage.id] or {}).done then return end
+
+    markDone(run, stage, src)
+    run.lastActivity = now()
+
+    if not quiet and stage.type == 'guard' and (stage.opts or {}).alertOnDeath ~= false then
+        Runs.Dispatch(run, T('guardDown', run.location.label or 'a business'))
+    end
+
+    if src and not quiet then
+        local payout = Runs.NormalisePayout(stage.payout)
+        for _, entry in ipairs(payout.items or {}) do
+            if entry.item and entry.item ~= '' and math.random(100) <= (tonumber(entry.chance) or 100) then
+                local low = tonumber(entry.min) or 1
+                Inv.Add(src, entry.item, math.random(low, math.max(low, tonumber(entry.max) or low)))
+            end
+        end
+        if payout.lootTable and payout.lootTable ~= '' then rollLoot(src, payout.lootTable) end
+    end
+
+    if not run.hasEscape and Runs.EverythingDone(run) then
+        Runs.Complete(run)
+        return
+    end
+
+    Runs.EscapeDeadline(run)
+    Runs.Push(run)
+end
 
 function Runs.GuardDown(src, ref, stageId)
     local location = Runs.Resolve(ref)

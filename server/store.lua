@@ -432,6 +432,13 @@ function Store.Anchor(def)
     }
 end
 
+function Store.Spawns(def)
+    local anchor = def and def.anchor or {}
+    local spawn = anchor.spawn
+    if anchor.kind ~= 'model' or type(spawn) ~= 'table' or spawn.mode ~= 'sent' then return nil end
+    return spawn
+end
+
 function Store.InArea(areas, point)
     if not areas or #areas == 0 then return true end
     for _, area in ipairs(areas) do
@@ -505,7 +512,7 @@ end
 function Store.ResolveModel(robberyId, anchor)
     local def = Store.robberies[robberyId]
     if not def or not def.enabled then return nil end
-    if Store.Anchor(def).kind ~= 'model' then return nil end
+    if Store.Anchor(def).kind ~= 'model' or Store.Spawns(def) then return nil end
     if not anchor or not anchor.x then return nil end
     if not Store.InArea(Store.Anchor(def).areas, anchor) then return nil end
 
@@ -533,11 +540,41 @@ function Store.ResolveModel(robberyId, anchor)
     }
 end
 
+function Store.ResolveSpawned(robberyId, truckId, pose)
+    local def = Store.robberies[robberyId]
+    if not def or not pose then return nil end
+
+    local origin = { x = pose.x, y = pose.y, z = pose.z, h = pose.h or 0.0 }
+
+    return {
+        id = truckId,
+        robberyId = def.id,
+        category = def.category or 'custom',
+        name = def.name,
+        label = def.name,
+        enabled = true,
+        needsContact = Store.NeedsContact(def),
+        origin = origin,
+        payoutMultiplier = 1.0,
+        payout = def.payout or {},
+        radius = def.radius or 30.0,
+        blip = def.blip or {},
+        gates = def.gates or {},
+        response = def.response or {},
+        stages = Store.LayoutStages(def, origin, nil, nil),
+        props = {},
+        npcs = {},
+        spawned = true,
+        truckId = truckId,
+        cooldownKey = 'truck:' .. def.id,
+    }
+end
+
 function Store.ModelRobberies()
     local out = {}
     for _, def in pairs(Store.robberies) do
         local anchor = Store.Anchor(def)
-        if def.enabled and anchor.kind == 'model' and #anchor.models > 0 then
+        if def.enabled and anchor.kind == 'model' and #anchor.models > 0 and not Store.Spawns(def) then
             out[#out + 1] = {
                 id = def.id,
                 name = def.name,

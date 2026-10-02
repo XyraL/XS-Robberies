@@ -1,7 +1,7 @@
 Hud = { visible = false }
 
 local function objectivesFor(state)
-    local location = Locations[state.locationId] or (ModelInstances or {})[state.locationId]
+    local location = Locations[state.locationId] or (ModelInstances or {})[state.locationId] or (TruckInstances or {})[state.locationId]
     if not location then return {} end
 
     local done, unlocked = {}, {}

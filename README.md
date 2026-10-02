@@ -28,6 +28,11 @@ QBox and QBCore.
 - **Contacts.** Put a ped somewhere who has to be talked to before a job opens.
   They can charge a fee, want an item, and send the player to the nearest place
   or a random one.
+- **Armoured trucks.** Talking to the contact sends a truck out on the road with
+  your guards riding inside. Stop it, deal with the guards, then blow the doors
+  and take the cargo. Let it reach its drop-off and it got away. Needs OneSync.
+- **Lootable props.** Place a gold trolley and make it lootable. It pays cash,
+  any items, or a loot table.
 - **A plan of the job.** Every point drawn to scale around the anchor, with the
   way each one faces and the distances between them. A flow view shows the order
   and when the alarm goes.

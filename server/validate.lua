@@ -165,6 +165,30 @@ function Validate.Robbery(def)
         issue(issues, 'warn', 'It is not placed anywhere yet. Add a place in Places.')
     end
 
+    local spawn = Store.Spawns(def)
+    if spawn then
+        if not Store.NeedsContact(def) then
+            issue(issues, 'error', 'The truck is sent out by the contact, but there is no contact yet. Set one up under NPCs.')
+        end
+        if GetConvar('onesync', 'off') == 'off' then
+            issue(issues, 'error', 'Trucks need OneSync turned on.')
+        end
+        if spawn.start == 'points' and #(spawn.starts or {}) == 0 then
+            issue(issues, 'warn', 'No start points yet, so the truck starts on a road near the contact.')
+        end
+        if spawn.heads == 'points' and #(spawn.ends or {}) == 0 then
+            issue(issues, 'warn', 'No drop-off yet, so the truck just drives around.')
+        end
+
+        local riding = 0
+        for _, s in ipairs(stages) do
+            if s.type == 'guard' and s.coords then riding = riding + 1 end
+        end
+        if riding > 4 then
+            issue(issues, 'warn', ('%d guards ride in it. Most trucks seat four, so the rest are left out.'):format(riding))
+        end
+    end
+
     local account = (def.payout or {}).account or 'cash'
     if account ~= 'cash' and account ~= 'bank' and account ~= 'dirty' then
         issue(issues, 'warn', ('Unknown payout type "%s". It pays as cash.'):format(tostring(account)))

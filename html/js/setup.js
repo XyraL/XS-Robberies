@@ -49,7 +49,7 @@ const RECIPES = {
         steps: [
             { key: 'doors', type: 'tool', title: 'The rear doors', name: 'Blow the doors', subtitle: 'Where they place the charge.', opts: { toolKind: 'thermite', duration: 15, notifyPolice: true } },
             { key: 'cargo', type: 'container', samePoint: 'doors', title: 'The cargo', subtitle: 'Where they take the cargo.', name: 'The cargo', after: ['doors'], opts: { grabs: 5, grabTime: 4 }, pay: [800, 1600] },
-            { key: 'guards', type: 'guard', title: 'Guards', name: 'Guard', subtitle: 'Optional. Each one fights back.', repeat: true, optional: true },
+            { key: 'guards', type: 'guard', title: 'Guards', name: 'Guard', subtitle: 'Optional. Each one fights back. On a truck the contact sends out, they ride inside.', repeat: true, optional: true },
             { key: 'escape', type: 'escape', title: 'The getaway', name: 'Getaway', subtitle: 'Optional. Where they must get to before the job counts. Skip it and the job ends when they leave.', zone: 100, after: ['cargo'], skipOnly: true },
         ],
     },

@@ -137,15 +137,36 @@ const PlacesView = {
         return true;
     },
 
+    pointList(kind, list, title, hint) {
+        const one = title.replace(/s$/, '');
+        return `<div class="sec-title" style="margin-top:16px"><span>${esc(title)}</span><button class="btn xs act primary" data-pt-add="${kind}">${icon('plus', 12)} Add</button></div>
+            <div class="hint" style="margin-bottom:8px">${esc(hint)}</div>
+            ${list.length ? `<div class="ov-list">${list.map((p, i) => `
+                <div class="ov-row">
+                    <span class="badge info">${i + 1}</span>
+                    <div><b>${esc(p.label || `${one} ${i + 1}`)}</b><small>${esc(fmtCoords(p))}</small></div>
+                    <div class="acts">
+                        <button class="btn xs" data-pt-move="${kind}:${i}">${icon('place', 11)} Move</button>
+                        <button class="btn xs" data-pt-go="${kind}:${i}">${icon('goto', 11)}</button>
+                        <button class="btn xs danger" data-pt-del="${kind}:${i}">${icon('trash', 11)}</button>
+                    </div>
+                </div>`).join('')}</div>` : '<span class="tag static">None yet</span>'}`;
+    },
+
     renderModel(el) {
         const job = State.current;
         const a = job.anchor;
         const models = a.models || [];
+        const vehicle = a.pool === 'vehicle';
+        const s = a.spawn || {};
+        const sent = vehicle && s.mode === 'sent';
 
         el.innerHTML = `
             <div class="sec">
                 <div class="sec-title">Lives on a model</div>
-                <div class="hint" style="margin-bottom:14px">Nothing to stamp. Every ${a.pool === 'vehicle' ? 'vehicle' : 'prop'} in the world with one of these models becomes this job, with the steps laid out around it the way you placed them around the first one.</div>
+                <div class="hint" style="margin-bottom:14px">${sent
+                    ? 'Talking to the contact sends one of these out, with the steps laid out around it the way you placed them around the first one.'
+                    : `Nothing to stamp. Every ${a.pool === 'vehicle' ? 'vehicle' : 'prop'} in the world with one of these models becomes this job, with the steps laid out around it the way you placed them around the first one.`}</div>
                 <div class="models" style="margin-bottom:12px">
                     ${models.map((m, i) => `<span class="model-chip">${icon('model', 14)} ${esc(modelName(m))}<button data-drop-model="${i}" title="Remove">×</button></span>`).join('') || '<span class="hint">No model yet.</span>'}
                 </div>
@@ -163,6 +184,25 @@ const PlacesView = {
                 </div>
                 ${jobOrigin(job) ? `<div class="card-row"><button class="btn sm" id="pm-repick">${icon('place', 13)} Rebuild around a different one</button></div>` : ''}
             </div>
+            ${vehicle ? `
+            <div class="sec">
+                <div class="sec-title">Where it comes from</div>
+                <div class="grid2" id="pm-spawn">
+                    ${fieldSeg('anchor.spawn.mode', 'The truck', sent ? 'sent' : 'road', [{ value: 'road', label: 'Already on the road' }, { value: 'sent', label: 'Sent by the contact' }], { wide: true, hint: sent ? 'Talking to the contact puts one on the road with your guard steps riding in it.' : 'Every one of this model driving around can be hit.' })}
+                    ${sent ? `
+                        ${fieldSeg('anchor.spawn.start', 'It starts', s.start === 'points' ? 'points' : 'near', [{ value: 'near', label: 'On a road nearby' }, { value: 'points', label: 'At my points' }], { wide: true })}
+                        ${s.start === 'points' ? '' : fieldNumber('anchor.spawn.nearMin', 'At least', s.nearMin ?? 250, { min: 100, max: 1500, unit: 'm' }) + fieldNumber('anchor.spawn.nearMax', 'At most', s.nearMax ?? 650, { min: 150, max: 2000, unit: 'm', hint: 'Away from the contact.' })}
+                        ${fieldSeg('anchor.spawn.heads', 'It drives', s.heads === 'points' ? 'points' : 'wander', [{ value: 'wander', label: 'Around the map' }, { value: 'points', label: 'To a drop-off' }], { wide: true, hint: s.heads === 'points' ? 'If it gets there before anyone hits it, it got away and the job fails.' : '' })}
+                        ${fieldNumber('anchor.spawn.speed', 'Speed', s.speed ?? 60, { min: 20, max: 140, unit: 'km/h' })}
+                        ${fieldNumber('anchor.spawn.lasts', 'Called off after', s.lasts ?? 20, { min: 5, max: 90, unit: 'min' })}
+                        ${fieldSwitch('anchor.spawn.blip', "Show it on the crew's map", s.blip !== false, { wide: true })}` : ''}
+                </div>
+                ${sent && s.start === 'points' ? PlacesView.pointList('starts', s.starts || [], 'Start points', 'Where it starts, facing the way it should drive off. One is picked at random.') : ''}
+                ${sent && s.heads === 'points' ? PlacesView.pointList('ends', s.ends || [], 'Drop-offs', 'Where it is heading. One is picked at random.') : ''}
+                ${sent ? `<div class="hint" style="margin-top:12px">They stop it by shooting it, the tyres or the driver, or by blocking the road. Then the guards get out and fight. The rear doors and the cargo only work once it has stopped.</div>
+                    <div class="card-row"><button class="btn sm" id="pm-contact">${icon('twoman', 13)} Set up the contact</button></div>` : ''}
+            </div>` : ''}
+            ${sent ? '' : `
             <div class="sec">
                 <div class="sec-title"><span>Where it works</span><button class="btn xs act primary" id="pm-area">${icon('plus', 12)} Add an area</button></div>
                 <div class="hint" style="margin-bottom:12px">Leave this empty and the job covers every one of these on the map. Add areas to keep it to parts of the map, then build other jobs for other areas with their own steps, items and payouts. Where areas overlap, the smaller one wins.</div>
@@ -179,7 +219,7 @@ const PlacesView = {
                             <button class="btn xs danger" data-area-del="${i}">${icon('trash', 11)}</button>
                         </div>
                     </div>`).join('')}</div>` : '<span class="tag static">Everywhere</span>'}
-            </div>`;
+            </div>`}`;
 
         const areas = () => (a.areas = a.areas || []);
         const placeArea = async (index) => {
@@ -200,7 +240,54 @@ const PlacesView = {
             renderView();
         };
 
-        el.querySelector('#pm-area').addEventListener('click', () => placeArea());
+        el.querySelector('#pm-area')?.addEventListener('click', () => placeArea());
+
+        const spawnCfg = () => (a.spawn = a.spawn || {});
+        const placePoint = async (kind, index) => {
+            const list = (spawnCfg()[kind] = spawnCfg()[kind] || []);
+            const current = index === undefined ? null : list[index];
+            const res = await place({
+                label: kind === 'starts' ? 'truck start' : 'drop-off',
+                colour: [255, 93, 115],
+                mode: 'point',
+                previewModel: kind === 'starts' ? models[0] : undefined,
+                origin: current || undefined,
+            });
+            if (!res.ok || !res.coords) return;
+            const point = { x: res.coords.x, y: res.coords.y, z: res.coords.z, h: res.coords.h || 0 };
+            if (current) list[index] = Object.assign(current, point); else list.push(point);
+            await saveJob(true);
+            renderView();
+        };
+
+        el.querySelectorAll('[data-pt-add]').forEach(b => b.addEventListener('click', () => placePoint(b.dataset.ptAdd)));
+        el.querySelectorAll('[data-pt-move]').forEach(b => b.addEventListener('click', () => {
+            const [kind, i] = b.dataset.ptMove.split(':');
+            placePoint(kind, Number(i));
+        }));
+        el.querySelectorAll('[data-pt-go]').forEach(b => b.addEventListener('click', () => {
+            const [kind, i] = b.dataset.ptGo.split(':');
+            const p = (spawnCfg()[kind] || [])[Number(i)];
+            if (p) nui('teleport', { coords: p, heading: p.h });
+        }));
+        el.querySelectorAll('[data-pt-del]').forEach(b => b.addEventListener('click', async () => {
+            const [kind, i] = b.dataset.ptDel.split(':');
+            (spawnCfg()[kind] || []).splice(Number(i), 1);
+            await saveJob(true);
+            renderView();
+        }));
+
+        const spawnForm = el.querySelector('#pm-spawn');
+        if (spawnForm) {
+            bindForm(spawnForm, job, (k) => {
+                markDirty();
+                if (['anchor.spawn.mode', 'anchor.spawn.start', 'anchor.spawn.heads'].includes(k)) {
+                    renderView();
+                    refresh({ tabs: true });
+                }
+            });
+        }
+        el.querySelector('#pm-contact')?.addEventListener('click', () => go('npcs'));
         el.querySelectorAll('[data-area-move]').forEach(b => b.addEventListener('click', () => placeArea(Number(b.dataset.areaMove))));
         el.querySelectorAll('[data-area-go]').forEach(b => b.addEventListener('click', () => {
             const ar = areas()[Number(b.dataset.areaGo)];

@@ -257,6 +257,7 @@ local function attemptInner(location, stage)
         locationId = location.modelAnchored and nil or location.id,
         robberyId = location.modelAnchored and location.robberyId or nil,
         anchor = location.modelAnchored and location.origin or nil,
+        truckId = location.spawned and location.truckId or nil,
         stageId = stage.id,
     })
 
@@ -439,6 +440,14 @@ local function wantsTarget(location, stage)
     return stageAvailable(location, stage)
 end
 
+local function nearPoint(location, stage)
+    if not location.spawned or not stage.offset then return true end
+    local vehicle = location.entity
+    if not vehicle or not DoesEntityExist(vehicle) then return false end
+    local at = GetOffsetFromEntityInWorldCoords(vehicle, stage.offset.x, stage.offset.y, stage.offset.z)
+    return #(GetEntityCoords(PlayerPedId()) - at) <= (tonumber((stage.opts or {}).reach) or 1.5) + 2.0
+end
+
 function SyncTargets(locationId)
     local built = Built[locationId]
     if not built then return end
@@ -494,7 +503,7 @@ local function buildZones(location)
         targets = {},
         peds = {},
         props = {},
-        sig = not location.modelAnchored and json.encode(location) or nil,
+        sig = not (location.modelAnchored or location.spawned) and json.encode(location) or nil,
     }
     Built[location.id] = built
     Zones[location.id] = true
@@ -506,12 +515,17 @@ local function buildZones(location)
             name = ('xs_rob_%s_%s'):format(tostring(location.id), stage.id),
             icon = 'fa-solid fa-' .. ((def and def.icon) or 'circle'),
             label = stage.label or (def and def.label) or 'Interact',
-            canInteract = function() return wantsTarget(location, stage) end,
+            canInteract = function() return wantsTarget(location, stage) and nearPoint(location, stage) end,
             onSelect = function() attempt(location, stage) end,
         }
 
         if stage.type == 'guard' then
-            Hazards.SpawnGuard(location, stage)
+            if not location.spawned then Hazards.SpawnGuard(location, stage) end
+            goto continue
+        end
+
+        if location.spawned then
+            built.targets[stage.id] = { kind = 'entity', entity = location.entity, option = option, reach = 4.0, stage = stage }
             goto continue
         end
 
@@ -603,7 +617,7 @@ RegisterNetEvent('XS-Robberies:client:locations', function(list)
     for _, location in ipairs(list or {}) do fresh[location.id] = location end
 
     for id, built in pairs(Built) do
-        if not built.location.modelAnchored then
+        if not built.location.modelAnchored and not built.location.spawned then
             local nextOne = fresh[id]
             if not nextOne or json.encode(nextOne) ~= built.sig then removeZones(id) end
         end
@@ -651,6 +665,9 @@ local ENDED = {
     tooLong = 'runTooLong',
     failed = 'runFailed',
     staff = 'forcedEnd',
+    gotAway = 'truckGotAway',
+    truckGone = 'truckGone',
+    truckLeft = 'truckLeft',
 }
 
 RegisterNetEvent('XS-Robberies:client:runEnded', function(data)
@@ -667,7 +684,7 @@ RegisterNetEvent('XS-Robberies:client:runEnded', function(data)
         if key then Framework.Notify(T(key), data.outcome == 'failed' and 'error' or 'inform') end
     end
 
-    local ended = Locations[data.locationId] or ModelInstances[data.locationId]
+    local ended = Locations[data.locationId] or ModelInstances[data.locationId] or TruckInstances[data.locationId]
     if ended then Access[ended.robberyId] = nil end
 
     local location = Locations[data.locationId]

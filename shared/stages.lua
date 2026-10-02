@@ -266,6 +266,14 @@ define('guard', {
           hint = 'Off means they only turn on you once the alarm goes, so a quiet crew can walk past.' },
         { key = 'alertOnDeath', label = 'Killing them calls it in', type = 'toggle', default = true },
         { key = 'guardScenario', label = 'Idle scenario', type = 'text', default = 'WORLD_HUMAN_GUARD_STAND', advanced = true },
+        { key = 'seat',        label = 'In the truck',   type = 'select', default = 'auto',
+          hint = 'Only for a truck the contact sends out. Anywhere else the guard stands at their point.',
+          options = {
+              { value = 'auto',      label = 'Any free seat' },
+              { value = 'driver',    label = 'Driving' },
+              { value = 'passenger', label = 'Front passenger' },
+              { value = 'back',      label = 'In the back' },
+          } },
     },
 })
 

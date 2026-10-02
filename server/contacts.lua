@@ -83,6 +83,13 @@ lib.callback.register('XS-Robberies:talk', function(src, robberyId)
     left = Runs.PlayerCooldownLeft(citizenid, { robberyId = def.id, category = def.category, gates = gates })
     if left > 0 then return { ok = false, error = T('playerCooling', math.ceil(left / 60)) } end
 
+    local truckJob = Store.Spawns(def) ~= nil
+    if truckJob then
+        if Trucks.ForRobbery(def.id) then return { ok = false, error = T('truckOut') } end
+        left = Runs.CooldownLeft('location', 'truck:' .. def.id)
+        if left > 0 then return { ok = false, error = T('locationCooling', math.ceil(left / 60)) } end
+    end
+
     local item = contact.item
     if item and item ~= '' and not Inv.Has(src, item) then
         return { ok = false, error = T('contactItem') }
@@ -100,8 +107,37 @@ lib.callback.register('XS-Robberies:talk', function(src, robberyId)
         Inv.Remove(src, item, 1)
     end
 
-    local place = placeFor(def, contact, here)
     local minutes = math.max(1, tonumber(contact.window) or 30)
+
+    if truckJob then
+        Contacts.Grant(citizenid, def.id, minutes, nil)
+        local truck, at = Trucks.Send(src, def, here)
+
+        if not truck then
+            Contacts.Consume(citizenid, def.id)
+            if fee > 0 then
+                Framework.AddMoney(src, contact.feeAccount == 'bank' and 'bank' or 'cash', fee, 'robbery-contact-refund')
+            end
+            if item and item ~= '' and contact.takeItem then Inv.Add(src, item, 1) end
+            return { ok = false, error = at }
+        end
+
+        local cooldown = tonumber(contact.cooldown) or 0
+        if cooldown > 0 then Runs.Cooldown('contact', key, math.floor(cooldown * 60)) end
+
+        return {
+            ok = true,
+            robberyId = def.id,
+            name = contact.name,
+            line = contact.line,
+            minutes = minutes,
+            truck = truck.id,
+            coords = at,
+            waypoint = contact.waypoint ~= false,
+        }
+    end
+
+    local place = placeFor(def, contact, here)
 
     Contacts.Grant(citizenid, def.id, minutes, place and place.id or nil)
 

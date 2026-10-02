@@ -117,6 +117,28 @@ MOCK.jobs.every_atm = {
     props: [],
 };
 
+MOCK.jobs.armoured_truck = {
+    id: 'armoured_truck', name: 'Armoured Truck', category: 'vehicle', enabled: true, revision: 4, author: 'XyraL', radius: 40,
+    origin: { x: 288.4, y: -1203.2, z: 29.29, h: 90 },
+    anchor: {
+        kind: 'model', models: ['stockade'], pool: 'vehicle', scanRange: 80, label: 'the truck',
+        spawn: { mode: 'sent', start: 'near', nearMin: 250, nearMax: 650, heads: 'points', ends: [{ x: -38.2, y: -1112.6, z: 26.4, h: 70, label: 'Union Depository' }], speed: 60, lasts: 20, blip: true },
+    },
+    contact: { enabled: true, model: 'a_m_m_business_01', name: 'Ramon', line: 'Gruppe Sechs run leaves in ten. Do not let it reach the depository.', label: 'Ask about work', scenario: 'WORLD_HUMAN_SMOKING', window: 15, cooldown: 30, fee: 1500, feeAccount: 'cash', item: '', takeItem: false, waypoint: true, coords: { x: 709.8, y: -963.6, z: 30.4, h: 180 } },
+    payout: { account: 'dirty', split: 'crew', when: 'instant' },
+    blip: { sprite: 67, colour: 1, scale: 0.9, showWhen: 'during', label: 'Armoured truck' },
+    gates: Object.assign({}, DEF_GATES, { policeRequired: 3, minCrew: 2, maxCrew: 4, locationCooldown: 2700, playerCooldown: 1800 }),
+    response: Object.assign({}, DEF_RESPONSE, { title: 'Armoured Truck', code: '10-90' }),
+    stages: [
+        mockStage('guard_1', 'guard', 'Driver', [290.2, -1203.0, 29.3, 90], [], { ped: 's_m_m_security_01', weapon: 'WEAPON_PISTOL', seat: 'driver', guardHealth: 200, armour: 50, accuracy: 35 }),
+        mockStage('guard_2', 'guard', 'Shotgun', [290.2, -1204.4, 29.3, 90], [], { ped: 's_m_m_security_01', weapon: 'WEAPON_PUMPSHOTGUN', seat: 'passenger', guardHealth: 200, armour: 50, accuracy: 35 }),
+        mockStage('guard_3', 'guard', 'Back guard', [286.0, -1203.6, 29.3, 90], [], { ped: 's_m_m_security_01', weapon: 'WEAPON_SMG', seat: 'back', guardHealth: 250, armour: 100, accuracy: 40 }),
+        mockStage('tool_1', 'tool', 'Burn the rear doors', [284.6, -1203.2, 29.3, 270], ['guard_1', 'guard_2', 'guard_3'], { toolKind: 'thermite', duration: 12, requiredItem: 'thermite', consumeItem: true }),
+        mockStage('container_1', 'container', 'Cash bags', [284.6, -1203.2, 29.3, 270], ['tool_1'], { grabs: 5, grabTime: 4 }, [1200, 2400]),
+    ],
+    props: [],
+};
+
 MOCK.jobs.vangelico = {
     id: 'vangelico', name: 'Vangelico', category: 'jewelry', enabled: false, revision: 2, author: 'XyraL', radius: 30,
     anchor: { kind: 'location', models: [], pool: 'object', scanRange: 80 },

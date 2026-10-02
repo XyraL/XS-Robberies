@@ -38,6 +38,7 @@ const NpcsView = {
                         ${fieldSeg('contact.feeAccount', 'Paid from', c.feeAccount || 'cash', [{ value: 'cash', label: 'Cash' }, { value: 'bank', label: 'Bank' }])}
                         <div class="f"><label>Needs an item</label>${itemPicker('contact.item', c.item || '', 'None')}</div>
                         ${anchorKind(job) === 'location' ? fieldSeg('contact.sends', 'Sends them to', c.sends || 'any', [{ value: 'any', label: 'Any place' }, { value: 'nearest', label: 'The nearest' }, { value: 'random', label: 'A random one' }], { wide: true }) : ''}
+                        ${job.anchor && job.anchor.spawn && job.anchor.spawn.mode === 'sent' ? '<div class="hint wide" style="grid-column:1/-1">Talking to them sends the truck out. Its settings are under Places.</div>' : ''}
                         ${fieldSwitch('contact.takeItem', 'Takes the item', c.takeItem)}
                         ${fieldSwitch('contact.waypoint', 'Marks it on their map', c.waypoint !== false)}
                     </div>` : ''}

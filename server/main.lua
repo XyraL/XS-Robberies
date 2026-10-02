@@ -86,6 +86,7 @@ RegisterNetEvent('XS-Robberies:server:ready', function()
     SyncLocations(source)
     SyncTunables(source)
     Doors.SyncTo(source)
+    Trucks.SyncTo(source)
 
     for _, entry in ipairs(Runs.PublicSnapshot()) do
         TriggerClientEvent('XS-Robberies:client:runPublic', source, entry)
@@ -425,6 +426,10 @@ end)
 
 lib.callback.register('XS-Robberies:beginStage', function(src, payload)
     payload = payload or {}
+
+    if payload.truckId then
+        return Runs.Begin(src, { truckId = payload.truckId }, payload.stageId)
+    end
 
     if payload.robberyId and payload.anchor then
         return Runs.Begin(src, { robberyId = payload.robberyId, anchor = payload.anchor }, payload.stageId)

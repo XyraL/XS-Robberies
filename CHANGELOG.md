@@ -37,6 +37,9 @@
 - Any placed prop can be made lootable. A gold trolley in the vault can pay cash, any items, or a loot table.
 - Picking a Fleeca, Pacific Standard or Paleto vault door sets it to swing open the right way by itself.
 - Each door on a step has its own Unlock, Lock or Swing, so one step can swing the vault open and unlock a gate.
+- Armoured trucks: a vehicle job can be sent out by its contact. The truck drives with your guards inside. Stop it, take out the guards, open it up and take the cargo. If it reaches its drop-off, it got away.
+- Guard steps can ride in a truck: driving, front passenger or in the back.
+- The crew sees the truck on their map, and its back doors open when the rear doors step is done.
 
 ### Changed
 

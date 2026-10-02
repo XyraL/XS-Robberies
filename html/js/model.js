@@ -4,7 +4,7 @@ const JOB_TYPES = [
     { id: 'bank',    label: 'Bank',    icon: 'bank',    colour: [255, 195, 90],  blurb: 'Security, a vault door, a code, the vault, the getaway.' },
     { id: 'jewelry', label: 'Jewelry', icon: 'jewelry', colour: [169, 139, 255], blurb: 'Display cases to smash, an alarm panel, a back safe.' },
     { id: 'house',   label: 'House',   icon: 'house',   colour: [124, 196, 255], blurb: 'Break in, search the rooms, find the safe.' },
-    { id: 'vehicle', label: 'Vehicle', icon: 'vehicle', colour: [255, 93, 115],  blurb: 'An armoured truck or any vehicle model. Every one on the road.' },
+    { id: 'vehicle', label: 'Vehicle', icon: 'vehicle', colour: [255, 93, 115],  blurb: 'An armoured truck. Every one on the road, or one the contact sends out with guards inside.' },
     { id: 'custom',  label: 'Other',   icon: 'custom',  colour: [143, 161, 198], blurb: 'Start blank and add exactly the steps you want.' },
 ];
 
@@ -205,6 +205,8 @@ function runEstimate(job) {
 function alarmText(job) {
     const r = job.response || {};
     const mode = r.alarm || 'instant';
+    const spawn = job.anchor && job.anchor.spawn;
+    if (spawn && spawn.mode === 'sent' && mode !== 'none') return 'The alarm goes when the truck is hit.';
     if (mode === 'instant') return 'The alarm goes the moment they start.';
     if (mode === 'delayed') return `The alarm goes ${r.alarmDelay || 30}s after they start.`;
     if (mode === 'silent') return 'Silent alarm: police are told, nobody hears it.';
