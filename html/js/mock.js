@@ -429,7 +429,7 @@ function mockOpen() {
             dispatch: 'ps-dispatch',
             doorlock: 'ox_doorlock',
             mdt: 'generic',
-            version: '1.0.0',
+            version: '1.0.1',
             stageTypes: CATALOGUE.stageTypes,
             minigames: CATALOGUE.minigames,
             accounts: CATALOGUE.accounts,

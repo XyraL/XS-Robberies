@@ -154,7 +154,7 @@ function renderRail() {
         </div>
         <div class="rail-foot">
             <div>${esc(State.boot && State.boot.framework || 'framework ?')} · ${esc(State.boot && State.boot.inventory || 'inventory ?')}</div>
-            <div>target <b>${esc(State.boot && State.boot.target || 'built-in')}</b> · v${esc(State.version || '1.0.0')}</div>
+            <div>target <b>${esc(State.boot && State.boot.target || 'built-in')}</b> · v${esc(State.version || '1.0.1')}</div>
         </div>`;
 
     el.querySelectorAll('[data-job]').forEach(card => card.addEventListener('click', () => openJob(card.dataset.job)));

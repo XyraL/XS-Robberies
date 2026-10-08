@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+### Fixed
+
+- Points in the builder did not land on what you aimed at, and X did not drop them to the floor.
+- Aiming at an ATM, vehicle or door in the builder did not pick it.
+- NPCs, guards and contacts did not drop onto the floor under their spot.
+
 ## 1.0.0
 
 ### New
