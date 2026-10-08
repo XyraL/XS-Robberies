@@ -2,10 +2,14 @@ Builder = Builder or {}
 
 local checkedAdmin, isAdmin = false, false
 
+function RayHit(hit)
+    return hit == true or hit == 1
+end
+
 function FloorUnder(x, y, z)
     local ray = StartExpensiveSynchronousShapeTestLosProbe(x, y, z + 0.6, x, y, z - 2.5, 1, 0, 4)
     local _, hit, at = GetShapeTestResult(ray)
-    if hit == 1 then return at.z end
+    if RayHit(hit) then return at.z end
     return z
 end
 

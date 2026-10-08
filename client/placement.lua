@@ -50,7 +50,7 @@ local function surfaceUnder(x, y, z)
         x, y, z + 1.0, x, y, z - 4.0, -1, ignored(), 4)
     local _, hit, endCoords = GetShapeTestResult(ray)
 
-    if hit == 1 then return endCoords.z end
+    if RayHit(hit) then return endCoords.z end
     return nil
 end
 
@@ -70,7 +70,7 @@ local function aimPoint(distance)
         pos.x, pos.y, pos.z, target.x, target.y, target.z, -1, ignored(), 4)
     local _, hit, endCoords, _, entity = GetShapeTestResult(ray)
 
-    if hit == 1 then return endCoords, true, entity end
+    if RayHit(hit) then return endCoords, true, entity end
     return target, false, 0
 end
 
