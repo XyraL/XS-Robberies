@@ -5,7 +5,7 @@ lua54 'yes'
 name 'XS-Robberies'
 author 'XyraL'
 description 'XS-Robberies. Build any robbery in-game: stores, ATMs, banks, jewelry, houses, vehicles, custom MLOs. QBox and QBCore.'
-version '1.0.1'
+version '1.0.2'
 
 dependencies {
     'ox_lib',

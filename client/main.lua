@@ -54,3 +54,9 @@ AddEventHandler('onResourceStop', function(resource)
     Placement.Abort()
     Markers.Clear()
 end)
+
+RegisterNetEvent('QBCore:Client:OnPlayerUnload', function()
+    Builder.Close()
+    if lib.progressActive() then lib.cancelProgress() end
+    for robberyId in pairs(Access) do Access[robberyId] = nil end
+end)

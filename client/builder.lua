@@ -45,6 +45,7 @@ local function hide()
 end
 
 local function reveal(payload)
+    if not Builder.open then return end
     Builder.hidden = false
     SetNuiFocus(true, true)
     payload = payload or {}

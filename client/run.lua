@@ -119,7 +119,7 @@ local function runProgress(stage, duration, label)
 
     if opts.scenario and opts.scenario ~= '' then
         payload.anim = { scenario = opts.scenario }
-    elseif anim then
+    elseif anim and pcall(lib.requestAnimDict, anim.dict, 3000) and HasAnimDictLoaded(anim.dict) then
         payload.anim = { dict = anim.dict, clip = anim.clip, flag = anim.flag }
     end
 

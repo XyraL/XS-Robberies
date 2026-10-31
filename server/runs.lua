@@ -1200,13 +1200,31 @@ AddEventHandler('onResourceStop', function(resource)
     for _, run in pairs(Runs.active) do Doors.Restore(run.doors) end
 end)
 
-AddEventHandler('playerDropped', function()
-    local src = source
+local function leave(src)
+    for token, ticket in pairs(Runs.tokens) do
+        if ticket.src == src then Runs.tokens[token] = nil end
+    end
+
     for _, run in pairs(Runs.active) do
         for citizenid, entry in pairs(run.participants) do
-            if entry.src == src then entry.src = nil end
+            if entry.src == src then
+                entry.src = nil
+                TriggerClientEvent('XS-Robberies:client:runEnded', src, {
+                    locationId = run.locationId,
+                    outcome = 'left',
+                    reason = 'left',
+                })
+            end
         end
     end
+end
+
+AddEventHandler('playerDropped', function()
+    leave(source)
+end)
+
+AddEventHandler('QBCore:Server:OnPlayerUnload', function(src)
+    leave(tonumber(src) or source)
 end)
 
 function Runs.StageDone(run, stageId, src, quiet)

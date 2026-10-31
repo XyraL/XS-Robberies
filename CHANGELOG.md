@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.0.2
+
+### Fixed
+
+- Switching character takes you out of a robbery, closes the builder and cancels the progress bar
+- A bad animation in a robbery no longer breaks every progress bar on the server
+
+Replace everything except your config.lua. No SQL to run.
+
 ## 1.0.1
 
 ### Fixed
