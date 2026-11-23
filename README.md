@@ -4,8 +4,12 @@ Build any robbery you want, in game. Stores, ATMs, banks, jewelry stores, houses
 armoured trucks, your own MLOs. You place every point yourself, decide what each
 one needs and what it pays, then stamp the job anywhere it should work.
 
-It ships empty. No presets, no coordinates from someone else's map, no items to
-add before it works. Every robbery on your server is one you built.
+Robberies ship empty. No presets, no coordinates from someone else's map, no items
+to add before it works. Every robbery on your server is one you built.
+
+Petty crime is the other half: pickpocketing, mugging, car break-ins, payphones,
+copper theft and the rest. Most of it works the moment you start the script, and every
+part of it can be changed in the builder.
 
 QBox and QBCore.
 
@@ -60,17 +64,25 @@ servers yet. If something breaks or feels wrong, tell me on Discord.
 - **The alarm is yours.** Instant, delayed, silent or none. Cutting the cameras or
   the power can change it. Steps can call the police, failed steps can too, and the
   call repeats on a timer while the job is running.
-- **Minigames.** 53 to pick from: 12 of our own plus the minigame resources people
-  already run (list below). Every step picks its own and how hard it is. Try any
-  of them from the builder.
+- **Minigames.** 73 to pick from. New steps and crimes use
+  [MGC Minigames](https://github.com/boiidevelopment/mgc) (free, 20 games). Without
+  mgc, each of those plays the closest of our own 12 instead, so nothing breaks.
+  The minigame resources people already run are there too (list below). Every
+  step picks its own and how hard it is. Try any of them from the builder.
 - **Live control.** See every robbery happening right now, end one, ban someone
   from robberies, or switch them all off. Players can call off their own job, and
   a job nobody is working ends itself.
+- **Petty crime.** 17 small crimes that need no job: pickpocketing, purse
+  snatching, mugging, smash and grab, catalytic converters, wheels, mailboxes,
+  vending machines, parking meters, payphones, newspaper boxes, copper from
+  electrical boxes and AC units, porch packages, tip jars, shoplifting and grabbing
+  the till. Thirteen of them work everywhere the moment you start the script.
 
 ## Install
 
 1. Drop the folder in your resources.
-2. `ensure XS-Robberies` after `ox_lib` and `oxmysql`.
+2. `ensure XS-Robberies` after `ox_lib` and `oxmysql`. For the MGC minigames, add
+   [mgc](https://github.com/boiidevelopment/mgc) and `ensure mgc` too.
 3. Give yourself access: `add_ace group.admin xs.robberies allow`, or list your
    framework groups or licenses in `Config.Admin`.
 4. In game, `/robberies`.
@@ -96,6 +108,62 @@ Nothing is placed from chat. Every point is placed in the world with a freecam:
 WASD to fly, SPACE to pin, X to drop to the floor, the scroll wheel to turn it, the
 arrow keys to nudge.
 
+## Petty crime
+
+`/robberies`, then **Petty crime** under Server. Every crime has its own card. Click
+one to change anything about it, flip the switch to turn it on or off.
+
+| Crime | How it works | On out of the box |
+|---|---|---|
+| Pickpocket | Walk up to someone on the street. They might feel it. | Yes |
+| Purse snatch | Grab the bag and run. Some chase you. | Yes |
+| Mugging | Aim a gun at someone and press E. Some refuse and fight. | Yes |
+| Smash and grab | Put a window in on a parked car. The alarm might go. | Yes |
+| Catalytic converter | Lie under a parked car with an angle grinder. | Yes, needs `angle_grinder` |
+| Wheel theft | Take the wheels off a parked car with a wrench. | Yes, needs a wrench |
+| Mailboxes | Any street or house mailbox. | Yes |
+| Vending machines | Any vending machine, with a lockpick. | Yes |
+| Parking meters | Any parking meter, with a lockpick. | Yes |
+| Payphones | Pry the coin box off any payphone with a crowbar. | Yes, needs a crowbar |
+| Newspaper boxes | Jimmy any newspaper box for the change. | Yes |
+| Electrical boxes | Strip the copper out of a street electrical box. It can shock you. | Yes |
+| AC units | Pull the copper coil out of an air conditioning unit with a wrench. It can shock you. | Yes, needs a wrench |
+| Porch packages | A box on every doorstep you place. | Once you place spots |
+| Tip jars | Every counter you place. | Once you place spots |
+| Shoplifting | Shelves you place. Only works while the clerk looks away. | Once you place spots |
+| Grab the till | Tills you place. Only works while the clerk looks away. | Once you place spots |
+
+Each crime sets its own:
+
+- What it takes: an item, whether it gets used up or can break, how long, a minigame, the animation.
+- Who or what it hits: men, women or anyone, which peds are left alone, which car classes, which prop models.
+- What it pays: cash, dirty money or bank, items with their own odds, or a loot table.
+- Getting caught: the odds police are called and how long it takes, witnesses calling it in, car alarms, the victim noticing, fighting back or refusing, and the odds of a shock on the copper crimes.
+- Limits: how long before the same person, car or spot can be hit again, how long a robber waits, and how many police have to be online.
+
+**Placing spots.** Open Porch packages, Tip jars, Shoplifting or Grab the till and
+press Place a spot. It uses the same freecam as the builder. Taken spots come back
+when their cooldown runs out.
+
+**Shop clerks.** Shoplifting and the till only work while the clerk looks away. If
+they look back before it is done, they saw it. Spots with the same shop name share
+one clerk. Under Shop clerks you set how long they watch and look away, and you can
+place a clerk behind the counter who turns to their phone when they stop watching.
+Players near a shelf or till see which it is on their screen.
+
+**Minigames.** New steps and crimes start on MGC Minigames. Install
+[mgc](https://github.com/boiidevelopment/mgc) and `ensure mgc`. Without it, each
+MGC game plays the closest built-in game instead, and the builder says which. Already built jobs keep the games they have. **Switch saved steps to
+MGC** in Settings moves every step and crime that uses a built-in game, the ox_lib
+skill check or a boii_minigames game over to MGC in one go.
+
+**Things to open.** Stolen wallets, bags and packages go in the pocket closed. Using
+one opens it and pays what is inside. Set what each one holds under Things to open.
+
+Three switches in **Settings** cover all of it: petty crime on or off, whether it
+can call the police, and a payout multiplier. Police and EMS can never do it, and
+the kill switch and robbery bans cover it too.
+
 ## Integrations
 
 Everything outside the script goes through a bridge that finds what you already run.
@@ -108,14 +176,56 @@ Everything outside the script goes through a bridge that finds what you already 
 | Dispatch | ps-dispatch, qs-dispatch, cd_dispatch, core_dispatch, rcore_dispatch, linden_outlawalert, XS-Dispatch, or any export through `Config.Integrations.GenericDispatch`. With none, police get a notification and a blip. |
 | Door locks | ox_doorlock, mri_Qdoorlock, qb-doorlock, rcore_doorlock, Quasar Doorlock Creator, jaksam's Doors Creator, cd_doorlock, or your own through `RegisterDoorProvider`. With none, the game opens doors itself. |
 | MDT | XS-MDT, or any other through `Config.Integrations.Generic` or `RegisterMdtProvider`. Optional. |
-| Minigames | 12 built in, plus ox_lib, ps-ui (or ps_lib), bl_ui, qb-minigames, glow_minigames, utk_fingerprint, ultra-voltlab, mhacking, SN-Hacking, boii_minigames, memorygame and howdy-hackminigame. 53 in all, each with an easy, normal and hard setting. |
+| Minigames | mgc (MGC Minigames) is the default. Also 12 built in, plus ox_lib, ps-ui (or ps_lib), bl_ui, qb-minigames, glow_minigames, utk_fingerprint, ultra-voltlab, mhacking, SN-Hacking, boii_minigames, memorygame and howdy-hackminigame. 73 in all, each with an easy, normal and hard setting. |
 
 None of them are required apart from a framework and an inventory.
 
 ## Items
 
-There is no item list to install. Tools and loot are picked in the builder from
+Robberies need no items of their own. Tools and loot are picked in the builder from
 whatever your inventory already has.
+
+Petty crime uses six. Add them to your inventory and copy the pictures from
+`inventory_images/` into your inventory's image folder.
+
+| Item | What it is |
+|---|---|
+| `stolen_wallet` | From pickpocketing and mugging. Use it to open it. |
+| `stolen_purse` | From purse snatching and car break-ins. Use it to open it. |
+| `stolen_package` | From porch packages and mailboxes. Use it to open it. |
+| `catalytic_converter` | From under a car. For your scrap or chop shop to buy. |
+| `stolen_wheel` | Off a parked car. For your chop shop to buy. |
+| `angle_grinder` | The tool for catalytic converters. Sell it in a hardware store. |
+
+The wheel crime and AC units ask for a wrench: `WEAPON_WRENCH` on ox_inventory,
+`weapon_wrench` on qb-core. Payphones ask for a crowbar: `WEAPON_CROWBAR` or
+`weapon_crowbar`. Vending machines and parking meters ask for a `lockpick`. The
+copper crimes pay in `copper`, which qb-core's recycling items already have, or
+`metalscrap` if that is what your inventory has. Change any of them in the builder.
+
+ox_inventory and Qbox, in `ox_inventory/data/items.lua`:
+
+```lua
+['stolen_wallet'] = { label = 'Stolen Wallet', weight = 100, close = true, client = { export = 'XS-Robberies.openStolen' } },
+['stolen_purse'] = { label = 'Stolen Purse', weight = 400, close = true, client = { export = 'XS-Robberies.openStolen' } },
+['stolen_package'] = { label = 'Stolen Package', weight = 1500, close = true, client = { export = 'XS-Robberies.openStolen' } },
+['catalytic_converter'] = { label = 'Catalytic Converter', weight = 4000 },
+['stolen_wheel'] = { label = 'Stolen Wheel', weight = 9000 },
+['angle_grinder'] = { label = 'Angle Grinder', weight = 2500, stack = false },
+```
+
+qb-core, in `qb-core/shared/items.lua`:
+
+```lua
+stolen_wallet = { name = 'stolen_wallet', label = 'Stolen Wallet', weight = 100, type = 'item', image = 'stolen_wallet.png', unique = false, useable = true, shouldClose = true, description = 'Not yours. See what is inside.' },
+stolen_purse = { name = 'stolen_purse', label = 'Stolen Purse', weight = 400, type = 'item', image = 'stolen_purse.png', unique = false, useable = true, shouldClose = true, description = 'Not yours. See what is inside.' },
+stolen_package = { name = 'stolen_package', label = 'Stolen Package', weight = 1500, type = 'item', image = 'stolen_package.png', unique = false, useable = true, shouldClose = true, description = 'Somebody is waiting for this.' },
+catalytic_converter = { name = 'catalytic_converter', label = 'Catalytic Converter', weight = 4000, type = 'item', image = 'catalytic_converter.png', unique = false, useable = false, shouldClose = false, description = 'Worth something to the right buyer.' },
+stolen_wheel = { name = 'stolen_wheel', label = 'Stolen Wheel', weight = 9000, type = 'item', image = 'stolen_wheel.png', unique = false, useable = false, shouldClose = false, description = 'Still has the tyre on.' },
+angle_grinder = { name = 'angle_grinder', label = 'Angle Grinder', weight = 2500, type = 'item', image = 'angle_grinder.png', unique = true, useable = false, shouldClose = false, description = 'Cuts through anything.' },
+```
+
+On qb-core and the other inventories the open-on-use is hooked up for you.
 
 Two items are set in `config.lua` because the script uses them itself:
 
@@ -152,6 +262,10 @@ end)
 AddEventHandler('XS-Robberies:runEnded', function(data)
     -- robberyId, locationId, label, outcome, payout, participants, seconds
 end)
+
+AddEventHandler('XS-Robberies:pettyCrime', function(data)
+    -- kind, citizenid, source, paid, account, coords
+end)
 ```
 
 Exports:
@@ -174,9 +288,9 @@ Nothing in a job is tied to our map, so one built on your server works on anyone
 ## Config
 
 `config.lua` only holds what applies to the whole server: bridges, who can open the
-builder, the jobs that can never rob, payout types, run limits, sounds, minigame
-backends, and every line a player reads (`Config.Text`). Everything about a single
-job lives in the database and is changed in game.
+builder, the jobs that can never rob, payout types, run limits, the petty crime
+switches, sounds, minigame backends, and every line a player reads (`Config.Text`).
+Everything about a single job or crime lives in the database and is changed in game.
 
 Police and EMS can never start or work a robbery. Whether going off duty lifts
 that is `Config.BlockedJobsRespectDuty`.

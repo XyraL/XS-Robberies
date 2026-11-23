@@ -213,6 +213,21 @@ Config.Scene = {
     SpawnDistance = 60.0,
 }
 
+-- ── Petty crime ──────────────────────────────────────────────────────────────
+-- Pickpocketing, mugging, car break-ins, mailboxes, vending machines, porch
+-- packages, shoplifting and the rest. Every crime is set up in the builder
+-- (/robberies, Petty crime). These are only the starting values for the three
+-- switches in Settings; once changed there, Settings wins.
+Config.Petty = {
+    Enabled    = true,  -- petty crime on at all
+    Alerts     = true,  -- petty crime can call the police
+    Multiplier = 1.0,   -- multiplies every petty crime payout
+
+    -- How close a player has to be before placed spots (packages, tip jars,
+    -- shelves, tills) and clerks appear. Metres.
+    SpawnDistance = 50.0,
+}
+
 -- ── Sound ────────────────────────────────────────────────────────────────────
 -- Native GTA sounds. Nothing to ship, nothing to stream.
 Config.Sounds = {
@@ -241,6 +256,11 @@ Config.Sounds = {
 -- running are shown greyed out rather than hidden, so an owner can see what
 -- they would get by installing it.
 Config.Minigames = {
+    -- MGC Minigames (resource name mgc, free on the Cfx forum). Every new step
+    -- and petty crime uses these by default. When mgc is not running, each MGC
+    -- game quietly plays the closest built-in game instead.
+    mgc = true,
+
     -- Our own. No dependency, always available.
     xs = true,
 
@@ -353,6 +373,46 @@ Config.Text = {
     truckGotAway    = 'The truck made its drop. It got away.',
     truckLeft       = 'The truck finished its round. The job is off.',
     crackIt         = 'No code to go on. Crack it.',
+
+    -- Petty crime
+    pettyOff          = 'Not right now.',
+    pettyBusy         = 'You are already doing something.',
+    pettyWaitMinutes  = 'Lie low for a bit. %d min.',
+    pettyWaitSeconds  = 'Give it %d seconds.',
+    pettyTargetDone   = 'Nothing left to take there.',
+    pettyInUse        = 'Someone is already on that.',
+    pettyNeedItem     = 'You need a %s for this.',
+    pettyBroke        = 'Your %s broke.',
+    pettyTooFar       = 'Get closer.',
+    pettyGone         = 'They are gone.',
+    pettyNotThem      = 'Not that one.',
+    pettyMoving       = 'Not while it is moving.',
+    pettyOccupied     = 'Someone is in it.',
+    pettyOwned        = 'Leave that one alone.',
+    pettyWrongCar     = 'Nothing worth taking on that.',
+    pettyNoWheel      = 'Get down next to a wheel.',
+    pettyResisted     = 'They are not having it.',
+    pettyNoticed      = 'They felt that.',
+    pettyGotAway      = 'They got away from you.',
+    pettyCaught       = 'The clerk saw you.',
+    pettyShocked      = 'It was live. You took a shock and dropped everything.',
+    pettyClerkWatching = 'The clerk is watching',
+    pettyClerkAway    = 'The clerk looked away · %ds',
+    pettyAlarm        = 'The alarm is going off.',
+    pettyKeepAiming   = 'You let them go.',
+    pettyTook         = 'You took %s.',
+    pettyNothing      = 'Nothing worth taking.',
+    pettyOpened       = 'Inside: %s.',
+    pettyEmptyItem    = 'Nothing inside.',
+    pettyNothingToOpen = 'You do not have that any more.',
+    pettyCash         = '$%d',
+    pettyBank         = '$%d to your bank',
+    pettyDirty        = '$%d dirty',
+    pettyItems        = '%dx %s',
+    pettyAlertWitness = 'A witness called it in.',
+    pettyAlertAlarm   = 'A car alarm is going off.',
+    pettyAlertCaller  = 'Someone called it in.',
+    pettyAlertClerk   = 'The shop called it in.',
 }
 -- ── Defaults for a new robbery ───────────────────────────────────────────────
 -- What the builder pre-fills when someone clicks Create. Owners change any of

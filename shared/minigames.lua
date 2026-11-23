@@ -9,6 +9,32 @@ end
 
 define('none', { label = 'None', provider = 'xs', blurb = 'Just the timer. No skill check.', difficulty = false })
 
+local MGC = {
+    { 'skill_circle',  'Skill Circle',  'Press as the needle passes through the zone on the ring.',      'xs:sweep' },
+    { 'skill_bar',     'Skill Bar',     'Stop the moving marker inside the zone.',                        'xs:bypass' },
+    { 'pulse_sync',    'Pulse Sync',    'Hit each pulse while it sits inside the zone.',                  'xs:bypass' },
+    { 'button_mash',   'Button Mash',   'Hammer the key to fill the dial before it drains away.',         'xs:drill' },
+    { 'safe_crack',    'Safe Crack',    'Turn each dial until its notch lines up with the marker.',       'xs:tumbler' },
+    { 'pincode',       'Pin Code',      'Guess the code. Every try shows which digits are right.',        'xs:pinpad' },
+    { 'chip_hack',     'Chip Hack',     'Find the hidden chips on the board before time runs out.',       'xs:thermite' },
+    { 'circuit_trace', 'Circuit Trace', 'Drag a trace along the circuit from start to end.',              'xs:circuit' },
+    { 'wire_cut',      'Wire Cut',      'Cut the right wires before you run out of chances.',             'xs:wire_trace' },
+    { 'signal_wave',   'Signal Wave',   'Tune frequency and amplitude until the two waves match.',        'xs:frequency' },
+    { 'frequency_jam', 'Frequency Jam', 'Turn every dial onto its frequency.',                            'xs:frequency' },
+    { 'pattern_lock',  'Pattern Lock',  'Draw the unlock pattern across the dots in time.',               'xs:sequence' },
+    { 'bit_flip',      'Bit Flip',      'Flip your bits until they match the target code.',               'xs:circuit' },
+    { 'tile_shift',    'Tile Shift',    'Slide the scrambled tiles back into place.',                     'xs:circuit' },
+    { 'key_drop',      'Key Drop',      'Press each falling letter before it reaches the bottom.',        'xs:sequence' },
+    { 'code_drop',     'Code Drop',     'Move the collector to catch the falling bits.',                  'xs:sweep' },
+    { 'whack_flash',   'Whack Flash',   'Click each circle the moment it flashes.',                       'xs:sweep' },
+    { 'packet_snatch', 'Packet Snatch', 'Click the good packets as they fall and leave the bad ones.',    'xs:sweep' },
+    { 'anagram',       'Anagram',       'Unscramble the word before your guesses run out.',               'xs:sequence' },
+    { 'hangman',       'Hangman',       'Guess the word one letter at a time.',                           'xs:pinpad' },
+}
+for _, g in ipairs(MGC) do
+    define('mgc:' .. g[1], { label = g[2], provider = 'mgc', resource = 'mgc', blurb = g[3], fallback = g[4] })
+end
+
 define('xs:signal_lock', { label = 'Signal Lock', provider = 'xs', blurb = 'Hold a drifting carrier inside the band until it locks.' })
 define('xs:circuit', { label = 'Circuit Routing', provider = 'xs', blurb = 'Route power across a grid before the breaker trips.' })
 define('xs:tumbler', { label = 'Tumbler', provider = 'xs', blurb = 'Feel out each pin and set it. Miss and the whole set drops.' })
@@ -82,6 +108,34 @@ for id, def in pairs(legacy) do
     Minigames.list[id] = def
 end
 
+Minigames.ToMgc = {
+    ['xs:signal_lock'] = 'mgc:signal_wave',
+    ['xs:circuit'] = 'mgc:circuit_trace',
+    ['xs:tumbler'] = 'mgc:safe_crack',
+    ['xs:sequence'] = 'mgc:pattern_lock',
+    ['xs:frequency'] = 'mgc:frequency_jam',
+    ['xs:wire_trace'] = 'mgc:wire_cut',
+    ['xs:thermite'] = 'mgc:chip_hack',
+    ['xs:fingerprint'] = 'mgc:bit_flip',
+    ['xs:drill'] = 'mgc:button_mash',
+    ['xs:pinpad'] = 'mgc:pincode',
+    ['xs:bypass'] = 'mgc:skill_bar',
+    ['xs:sweep'] = 'mgc:skill_circle',
+    ['ox_lib:skillcheck'] = 'mgc:skill_circle',
+    ['boii:chip_hack'] = 'mgc:chip_hack',
+    ['boii:safe_crack'] = 'mgc:safe_crack',
+    ['boii:wire_cut'] = 'mgc:wire_cut',
+    ['boii:pincode'] = 'mgc:pincode',
+    ['boii:anagram'] = 'mgc:anagram',
+}
+
+function Minigames.MgcFor(id)
+    if type(id) ~= 'string' then return nil end
+    local bare = id:match('^cipher:(.+)$')
+    if bare then id = 'xs:' .. bare end
+    return Minigames.ToMgc[id]
+end
+
 function Minigames.Resource(def)
     local res = def.resource
     if not res then return nil end
@@ -102,15 +156,25 @@ function Minigames.Available(id)
     return GetResourceState(Minigames.Resource(def)) == 'started'
 end
 
+function Minigames.Group(def)
+    if def.provider == 'xs' then return 'Built in' end
+    if def.provider == 'mgc' then return 'MGC Minigames' end
+    local res = type(def.resource) == 'table' and def.resource[1] or def.resource
+    return res or def.provider
+end
+
 function Minigames.Catalogue()
     local out = {}
     for _, id in ipairs(Minigames.order) do
         local d = Minigames.list[id]
         local res = type(d.resource) == 'table' and d.resource[1] or d.resource
+        local fallback = d.fallback and Minigames.list[d.fallback]
         out[#out + 1] = {
             id = id, label = d.label, provider = d.provider, blurb = d.blurb,
-            resource = res, difficulty = d.difficulty,
+            resource = res, difficulty = d.difficulty, group = Minigames.Group(d),
             available = Minigames.Available(id),
+            fallback = fallback and d.fallback or nil,
+            fallbackLabel = fallback and fallback.label or nil,
         }
     end
     return out

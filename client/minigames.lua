@@ -208,6 +208,41 @@ Bridges['boii_minigames'] = function(kind, d)
     end, 180000)
 end
 
+local MGC = {
+    skill_circle = function(d) return { icon = 'fa-solid fa-lock', speed = pick({ 0.6, 0.8, 1.1 }, d), area_size = pick({ 3, 4, 6 }, d) } end,
+    skill_bar = function(d) return { icon = 'fa-solid fa-lock', orientation = 1, area_size = pick({ 26, 20, 14 }, d), perfect_area_size = 4, speed = pick({ 0.8, 1.0, 1.3 }, d), moving_icon = true, icon_speed = pick({ 0.8, 1.0, 1.3 }, d) } end,
+    pulse_sync = function(d) return { rounds = pick({ 1, 2, 3 }, d), zone_width = pick({ 14, 10, 7 }, d), pulse_duration = pick({ 2800, 2500, 2000 }, d), delay_between = 1000 } end,
+    button_mash = function(d) return { difficulty = pick({ 2, 3, 5 }, d) } end,
+    safe_crack = function(d) return { difficulty = pick({ 2, 3, 4 }, d) } end,
+    pincode = function(d) return { difficulty = pick({ 1, 2, 3 }, d) } end,
+    chip_hack = function(d) return { loading_time = 2000, chips = pick({ 2, 3, 4 }, d), timer = pick({ 40000, 30000, 22000 }, d) } end,
+    circuit_trace = function(d) return { timer = pick({ 25000, 18000, 12000 }, d) } end,
+    wire_cut = function(d) return { timer = pick({ 40000, 30000, 20000 }, d), chances = pick({ 4, 3, 2 }, d) } end,
+    signal_wave = function(d) return { match_threshold = pick({ 0.15, 0.1, 0.07 }, d), total_time = pick({ 30, 20, 15 }, d) } end,
+    frequency_jam = function(d) return { dials = pick({ 2, 3, 4 }, d), timer = pick({ 30000, 20000, 15000 }, d) } end,
+    pattern_lock = function(d) return { pattern_length = pick({ 4, 5, 6 }, d), timer = pick({ 15000, 12000, 9000 }, d) } end,
+    bit_flip = function(d) return { code_length = pick({ 4, 6, 8 }, d), timer = pick({ 20000, 15000, 10000 }, d) } end,
+    tile_shift = function(d) return { grid_size = 3, scramble_moves = pick({ 15, 30, 45 }, d), timer = pick({ 40000, 30000, 20000 }, d), preview = true } end,
+    key_drop = function(d) return { score_limit = pick({ 8, 12, 16 }, d), miss_limit = pick({ 5, 4, 3 }, d), fall_delay = pick({ 2500, 2000, 1500 }, d), new_letter_delay = pick({ 2500, 2000, 1500 }, d) } end,
+    code_drop = function(d) return { bit_speed = pick({ 1.0, 1.3, 1.7 }, d), spawn_interval = pick({ 800, 700, 550 }, d), target_score = pick({ 8, 10, 14 }, d), max_misses = pick({ 6, 5, 3 }, d) } end,
+    whack_flash = function(d) return { total_hits = pick({ 8, 10, 14 }, d), max_misses = pick({ 4, 3, 2 }, d), flash_duration = pick({ 1200, 1000, 750 }, d) } end,
+    packet_snatch = function(d) return { packet_count = pick({ 20, 25, 30 }, d), allowed_misses = pick({ 6, 5, 3 }, d), spawn_interval = pick({ 900, 800, 650 }, d), fall_duration = pick({ 4000, 3200, 2500 }, d), legit_chance = 0.65 } end,
+    anagram = function(d) return { loading_time = 2000, difficulty = pick({ 1, 2, 3 }, d), guesses = pick({ 6, 5, 4 }, d), timer = pick({ 45000, 35000, 25000 }, d) } end,
+    hangman = function(d) return { loading_time = 2000, difficulty = pick({ 1, 2, 3 }, d), timer = pick({ 60000, 45000, 35000 }, d) } end,
+}
+
+Bridges['mgc'] = function(kind, d)
+    local build = MGC[kind]
+    if not build then return true end
+    local data = build(d)
+    local limit = (data.timer or (data.total_time and data.total_time * 1000) or 120000) + (data.loading_time or 0) + 30000
+    return await(function(cb)
+        exports['mgc']:start_game({ game = kind, data = data }, function(result)
+            cb(type(result) == 'table' and result.success == true)
+        end)
+    end, limit)
+end
+
 Bridges['memorygame'] = function(_, d)
     local v = pick({ { 8, 4, 4, 12 }, { 10, 3, 3, 10 }, { 12, 2, 3, 8 } }, d)
     return await(function(cb)
@@ -236,7 +271,12 @@ function Minigames.Run(id, difficulty)
     local bridge = Bridges[def.provider]
     local resource = Minigames.Resource(def)
 
-    if not bridge or (resource and GetResourceState(resource) ~= 'started') then
+    local off = Config.Minigames and Config.Minigames[def.provider] == false
+    if not bridge or off or (resource and GetResourceState(resource) ~= 'started') then
+        if def.fallback and Minigames.list[def.fallback] then
+            print(('^3[XS-Robberies]^0 %s is not running, so %s used %s instead.'):format(tostring(resource), id, def.fallback))
+            return Minigames.Run(def.fallback, d)
+        end
         print(('^3[XS-Robberies]^0 %s is not running, so %s fell back to an ox_lib skill check.'):format(tostring(resource), id))
         return lib.skillCheck({ 'easy', 'medium' }, { 'w', 'a', 's', 'd' }) == true
     end

@@ -300,7 +300,7 @@ local function attemptInner(location, stage)
             return
         end
         success = runMinigame({
-            minigame = (opts.minigame and opts.minigame ~= 'none') and opts.minigame or 'xs:pinpad',
+            minigame = (opts.minigame and opts.minigame ~= 'none') and opts.minigame or 'mgc:pincode',
             difficulty = opts.difficulty,
             attempts = opts.attempts,
         })

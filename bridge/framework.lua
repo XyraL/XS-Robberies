@@ -160,6 +160,16 @@ if IS_SERVER then
         return false
     end
 
+    function Framework.UseableItem(name, handler)
+        local ok = false
+        if Framework.name == 'qbox' then
+            ok = pcall(function() exports.qbx_core:CreateUseableItem(name, handler) end)
+        elseif Framework.core then
+            ok = pcall(Framework.core.Functions.CreateUseableItem, name, handler)
+        end
+        return ok
+    end
+
     function Framework.Notify(src, msg, type, title)
         local NS = Config.NotifyStyle or {}
         local ico = (NS.icons or {})[type or 'inform'] or {}

@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.1.0
+
+### New
+
+- Petty crime: a new page in the builder with 17 small crimes you can switch on and tune
+- Pickpocketing, purse snatching and mugging people on the street
+- Smash and grab on parked cars, catalytic converter theft and wheel theft
+- Mailboxes, vending machines and parking meters work all over the map with nothing to place
+- Porch packages and tip jars on spots you place
+- Shoplifting and grabbing the till while the clerk looks away
+- Place a clerk behind the counter and they turn to their phone when they stop watching
+- Every crime has its own item, time, minigame, animation, loot, police odds, witnesses and cooldowns
+- Car alarms, victims who notice, fight back or refuse, and witnesses who call it in
+- Stolen wallets, bags and packages can be opened for what is inside
+- Three new switches in Settings: petty crime on or off, whether it calls the police, and its payout multiplier
+- Six new items with pictures. The lines to add are in the README under Items
+- Four more petty crimes: payphones, newspaper boxes, and copper from electrical boxes and AC units
+- Copper crimes can shock you, with the odds set per crime
+- MGC Minigames: 20 new minigames, used by default on new steps and crimes
+- Without mgc running, each MGC game plays the closest built-in game instead
+- Switch saved steps to MGC in Settings moves your existing jobs over in one click
+
+### Updating
+
+Replace everything except your config.lua, then copy the new Petty crime block, the `mgc = true` line in Config.Minigames and the petty lines at the end of Config.Text into yours. For MGC Minigames, install mgc and ensure it. The new table is made on start. Add the new items from the README.
+
 ## 1.0.2
 
 ### Fixed

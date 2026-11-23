@@ -31,11 +31,11 @@ const Inspector = {
         if (f.type === 'minigame') {
             const groups = new Map();
             (State.minigames || []).forEach(m => {
-                const g = m.id === 'none' ? '' : m.provider === 'xs' ? 'Built in' : (m.resource || m.provider);
+                const g = m.id === 'none' ? '' : (m.group || (m.provider === 'xs' ? 'Built in' : (m.resource || m.provider)));
                 if (!groups.has(g)) groups.set(g, []);
                 groups.get(g).push(m);
             });
-            const option = (m) => `<option value="${esc(m.id)}" ${m.id === v ? 'selected' : ''} ${m.available ? '' : 'disabled'}>${esc(m.label)}${m.available ? '' : ' (not running)'}</option>`;
+            const option = (m) => `<option value="${esc(m.id)}" ${m.id === v ? 'selected' : ''} ${m.available || m.fallback ? '' : 'disabled'}>${esc(m.label)}${m.available ? '' : m.fallback ? ` (${esc(m.resource)} not running)` : ' (not running)'}</option>`;
             const list = [...groups.entries()].map(([g, items]) => g ? `<optgroup label="${esc(g)}">${items.map(option).join('')}</optgroup>` : items.map(option).join('')).join('');
             return `
                 <div class="f wide">
@@ -44,6 +44,7 @@ const Inspector = {
                         <select class="sel" data-k="${esc(k)}">${list}</select>
                         <button class="btn sm" data-try-mg="${esc(k)}" title="Play it">${icon('play', 12)} Try</button>
                     </div>
+                    ${mgFallbackHint(v)}
                 </div>`;
         }
         if (f.type === 'stage') {

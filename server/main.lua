@@ -52,7 +52,9 @@ CreateThread(function()
     Store.Load()
     Settings.Load()
     Runs.LoadState()
+    Petty.Load()
     SyncLocations()
+    Petty.SyncTo()
 
     Wait(2500)
 
@@ -76,6 +78,10 @@ CreateThread(function()
     print(("^2[XS-Robberies]^0 %d robberies (%d live) across %d locations%s")
         :format(definitions, live, sites,
             Settings.KillSwitch() and ' · KILL SWITCH IS ON' or ''))
+
+    local pettyOn, pettyAll = Petty.Count()
+    print(("^2[XS-Robberies]^0 petty crime: %d of %d on%s")
+        :format(pettyOn, pettyAll, Petty.On() and '' or ' · SWITCHED OFF IN SETTINGS'))
 end)
 
 AddEventHandler('playerJoining', function()
@@ -87,6 +93,7 @@ RegisterNetEvent('XS-Robberies:server:ready', function()
     SyncTunables(source)
     Doors.SyncTo(source)
     Trucks.SyncTo(source)
+    if Petty.loaded then Petty.SyncTo(source) end
 
     for _, entry in ipairs(Runs.PublicSnapshot()) do
         TriggerClientEvent('XS-Robberies:client:runPublic', source, entry)
@@ -99,6 +106,46 @@ if Config.Run.CancelCommand and Config.Run.CancelCommand ~= '' then
         if not Runs.Cancel(src) then Framework.Notify(src, T('notInRun'), 'error') end
     end, false)
 end
+
+guard('XS-Robberies:swapMinigames', function(src)
+    local steps, jobs, crimes = 0, 0, 0
+
+    for _, def in pairs(Store.robberies) do
+        local changed = false
+        for _, stage in ipairs(def.stages or {}) do
+            local to = type(stage.opts) == 'table' and Minigames.MgcFor(stage.opts.minigame)
+            if to then
+                stage.opts.minigame = to
+                steps = steps + 1
+                changed = true
+            end
+        end
+        if changed then
+            Store.Save(def, def.author)
+            jobs = jobs + 1
+        end
+    end
+
+    for _, id in ipairs(Petty.order) do
+        local cfg = Petty.config[id]
+        local to = cfg and Minigames.MgcFor(cfg.minigame)
+        if to then
+            local copy = json.decode(json.encode(cfg))
+            copy.minigame = to
+            Petty.Save(id, copy)
+            crimes = crimes + 1
+        end
+    end
+
+    local map = {}
+    for from, to in pairs(Minigames.ToMgc) do
+        map[from] = to
+        local bare = from:match('^xs:(.+)$')
+        if bare then map['cipher:' .. bare] = to end
+    end
+
+    return { ok = true, steps = steps, jobs = jobs, crimes = crimes, robberies = Store.List(), map = map }
+end)
 
 guard('XS-Robberies:saveTunables', function(src, values)
     if type(values) ~= 'table' then return { ok = false, error = 'Nothing to save.' } end
@@ -128,6 +175,7 @@ guard('XS-Robberies:saveTunables', function(src, values)
     end
 
     SyncTunables()
+    if Petty.loaded then Petty.SyncTo() end
     return { ok = true, settings = Settings.Schema() }
 end)
 

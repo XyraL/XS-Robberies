@@ -73,3 +73,10 @@ CREATE TABLE IF NOT EXISTS `xs_robbery_settings` (
     `value` TEXT                 DEFAULT NULL,
     PRIMARY KEY (`key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS `xs_robbery_petty` (
+    `kind`       VARCHAR(32)  NOT NULL,
+    `data`       LONGTEXT     NOT NULL,
+    `updated_at` TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`kind`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

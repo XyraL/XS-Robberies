@@ -11,6 +11,16 @@ const MOCK_ITEMS = [
     { name: 'rolex', label: 'Rolex' },
     { name: 'diamond_ring', label: 'Diamond Ring' },
     { name: 'bag', label: 'Duffel Bag' },
+    { name: 'phone', label: 'Phone' },
+    { name: 'radio', label: 'Radio' },
+    { name: 'sprunk', label: 'Sprunk' },
+    { name: 'sandwich', label: 'Sandwich' },
+    { name: 'WEAPON_WRENCH', label: 'Wrench' },
+    { name: 'stolen_wallet', label: 'Stolen Wallet' },
+    { name: 'stolen_purse', label: 'Stolen Purse' },
+    { name: 'stolen_package', label: 'Stolen Package' },
+    { name: 'catalytic_converter', label: 'Catalytic Converter' },
+    { name: 'stolen_wheel', label: 'Stolen Wheel' },
 ];
 
 const MOCK_SETTINGS = [
@@ -19,7 +29,57 @@ const MOCK_SETTINGS = [
     { key: 'respectDuty', label: 'Off-duty police and EMS may rob', kind: 'toggle', value: false, fromConfig: true },
     { key: 'logRuns', label: 'Write finished runs to history', kind: 'toggle', value: true, fromConfig: true },
     { key: 'abandonAfter', label: 'Abandon a run after', kind: 'number', min: 60, max: 7200, unit: 's', value: 300, fromConfig: true },
+    { key: 'pettyEnabled', label: 'Petty crime is on', kind: 'toggle', value: true, fromConfig: true },
+    { key: 'pettyAlerts', label: 'Petty crime can call the police', kind: 'toggle', value: true, fromConfig: true },
+    { key: 'pettyMultiplier', label: 'Petty crime payout multiplier', kind: 'number', min: 0, max: 20, step: 0.05, value: 1, fromConfig: true },
 ];
+
+function mockPettyDefaults() {
+    const config = {};
+    CATALOGUE.petty.kinds.forEach(k => { config[k.id] = clone(k.defaults); });
+    return config;
+}
+
+const MOCK_PETTY = {
+    on: true,
+    config: mockPettyDefaults(),
+    shops: clone(CATALOGUE.petty.shops),
+    openables: clone(CATALOGUE.petty.openables),
+    saved: { package: true, shoplift: true, till: true, _shops: true },
+    stats: {
+        pickpocket: { hits: 14, paid: 812 },
+        mugging: { hits: 3, paid: 540 },
+        carwindow: { hits: 6, paid: 210 },
+        vending: { hits: 9, paid: 388 },
+    },
+};
+
+MOCK_PETTY.config.package.spots = [
+    { id: 'spot_1', label: 'Grove Street porch', shop: '', x: 85.12, y: -1959.4, z: 20.75, h: 320 },
+    { id: 'spot_2', label: 'Forum Drive door', shop: '', x: -164.8, y: -1606.2, z: 33.65, h: 160 },
+    { id: 'spot_3', label: '', shop: '', x: 1260.4, y: -1761.7, z: 49.66, h: 20 },
+];
+MOCK_PETTY.config.shoplift.spots = [
+    { id: 'spot_1', label: 'Snack aisle', shop: 'Grove 24/7', x: 28.9, y: -1343.2, z: 29.5, h: 0 },
+    { id: 'spot_2', label: 'Drinks fridge', shop: 'Grove 24/7', x: 31.4, y: -1340.8, z: 29.5, h: 90 },
+];
+MOCK_PETTY.config.till.spots = [
+    { id: 'spot_1', label: 'Front till', shop: 'Grove 24/7', x: 24.5, y: -1347.3, z: 29.5, h: 270 },
+];
+MOCK_PETTY.shops.clerks = [{ id: 'clerk_1', shop: 'Grove 24/7', x: 24.0, y: -1346.2, z: 29.5, h: 270 }];
+
+function mockPettySnapshot() {
+    return {
+        ok: true,
+        on: MOCK_PETTY.on,
+        catalogue: clone(CATALOGUE.petty),
+        config: clone(MOCK_PETTY.config),
+        shops: clone(MOCK_PETTY.shops),
+        openables: clone(MOCK_PETTY.openables),
+        saved: clone(MOCK_PETTY.saved),
+        stats: clone(MOCK_PETTY.stats),
+    };
+}
 
 const DEF_GATES = { policeRequired: 2, policeOnDuty: true, minCrew: 1, maxCrew: 6, locationCooldown: 1800, playerCooldown: 900, playerCooldownScope: 'type', globalCooldown: 0, proximityMetres: 0, proximitySeconds: 0 };
 const DEF_RESPONSE = { alarm: 'instant', alarmDelay: 30, camerasChangeTo: 'delayed', powerChangesTo: 'silent', code: '10-90', title: 'Robbery', repeatAlert: 120, dispatchOnFail: true };
@@ -336,7 +396,45 @@ const MOCK_HANDLERS = {
     },
     saveTunables: (values) => {
         MOCK_SETTINGS.forEach(s => { if (values[s.key] !== undefined) { s.value = values[s.key]; s.fromConfig = false; } });
+        if (values.pettyEnabled !== undefined) MOCK_PETTY.on = values.pettyEnabled === true;
         return { ok: true, settings: clone(MOCK_SETTINGS) };
+    },
+    swapMinigames: () => {
+        const map = {
+            'xs:signal_lock': 'mgc:signal_wave', 'xs:circuit': 'mgc:circuit_trace', 'xs:tumbler': 'mgc:safe_crack', 'xs:sequence': 'mgc:pattern_lock',
+            'xs:frequency': 'mgc:frequency_jam', 'xs:wire_trace': 'mgc:wire_cut', 'xs:thermite': 'mgc:chip_hack', 'xs:fingerprint': 'mgc:bit_flip',
+            'xs:drill': 'mgc:button_mash', 'xs:pinpad': 'mgc:pincode', 'xs:bypass': 'mgc:skill_bar', 'xs:sweep': 'mgc:skill_circle',
+            'ox_lib:skillcheck': 'mgc:skill_circle', 'boii:chip_hack': 'mgc:chip_hack', 'boii:safe_crack': 'mgc:safe_crack',
+            'boii:wire_cut': 'mgc:wire_cut', 'boii:pincode': 'mgc:pincode', 'boii:anagram': 'mgc:anagram',
+        };
+        let steps = 0, jobs = 0, crimes = 0;
+        Object.values(MOCK.jobs).forEach(job => {
+            let changed = false;
+            (job.stages || []).forEach(st => { if (st.opts && map[st.opts.minigame]) { st.opts.minigame = map[st.opts.minigame]; steps++; changed = true; } });
+            if (changed) { job.revision = (job.revision || 0) + 1; jobs++; }
+        });
+        Object.values(MOCK_PETTY.config).forEach(cfg => { if (cfg && map[cfg.minigame]) { cfg.minigame = map[cfg.minigame]; crimes++; } });
+        return { ok: true, steps, jobs, crimes, robberies: mockList(), map };
+    },
+    getPetty: () => mockPettySnapshot(),
+    savePetty: (p) => {
+        const config = clone(p.config);
+        if (p.kind === '_shops') MOCK_PETTY.shops = config;
+        else if (p.kind === '_open') MOCK_PETTY.openables = config;
+        else if (MOCK_PETTY.config[p.kind]) {
+            const cash = config.payout && config.payout.cash;
+            if (cash && cash.min > cash.max) cash.min = cash.max;
+            MOCK_PETTY.config[p.kind] = config;
+        } else return { ok: false, error: 'There is no crime called that.' };
+        MOCK_PETTY.saved[p.kind] = true;
+        return { ok: true, kind: p.kind, config: clone(config), saved: clone(MOCK_PETTY.saved) };
+    },
+    resetPetty: (kind) => {
+        if (kind === '_shops') MOCK_PETTY.shops = clone(CATALOGUE.petty.shops);
+        else if (kind === '_open') MOCK_PETTY.openables = clone(CATALOGUE.petty.openables);
+        else MOCK_PETTY.config[kind] = clone(CATALOGUE.petty.kinds.find(k => k.id === kind).defaults);
+        MOCK_PETTY.saved[kind] = false;
+        return Object.assign(mockPettySnapshot(), { kind });
     },
     setEditorStages: () => ({ ok: true }),
     teleport: () => ({ ok: true }),
@@ -350,7 +448,8 @@ const MOCK_HANDLERS = {
     },
     previewMinigame: (p) => new Promise(resolve => {
         suspend(true);
-        const kind = String(p.id || '').replace(/^xs:/, '');
+        const entry = (CATALOGUE.minigames || []).find(m => m.id === p.id);
+        const kind = String((entry && entry.fallback) || p.id || '').replace(/^xs:/, '');
         PLACE_STATE.mg = (passed) => { suspend(false); resolve({ ok: true, passed }); };
         setTimeout(() => window.postMessage({ action: 'minigame', kind, difficulty: p.difficulty || 2 }, '*'), 200);
     }),
@@ -429,7 +528,7 @@ function mockOpen() {
             dispatch: 'ps-dispatch',
             doorlock: 'ox_doorlock',
             mdt: 'generic',
-            version: '1.0.1',
+            version: '1.1.0',
             stageTypes: CATALOGUE.stageTypes,
             minigames: CATALOGUE.minigames,
             accounts: CATALOGUE.accounts,

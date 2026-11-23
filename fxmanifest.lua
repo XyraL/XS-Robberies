@@ -5,7 +5,7 @@ lua54 'yes'
 name 'XS-Robberies'
 author 'XyraL'
 description 'XS-Robberies. Build any robbery in-game: stores, ATMs, banks, jewelry, houses, vehicles, custom MLOs. QBox and QBCore.'
-version '1.0.2'
+version '1.1.0'
 
 dependencies {
     'ox_lib',
@@ -18,6 +18,7 @@ shared_scripts {
     'shared/text.lua',
     'shared/stages.lua',
     'shared/minigames.lua',
+    'shared/petty.lua',
 }
 
 client_scripts {
@@ -36,6 +37,7 @@ client_scripts {
     'client/hazards.lua',
     'client/hud.lua',
     'client/sounds.lua',
+    'client/petty.lua',
     'client/minigames.lua',
     'client/builder.lua',
     'client/placement.lua',
@@ -56,6 +58,7 @@ server_scripts {
     'server/runs.lua',
     'server/trucks.lua',
     'server/contacts.lua',
+    'server/petty.lua',
     'server/validate.lua',
     'server/main.lua',
     'server/commands.lua',
@@ -80,6 +83,7 @@ files {
     'html/js/views/places.js',
     'html/js/views/rules.js',
     'html/js/views/server.js',
+    'html/js/views/petty.js',
     'html/js/inspector.js',
     'html/js/setup.js',
     'html/js/app.js',

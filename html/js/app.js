@@ -146,6 +146,8 @@ function renderRail() {
         </div>
         <div class="server-nav">
             <div class="rail-head"><span>SERVER</span></div>
+            <div class="nav-row ${State.view === 'petty' ? 'on' : ''}" data-nav="petty">${icon('hand', 15)} Petty crime
+                <span class="cnt ${PettyView.data && PettyView.data.on === false ? 'hot' : ''}">${PettyView.data ? (PettyView.data.on === false ? 'OFF' : `${PettyView.onCount()}/${PettyView.kinds().length}`) : ''}</span></div>
             <div class="nav-row ${State.view === 'live' ? 'on' : ''}" data-nav="live">${icon('live', 15)} Live
                 <span class="cnt ${running ? 'hot' : ''}">${running || ''}</span></div>
             <div class="nav-row ${State.view === 'history' ? 'on' : ''}" data-nav="history">${icon('history', 15)} History</div>
@@ -154,7 +156,7 @@ function renderRail() {
         </div>
         <div class="rail-foot">
             <div>${esc(State.boot && State.boot.framework || 'framework ?')} · ${esc(State.boot && State.boot.inventory || 'inventory ?')}</div>
-            <div>target <b>${esc(State.boot && State.boot.target || 'built-in')}</b> · v${esc(State.version || '1.0.1')}</div>
+            <div>target <b>${esc(State.boot && State.boot.target || 'built-in')}</b> · v${esc(State.version || '1.1.0')}</div>
         </div>`;
 
     el.querySelectorAll('[data-job]').forEach(card => card.addEventListener('click', () => openJob(card.dataset.job)));
@@ -172,6 +174,7 @@ function renderHead() {
             live: ['Live', 'Every robbery happening right now.'],
             history: ['History', 'Every run this server has recorded.'],
             settings: ['Settings', 'What applies to the whole server.'],
+            petty: ['Petty crime', 'Small crimes that need no job. Most work anywhere straight away.'],
         };
         const [title, sub] = titles[State.view] || titles.home;
         el.innerHTML = `<h2>${esc(title)}</h2><span class="sub">${esc(sub)}</span>`;
@@ -467,6 +470,7 @@ async function boot(data) {
     State.dirtyItem = data.dirtyItem || 'markedbills';
     State.version = data.version || '';
     State.open = true;
+    if (!PettyView.dirty.size) PettyView.data = null;
 
     if (!document.querySelector('.window')) shell();
     document.getElementById('app').classList.remove('hidden', 'suspended');
@@ -553,7 +557,8 @@ document.addEventListener('keydown', (e) => {
         closeBuilder();
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        if (State.current) saveJob();
+        if (State.view === 'petty' && PettyView.data) PettyView.save(PettyView.sel);
+        else if (State.current) saveJob();
     }
 });
 

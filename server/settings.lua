@@ -61,9 +61,16 @@ Settings.tunables = {
     { key = 'respectDuty',      label = 'Off-duty police and EMS may rob', kind = 'toggle' },
     { key = 'logRuns',          label = 'Write finished runs to history', kind = 'toggle' },
     { key = 'abandonAfter',     label = 'Abandon a run after', kind = 'number', min = 60, max = 7200, unit = 's' },
+    { key = 'pettyEnabled',     label = 'Petty crime is on', kind = 'toggle' },
+    { key = 'pettyAlerts',      label = 'Petty crime can call the police', kind = 'toggle' },
+    { key = 'pettyMultiplier',  label = 'Petty crime payout multiplier', kind = 'number', min = 0, max = 20, step = 0.05 },
 }
 
 local function fallbackFor(key)
+    local petty = Config.Petty or {}
+    if key == 'pettyEnabled'     then return petty.Enabled ~= false end
+    if key == 'pettyAlerts'      then return petty.Alerts ~= false end
+    if key == 'pettyMultiplier'  then return tonumber(petty.Multiplier) or 1.0 end
     if key == 'payoutMultiplier' then return Config.Payout.GlobalMultiplier or 1.0 end
     if key == 'payoutOnEscape'   then return Config.Run.PayoutOnEscape ~= false end
     if key == 'respectDuty'      then return Config.BlockedJobsRespectDuty == true end

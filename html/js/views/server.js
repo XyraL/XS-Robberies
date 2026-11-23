@@ -188,13 +188,13 @@ Views.settings = {
                         </div>
                     </div>
                     <div class="sec">
-                        <div class="sec-title">Minigames</div>
-                        <div class="hint" style="margin-bottom:10px">${minigames.filter(m => m.available).length} of ${minigames.length} ready. Missing ones stay listed so you can see what installing them adds. Try any of them here.</div>
+                        <div class="sec-title"><span>Minigames</span><button class="btn xs act" id="st-mgc">${icon('refresh', 11)} Switch saved steps to MGC</button></div>
+                        <div class="hint" style="margin-bottom:10px">${minigames.filter(m => m.available).length} of ${minigames.length} ready. New steps and petty crimes use MGC Minigames. When mgc is not running, each MGC game plays the closest built-in game instead.</div>
                         <div class="ov-list">${minigames.filter(m => m.id !== 'none').map((m, i, all) => `
-                            ${i === 0 || all[i - 1].provider !== m.provider ? `<div class="group-label" style="margin:${i ? 12 : 0}px 0 4px">${esc(m.provider === 'xs' ? 'Built in' : (m.resource || m.provider))}</div>` : ''}
+                            ${i === 0 || all[i - 1].provider !== m.provider ? `<div class="group-label" style="margin:${i ? 12 : 0}px 0 4px">${esc(m.group || (m.provider === 'xs' ? 'Built in' : (m.resource || m.provider)))}</div>` : ''}
                             <div class="ov-row">
                                 <span class="badge ${m.available ? 'on' : ''}">${m.available ? 'Ready' : 'Missing'}</span>
-                                <div><b>${esc(m.label)}</b><small>${esc(m.blurb || '')}</small></div>
+                                <div><b>${esc(m.label)}</b><small>${esc(m.blurb || '')}${!m.available && m.fallback ? ` Plays ${esc(m.fallbackLabel)} until ${esc(m.resource)} runs.` : ''}</small></div>
                                 <div class="acts">${m.available ? `<button class="btn xs" data-try="${esc(m.id)}">${icon('play', 11)} Try</button>` : ''}</div>
                             </div>`).join('')}</div>
                     </div>
@@ -215,6 +215,21 @@ Views.settings = {
             if (!report(res, 'Lifted')) return;
             State.blacklist = res.blacklist || {};
             renderView();
+        }));
+
+        el.querySelector('#st-mgc').addEventListener('click', () => modal({
+            title: 'Switch saved steps to MGC?',
+            sub: 'Every saved robbery step and petty crime that uses a built-in game, the ox_lib skill check or a boii_minigames game moves to the closest MGC game. Games from other resources stay as they are.',
+            confirmLabel: 'Switch them',
+            confirm: async () => {
+                const res = await nui('swapMinigames', {});
+                if (!report(res, 'Switched to MGC', res && res.ok ? `${res.steps} step${res.steps === 1 ? '' : 's'} in ${res.jobs} job${res.jobs === 1 ? '' : 's'}, ${res.crimes} petty crime${res.crimes === 1 ? '' : 's'}` : '')) return false;
+                State.robberies = res.robberies || State.robberies;
+                const map = res.map || {};
+                if (State.current) (State.current.stages || []).forEach(s => { if (s.opts && map[s.opts.minigame]) s.opts.minigame = map[s.opts.minigame]; });
+                if (typeof PettyView !== 'undefined' && PettyView.data) Object.values(PettyView.data.config || {}).forEach(c => { if (c && map[c.minigame]) c.minigame = map[c.minigame]; });
+                renderView();
+            },
         }));
 
         el.querySelectorAll('[data-try]').forEach(b => b.addEventListener('click', async () => {

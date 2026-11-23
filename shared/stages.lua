@@ -92,7 +92,7 @@ define('hack', {
     colour = MARKER.puzzle,
     blurb = 'A minigame point. Terminals, alarm panels, security consoles.',
     fields = {
-        { key = 'minigame', label = 'Minigame',  type = 'minigame', default = 'xs:signal_lock' },
+        { key = 'minigame', label = 'Minigame',  type = 'minigame', default = 'mgc:chip_hack' },
         { key = 'attempts', label = 'Attempts',  type = 'number', default = 3, min = 1, max = 10 },
         { key = 'revealCode', label = 'Reveals a code', type = 'number', default = 0, min = 0, max = 8,
           hidden = true },
@@ -129,7 +129,7 @@ define('keypad', {
         { key = 'digits',   label = 'Code length', type = 'number', default = 4, min = 3, max = 8 },
         { key = 'codeFrom', label = 'Code found at', type = 'stage', default = '', none = 'Nowhere, they crack it',
           hint = 'Whoever finishes that step is shown the code, and so is the rest of the crew.' },
-        { key = 'minigame', label = 'Cracking it', type = 'minigame', default = 'xs:pinpad',
+        { key = 'minigame', label = 'Cracking it', type = 'minigame', default = 'mgc:pincode',
           hint = 'Only used when the code is not found anywhere.' },
         { key = 'attempts', label = 'Attempts',    type = 'number', default = 3, min = 1, max = 10 },
     },
@@ -142,7 +142,7 @@ define('camera', {
     colour = MARKER.control,
     blurb = 'Disable to change what the alarm does. Set the change under Rules.',
     fields = {
-        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'xs:wire_trace' },
+        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'mgc:wire_cut' },
     },
 })
 
@@ -165,7 +165,7 @@ define('register', {
     colour = MARKER.loot,
     blurb = 'A fast grab for a small payout.',
     fields = {
-        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'xs:tumbler' },
+        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'mgc:skill_circle' },
         { key = 'restock',  label = 'Restocks after', type = 'number', default = 1800, min = 0, max = 86400, unit = 's' },
     },
 })
@@ -177,7 +177,7 @@ define('safe', {
     colour = MARKER.loot,
     blurb = 'Long, loud, and worth it.',
     fields = {
-        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'xs:circuit' },
+        { key = 'minigame', label = 'Minigame', type = 'minigame', default = 'mgc:safe_crack' },
         { key = 'restock',  label = 'Restocks after', type = 'number', default = 7200, min = 0, max = 86400, unit = 's' },
         { key = 'revealCode', label = 'Reveals a code', type = 'number', default = 0, min = 0, max = 8,
           hidden = true },
@@ -245,7 +245,7 @@ define('doorlock', {
     colour = MARKER.control,
     blurb = 'A point where they work a door open. Pick the door under Doors. Any other step can open a door too.',
     fields = {
-        { key = 'minigame',    label = 'Minigame',       type = 'minigame', default = 'xs:signal_lock' },
+        { key = 'minigame',    label = 'Minigame',       type = 'minigame', default = 'mgc:circuit_trace' },
         { key = 'attempts',    label = 'Attempts',       type = 'number', default = 3, min = 1, max = 10 },
     },
 })
@@ -287,7 +287,7 @@ define('laser', {
         { key = 'span',        label = 'Width',          type = 'number', default = 2.0, min = 0.5, max = 12.0, unit = 'm' },
         { key = 'beams',       label = 'Beams',          type = 'number', default = 4, min = 1, max = 12 },
         { key = 'tripAlarm',   label = 'Crossing it trips the alarm', type = 'toggle', default = true },
-        { key = 'minigame',    label = 'Minigame',       type = 'minigame', default = 'xs:frequency' },
+        { key = 'minigame',    label = 'Minigame',       type = 'minigame', default = 'mgc:frequency_jam' },
         { key = 'attempts',    label = 'Attempts',       type = 'number', default = 2, min = 1, max = 10 },
     },
 })

@@ -25,11 +25,41 @@ for (const type of catalogue.stageTypes) {
 }
 
 const diff = (a, b) => [...a].filter(x => !b.has(x));
+
+const petty = readFileSync(root + 'shared/petty.lua', 'utf8');
+const pettyKinds = new Set([...petty.matchAll(/define\('([a-z]+)'/g)].map(m => m[1]));
+const mockPetty = catalogue.petty || { kinds: [], shops: {} };
+const mockKinds = new Set(mockPetty.kinds.map(k => k.id));
+
+const configBody = petty.slice(petty.indexOf('local function config('), petty.indexOf('\nend', petty.indexOf('local function config(')));
+const luaConfigKeys = new Set([...configBody.matchAll(/^\s*(?:local\s+)?(?:cfg\.)?([a-zA-Z]+)\s*=(?!=)/gm)].map(m => m[1]).filter(k => !['cfg', 'local'].includes(k)));
+
+const mockConfigKeys = new Set();
+const collect = (value) => {
+    if (Array.isArray(value)) return;
+    if (value && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value)) {
+            mockConfigKeys.add(k);
+            collect(v);
+        }
+    }
+};
+mockPetty.kinds.forEach(k => collect(k.defaults));
+
+const shopKeys = new Set(Object.keys(mockPetty.shops || {}));
+const luaShopBody = petty.slice(petty.indexOf('Petty.shopDefaults = {'), petty.indexOf('}', petty.indexOf('clerks = {}')));
+const luaShopKeys = new Set([...luaShopBody.matchAll(/^\s*([a-zA-Z]+)\s*=/gm)].map(m => m[1]));
+
 const problems = [
     ['fields in shared/stages.lua but not the catalogue', diff(luaFields, mockFields)],
     ['fields in the catalogue but not shared/stages.lua', diff(mockFields, luaFields)],
     ['stage types in shared/stages.lua but not the catalogue', diff(luaTypes, mockTypes)],
     ['stage types in the catalogue but not shared/stages.lua', diff(mockTypes, luaTypes)],
+    ['petty crimes in shared/petty.lua but not the catalogue', diff(pettyKinds, mockKinds)],
+    ['petty crimes in the catalogue but not shared/petty.lua', diff(mockKinds, pettyKinds)],
+    ['petty settings in shared/petty.lua but not the catalogue', diff(luaConfigKeys, mockConfigKeys)],
+    ['petty settings in the catalogue but not shared/petty.lua', [...mockConfigKeys].filter(k => !new RegExp(`\\b${k}\\s*=`).test(petty))],
+    ['shop clerk settings that differ', [...diff(luaShopKeys, shopKeys), ...diff(shopKeys, luaShopKeys)]],
 ].filter(([, list]) => list.length);
 
 for (const [label, list] of problems) console.log(`  ${label}: ${list.join(', ')}`);
@@ -37,5 +67,5 @@ for (const [label, list] of problems) console.log(`  ${label}: ${list.join(', ')
 const count = problems.reduce((n, [, list]) => n + list.length, 0);
 console.log(count
     ? `  ${count} difference(s). Regenerate html/js/mock-catalogue.js from the Lua.`
-    : `  ${luaTypes.size} stage types and ${luaFields.size} fields match the preview catalogue.`);
+    : `  ${luaTypes.size} stage types, ${luaFields.size} fields, ${pettyKinds.size} petty crimes and ${mockConfigKeys.size} petty settings match the preview catalogue.`);
 process.exit(count ? 1 : 0);

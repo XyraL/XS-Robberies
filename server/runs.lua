@@ -671,15 +671,22 @@ end
 
 local function rollLoot(src, lootId)
     local table_ = Store.loot[lootId]
-    if not table_ then return end
+    if not table_ then return {} end
 
+    local given = {}
     for _, entry in ipairs(table_.entries or {}) do
         if math.random(100) <= (entry.chance or 100) then
             local count = math.random(entry.min or 1, math.max(entry.min or 1, entry.max or 1))
-            Inv.Add(src, entry.item, count)
+            if Inv.Add(src, entry.item, count) then
+                given[#given + 1] = { item = entry.item, count = count }
+            end
         end
     end
+    return given
 end
+
+Runs.PayAccount = payAccount
+Runs.RollLoot = rollLoot
 
 local function stageRestocked(locationId, stageId)
     local state = Runs.state[locationId]

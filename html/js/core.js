@@ -85,7 +85,24 @@ const ICON_PATHS = {
     stop: '<rect x="5" y="5" width="14" height="14" rx="2"/>',
     model: P('M4 7l8-4 8 4-8 4z') + P('M4 7v10l8 4 8-4V7M12 11v10'),
     bolt: P('M13 2 4.5 13.5H12L11 22l8.5-11.5H12z'),
+    hand: P('M8 12.5V5.5a1.5 1.5 0 0 1 3 0V11M11 10.5V4a1.5 1.5 0 0 1 3 0v6.5M14 10.5V5.5a1.5 1.5 0 0 1 3 0v8.5a7 7 0 0 1-7 7h-.6a6 6 0 0 1-4.9-2.6L3.2 15.4a1.5 1.5 0 0 1 2.4-1.8L8 16'),
+    purse: P('M4 10h16l-1.4 9.1a1.5 1.5 0 0 1-1.5 1.3H6.9a1.5 1.5 0 0 1-1.5-1.3z') + P('M8 10c0-3.6 1.8-6 4-6s4 2.4 4 6M10 14h4'),
+    gun: P('M3 7.5h16l1 2h1.5v3H14l-1.5 1.5V18a1 1 0 0 1-1 1H9.6a1 1 0 0 1-1-1.1l.6-4.9H5a2 2 0 0 1-2-2z') + P('M12.5 12.5v2'),
+    window: P('M3.5 17v-5.5L7 6h10l3.5 5.5V17z') + P('M7 11.5h10M11 6.5l1.6 2.6-1.4 1.4 1.8 2.5') + '<circle cx="7" cy="17.5" r="1.6"/><circle cx="17" cy="17.5" r="1.6"/>',
+    converter: P('M2 12h4M18 12h4') + '<rect x="6" y="8" width="12" height="8" rx="4"/>' + P('M9.5 10.5v3M12 10v4M14.5 10.5v3'),
+    wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2"/>' + P('M12 3v5.8M12 15.2V21M3 12h5.8M15.2 12H21'),
+    mail: '<rect x="3" y="6" width="18" height="12" rx="2"/>' + P('M3.5 7l8.5 6 8.5-6'),
+    vending: '<rect x="5" y="3" width="14" height="18" rx="1.5"/>' + P('M8 6h5v9H8zM16 7v2M16 12v1M8 18h8'),
+    meter: '<rect x="7" y="3" width="10" height="11" rx="5"/>' + P('M12 14v7M9 21h6M10 7.5h4M12 10.5l1.6-1.6'),
+    box: P('M3 8l9-4 9 4v8l-9 4-9-4z') + P('M3 8l9 4 9-4M12 12v8M7.5 6l9 4'),
+    jar: P('M8 6V3.5h8V6M7 6h10c1.4 1 2 2.4 2 4v8.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 18.5V10c0-1.6.6-3 2-4z') + P('M9.5 13h5M10.5 16h3'),
+    basket: P('M3 10h18l-2 10H5z') + P('M7.5 10l3.5-6M16.5 10 13 4M9 13.5v3.5M12 13.5v3.5M15 13.5v3.5'),
+    clerk: '<circle cx="12" cy="7.5" r="3.5"/>' + P('M5 20.5a7 7 0 0 1 14 0M3 13h4M17 13h4'),
+    open: P('M4 10l8 4 8-4M4 10v8l8 4 8-4v-8M4 10l3.5-5.5L15 8.5M20 10l-3.5-5.5L9 8.5'),
     dial: '',
+    phone: '<rect x="6" y="2.5" width="12" height="19" rx="1.5"/>' + P('M9 6h6v3H9zM9 12.5h.01M12 12.5h.01M15 12.5h.01M9 15.5h.01M12 15.5h.01M15 15.5h.01M10 18.5h4', 'stroke-width="2.2"'),
+    news: '<rect x="5" y="4" width="14" height="13" rx="1.5"/>' + P('M8 7.5h8M8 10.5h8M8 13.5h5M7 17v4M17 17v4'),
+    fan: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="1.6"/>' + P('M12 10.4c0-2.6 1.2-4.4 3-4.4M13.6 12c2.6 0 4.4 1.2 4.4 3M12 13.6c0 2.6-1.2 4.4-3 4.4M10.4 12C7.8 12 6 10.8 6 9'),
 };
 
 function icon(name, size = 16, sw = 1.8) {
@@ -365,6 +382,12 @@ function closeModal() {
         modalOpen.remove();
         modalOpen = null;
     }
+}
+
+function mgFallbackHint(id) {
+    const m = (State.minigames || []).find(x => x.id === id);
+    if (!m || m.available || !m.fallback) return '';
+    return `<div class="hint" style="margin-top:6px">${esc(m.resource)} is not running, so players get ${esc(m.fallbackLabel)} (built in) until it is.</div>`;
 }
 
 function modal({ title, sub = '', body = '', size = '', confirm = null, confirmLabel = 'Save', danger = false, cancelLabel = 'Cancel', onOpen = null, foot = true }) {

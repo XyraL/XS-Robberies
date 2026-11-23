@@ -258,6 +258,11 @@ const PROP_CATALOGUE = [
 const KNOWN_MODELS = [
     'prop_atm_01', 'prop_atm_02', 'prop_atm_03', 'prop_fleeca_atm',
     'stockade', 'stockade3', 'gburrito', 'gburrito2', 'pounder', 'mule', 'boxville',
+    'prop_postbox_01a', 'prop_letterbox_01', 'prop_letterbox_02', 'prop_letterbox_03', 'prop_letterbox_04',
+    'prop_vend_soda_01', 'prop_vend_soda_02', 'prop_vend_snak_01', 'prop_vend_snak_01_tu', 'prop_vend_coffe_01',
+    'prop_vend_water_01', 'prop_vend_fags_01', 'prop_vend_condom_01', 'prop_parknmeter_01', 'prop_parknmeter_02',
+    'prop_news_disp_01a', 'prop_news_disp_02a', 'prop_news_disp_03a', 'prop_till_01', 'prop_till_02', 'prop_till_03',
+    'prop_cs_cardbox_01', 'prop_cs_package_01', 'hei_prop_heist_box',
 ].concat(PROP_CATALOGUE.map(p => p.model));
 
 function modelName(model) {
